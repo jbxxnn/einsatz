@@ -1,13 +1,29 @@
+'use client'
+
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, Clock, MapPin, Shield, Star } from "lucide-react"
+import { Hero } from "@/components/animated-hero"
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+    // <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+
+
+    <div>
+    <div className="absolute top-0 z-[-2] h-screen w-screen rotate-180 transform bg-white bg-[radial-gradient(60%_120%_at_50%_50%,hsla(0,0%,100%,0)_0,rgba(252,205,238,.5)_100%)]"></div>
+      {/* Animated Hero Section */}
+      
+      <section className="w-full">
+        <Hero />
+      </section>
+
+
+
+
       {/* Hero Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-background to-muted">
+      {/* <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-background to-muted">
         <div className="container px-4 md:px-6">
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
             <div className="flex flex-col justify-center space-y-4">
@@ -45,10 +61,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* How It Works */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
+      {/* <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
@@ -84,10 +100,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Featured Freelancers */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
+      {/* <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
@@ -141,10 +157,10 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Testimonials */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
+      {/* <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
@@ -189,10 +205,10 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-primary text-primary-foreground">
+      {/* <section className="w-full py-12 md:py-24 lg:py-32 bg-primary text-primary-foreground">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
@@ -219,7 +235,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   )
 }
