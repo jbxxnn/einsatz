@@ -5,21 +5,42 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, Clock, MapPin, Shield, Star } from "lucide-react"
 import { Hero } from "@/components/animated-hero"
+import FeaturedFreelancers from "@/components/featured-freelancers"
 
 export default function Home() {
   return (
-    // <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] transform bg-white bg-[radial-gradient(60%_120%_at_50%_50%,hsla(0,0%,100%,0)_0,rgba(252,205,238,.5)_100%)]">
 
 
-    <div>
-    <div className="absolute top-0 z-[-2] h-screen w-screen rotate-180 transform bg-white bg-[radial-gradient(60%_120%_at_50%_50%,hsla(0,0%,100%,0)_0,rgba(252,205,238,.5)_100%)]"></div>
+    {/* <div> */}
+    {/* <div className="absolute top-0 z-[-2] h-screen w-screen rotate-180 transform bg-white bg-[radial-gradient(60%_120%_at_50%_50%,hsla(0,0%,100%,0)_0,rgba(252,205,238,.5)_100%)]"></div> */}
       {/* Animated Hero Section */}
       
       <section className="w-full">
         <Hero />
       </section>
 
-
+      {/* Featured Freelancers */}
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-white">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">Featured Freelancers</h2>
+              <p className="max-w-[900px] text-muted-foreground md:text-xl">
+                Discover top-rated professionals ready to help
+              </p>
+            </div>
+          </div>
+          <FeaturedFreelancers />
+          <div className="flex justify-center mt-8">
+            <Link href="/freelancers">
+              <Button variant="outline" size="lg">
+                View All Freelancers
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
 
 
       {/* Hero Section */}
