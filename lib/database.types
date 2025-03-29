@@ -23,6 +23,26 @@ export interface Database {
         Insert: any;
         Update: any;
       };
+       job_categories: {
+        Row: any;
+        Insert: any;
+        Update: any;
+      };
+      freelancer_job_offerings: {
+        Row: any;
+        Insert: any;
+        Update: any;
+      };
+      availability_schedules: {
+        Row: any;
+        Insert: any;
+        Update: any;
+      };
+      real_time_availability: {
+        Row: any;
+        Insert: any;
+        Update: any;
+      };
     };
   };
 }

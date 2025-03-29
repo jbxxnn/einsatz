@@ -167,6 +167,125 @@ export interface Database {
           created_at?: string
         }
       }
+      job_categories: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          icon: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          icon?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          icon?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      freelancer_job_offerings: {
+        Row: {
+          id: string
+          freelancer_id: string
+          category_id: string
+          hourly_rate: number | null
+          fixed_rate: number | null
+          is_available_now: boolean
+          description: string | null
+          experience_years: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          freelancer_id: string
+          category_id: string
+          hourly_rate?: number | null
+          fixed_rate?: number | null
+          is_available_now?: boolean
+          description?: string | null
+          experience_years?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          freelancer_id?: string
+          category_id?: string
+          hourly_rate?: number | null
+          fixed_rate?: number | null
+          is_available_now?: boolean
+          description?: string | null
+          experience_years?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      availability_schedules: {
+        Row: {
+          id: string
+          freelancer_id: string
+          category_id: string
+          day_of_week: number
+          start_time: string
+          end_time: string
+          is_available: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          freelancer_id: string
+          category_id: string
+          day_of_week: number
+          start_time: string
+          end_time: string
+          is_available?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          freelancer_id?: string
+          category_id?: string
+          day_of_week?: number
+          start_time?: string
+          end_time?: string
+          is_available?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      real_time_availability: {
+        Row: {
+          freelancer_id: string
+          category_id: string
+          is_available_now: boolean
+          last_updated: string
+        }
+        Insert: {
+          freelancer_id: string
+          category_id: string
+          is_available_now?: boolean
+          last_updated?: string
+        }
+        Update: {
+          freelancer_id?: string
+          category_id?: string
+          is_available_now?: boolean
+          last_updated?: string
+        }
+      }
     }
   }
 }

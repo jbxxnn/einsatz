@@ -15,6 +15,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Loader2, Upload } from "lucide-react"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
+import JobOfferingsManager from "@/components/job-offerings-manager"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
@@ -34,6 +35,7 @@ export default function ProfilePage() {
   const [newSkill, setNewSkill] = useState("")
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [activeTab, setActiveTab] = useState("profile")
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -191,11 +193,12 @@ export default function ProfilePage() {
     <div className="container py-10">
       <h1 className="text-3xl font-bold mb-6">Profile Settings</h1>
 
-      <Tabs defaultValue="profile">
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
           {profile.user_type === "freelancer" && <TabsTrigger value="professional">Professional Info</TabsTrigger>}
+          {profile.user_type === "freelancer" && <TabsTrigger value="job-offerings">Job Offerings</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="profile">
@@ -325,7 +328,7 @@ export default function ProfilePage() {
               <form onSubmit={handleUpdateProfile}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="hourlyRate">Hourly Rate (€)</Label>
+                  <Label htmlFor="hourlyRate">Default Hourly Rate (€)</Label>
                     <Input
                       id="hourlyRate"
                       type="number"
@@ -335,6 +338,10 @@ export default function ProfilePage() {
                       value={hourlyRate}
                       onChange={(e) => setHourlyRate(e.target.value)}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      This is your default rate. You can set specific rates for each job category in the Job Offerings
+                      tab.
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -385,6 +392,12 @@ export default function ProfilePage() {
                 </CardFooter>
               </form>
             </Card>
+          </TabsContent>
+        )}
+
+        {profile.user_type === "freelancer" && (
+          <TabsContent value="job-offerings">
+            <JobOfferingsManager freelancerId={profile.id} />
           </TabsContent>
         )}
       </Tabs>

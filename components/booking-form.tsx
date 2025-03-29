@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
 import { Button } from "@/components/ui/button"
@@ -14,15 +14,19 @@ import { ArrowLeft, Calendar, MapPin } from "lucide-react"
 import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
 
-type Profile = Database["public"]["Tables"]["profiles"]["Row"]
+type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
+  job_offerings?: any[]
+  is_available_now?: boolean
+}
 
 interface BookingFormProps {
   freelancer: Profile
   selectedDate: Date | undefined
+  selectedCategoryId?: string | null
   onBack: () => void
 }
 
-export default function BookingForm({ freelancer, selectedDate, onBack }: BookingFormProps) {
+export default function BookingForm({ freelancer, selectedDate, selectedCategoryId, onBack }: BookingFormProps) {
   const router = useRouter()
   const { supabase } = useSupabase()
   const { toast } = useToast()
@@ -31,6 +35,21 @@ export default function BookingForm({ freelancer, selectedDate, onBack }: Bookin
   const [endTime, setEndTime] = useState("10:00")
   const [location, setLocation] = useState("")
   const [description, setDescription] = useState("")
+  const [hourlyRate, setHourlyRate] = useState<number | null>(null)
+  const [categoryName, setCategoryName] = useState<string>("")
+
+  useEffect(() => {
+    // Set hourly rate based on selected category or default
+    if (selectedCategoryId && freelancer.job_offerings) {
+      const offering = freelancer.job_offerings.find((o: any) => o.category_id === selectedCategoryId)
+      if (offering) {
+        setHourlyRate(offering.hourly_rate)
+        setCategoryName(offering.category_name)
+      }
+    } else {
+      setHourlyRate(freelancer.hourly_rate)
+    }
+  }, [selectedCategoryId, freelancer])
 
   const calculateHours = () => {
     const start = startTime.split(":").map(Number)
@@ -44,8 +63,8 @@ export default function BookingForm({ freelancer, selectedDate, onBack }: Bookin
 
   const calculateTotal = () => {
     const hours = calculateHours()
-    const hourlyRate = freelancer.hourly_rate || 0
-    return hours * hourlyRate
+    const rate = hourlyRate || freelancer.hourly_rate || 0
+    return hours * rate
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,12 +108,14 @@ export default function BookingForm({ freelancer, selectedDate, onBack }: Bookin
         .insert({
           client_id: user.id,
           freelancer_id: freelancer.id,
-          title: `Booking with ${freelancer.first_name} ${freelancer.last_name}`,
+          title: categoryName
+            ? `${categoryName} Service with ${freelancer.first_name} ${freelancer.last_name}`
+            : `Booking with ${freelancer.first_name} ${freelancer.last_name}`,
           description,
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           location,
-          hourly_rate: freelancer.hourly_rate || 0,
+          hourly_rate: hourlyRate || freelancer.hourly_rate || 0,
           total_amount: calculateTotal(),
           status: "pending",
           payment_status: "unpaid",
@@ -129,6 +150,13 @@ export default function BookingForm({ freelancer, selectedDate, onBack }: Bookin
         <ArrowLeft className="h-4 w-4 mr-1" />
         Back
       </Button>
+
+      {categoryName && (
+        <div className="mb-2">
+          <p className="font-medium">{categoryName} Service</p>
+          <p className="text-sm text-muted-foreground">€{hourlyRate}/hour</p>
+        </div>
+      )}
 
       <div className="space-y-2">
         <div className="flex items-center text-sm">
@@ -188,7 +216,7 @@ export default function BookingForm({ freelancer, selectedDate, onBack }: Bookin
         </div>
         <div className="flex justify-between mb-2">
           <span>Hourly Rate</span>
-          <span>€{freelancer.hourly_rate || 0}</span>
+          <span>€{hourlyRate || freelancer.hourly_rate || 0}</span>
         </div>
         <div className="flex justify-between font-bold">
           <span>Total</span>

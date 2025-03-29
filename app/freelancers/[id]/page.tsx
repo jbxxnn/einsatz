@@ -15,22 +15,35 @@ import type { Database } from "@/lib/database.types"
 import BookingForm from "@/components/booking-form"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
+type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"] & {
+  category_name: string
+}
+
+interface FreelancerWithOfferings extends Profile {
+  job_offerings: JobOffering[]
+  is_available_now: boolean
+}
 
 export default function FreelancerProfile() {
   const params = useParams()
   const router = useRouter()
   const { supabase } = useSupabase()
   const { toast } = useToast()
-  const [freelancer, setFreelancer] = useState<Profile | null>(null)
+  const [freelancer, setFreelancer] = useState<FreelancerWithOfferings | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [showBookingForm, setShowBookingForm] = useState(false)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [reviews, setReviews] = useState<any[]>([])
 
   useEffect(() => {
     const fetchFreelancer = async () => {
       setLoading(true)
 
+
+
+    try {
+        // Fetch freelancer profile
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -39,15 +52,48 @@ export default function FreelancerProfile() {
         .single()
 
       if (error) {
-        console.error("Error fetching freelancer:", error)
-        toast({
-          title: "Error",
-          description: "Could not load freelancer profile",
-          variant: "destructive",
+        throw error
+      }
+
+      // Fetch job offerings
+      const { data: offeringsData, error: offeringsError } = await supabase
+        .from("freelancer_job_offerings")
+        .select(`
+        *,
+        job_categories (id, name)
+      `)
+        .eq("freelancer_id", params.id)
+
+      if (offeringsError) {
+        throw offeringsError
+      }
+
+      // Format job offerings
+      const formattedOfferings = offeringsData.map((offering) => ({
+        ...offering,
+        category_name: offering.job_categories.name,
+      }))
+
+      // Check real-time availability
+      const { data: availabilityData } = await supabase
+        .from("real_time_availability")
+        .select("*")
+        .eq("freelancer_id", params.id)
+        .eq("is_available_now", true)
+
+      const isAvailableNow = availabilityData && availabilityData.length > 0
+
+      // Set the freelancer with offerings
+      setFreelancer({
+        ...data,
+        job_offerings: formattedOfferings,
+        is_available_now: isAvailableNow,
         })
-        router.push("/freelancers")
-      } else {
-        setFreelancer(data)
+       
+        // If there are job offerings, select the first one by default
+        if (formattedOfferings.length > 0) {
+          setSelectedCategoryId(formattedOfferings[0].category_id)
+        }
 
         // Fetch reviews
         const { data: reviewsData } = await supabase
@@ -60,13 +106,26 @@ export default function FreelancerProfile() {
           .order("created_at", { ascending: false })
 
         setReviews(reviewsData || [])
+      } catch (error) {
+        console.error("Error fetching freelancer:", error)
+        toast({
+          title: "Error",
+          description: "Could not load freelancer profile",
+          variant: "destructive",
+        })
+        router.push("/freelancers")
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
     fetchFreelancer()
   }, [supabase, params.id, router, toast])
+  
+  const getSelectedOffering = () => {
+    if (!freelancer || !selectedCategoryId) return null
+    return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId)
+  }
 
   if (loading) {
     return (
@@ -84,6 +143,8 @@ export default function FreelancerProfile() {
       </div>
     )
   }
+  
+  const selectedOffering = getSelectedOffering()
 
   return (
     <div className="container py-10">
@@ -101,6 +162,14 @@ export default function FreelancerProfile() {
                 fill
                 className="object-cover"
               />
+              {freelancer.is_available_now && (
+                <div className="absolute top-2 right-2">
+                  <Badge className="bg-green-500 hover:bg-green-600">
+                    <Clock className="h-3 w-3 mr-1" />
+                    Available Now
+                  </Badge>
+                </div>
+              )}
             </div>
 
             <div className="flex-1">
@@ -123,17 +192,15 @@ export default function FreelancerProfile() {
                 )}
               </div>
 
-              {freelancer.hourly_rate && (
-                <div className="mt-3">
-                  <span className="text-xl font-bold text-primary">€{freelancer.hourly_rate}</span>
-                  <span className="text-muted-foreground">/hour</span>
-                </div>
-              )}
-
               <div className="mt-4 flex flex-wrap gap-2">
-                {freelancer.skills?.map((skill) => (
-                  <Badge key={skill} variant="secondary">
-                    {skill}
+              {freelancer.job_offerings.map((offering) => (
+                  <Badge
+                    key={offering.category_id}
+                    variant={selectedCategoryId === offering.category_id ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => setSelectedCategoryId(offering.category_id)}
+                  >
+                    {offering.category_name}
                   </Badge>
                 ))}
               </div>
@@ -152,11 +219,35 @@ export default function FreelancerProfile() {
                 <p className="text-muted-foreground whitespace-pre-line">{freelancer.bio || "No bio provided."}</p>
               </div>
 
+              
+              {selectedOffering && (
+                <div>
+                  <h2 className="text-xl font-semibold mb-2">{selectedOffering.category_name} Services</h2>
+                  <div className="flex items-center mb-2">
+                    <p className="text-xl font-bold text-primary">€{selectedOffering.hourly_rate}/hour</p>
+                  </div>
+                  {selectedOffering.description && (
+                    <p className="text-muted-foreground">{selectedOffering.description}</p>
+                  )}
+                  {selectedOffering.experience_years && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {selectedOffering.experience_years} years of experience
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div>
-                <h2 className="text-xl font-semibold mb-2">Availability</h2>
-                <div className="flex items-center text-muted-foreground">
-                  <Clock className="h-4 w-4 mr-2" />
-                  <span>Available for bookings</span>
+              <h2 className="text-xl font-semibold mb-2">Skills</h2>
+                <div className="flex flex-wrap gap-2">
+                  {freelancer.skills?.map((skill) => (
+                    <Badge key={skill} variant="secondary">
+                      {skill}
+                    </Badge>
+                  ))}
+                  {(!freelancer.skills || freelancer.skills.length === 0) && (
+                    <p className="text-muted-foreground">No skills listed.</p>
+                  )}
                 </div>
               </div>
             </TabsContent>
@@ -224,6 +315,27 @@ export default function FreelancerProfile() {
 
               {!showBookingForm ? (
                 <div className="space-y-4">
+                    {freelancer.job_offerings.length > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Select a service:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {freelancer.job_offerings.map((offering) => (
+                          <Badge
+                            key={offering.category_id}
+                            variant={selectedCategoryId === offering.category_id ? "default" : "outline"}
+                            className="cursor-pointer"
+                            onClick={() => setSelectedCategoryId(offering.category_id)}
+                          >
+                            {offering.category_name}
+                          </Badge>
+                        ))}
+                      </div>
+                      {selectedOffering && (
+                        <p className="mt-2 font-medium text-primary">€{selectedOffering.hourly_rate}/hour</p>
+                      )}
+                    </div>
+                  )}
+
                   <div>
                     <p className="text-sm text-muted-foreground mb-2">Select a date:</p>
                     <Calendar
@@ -235,8 +347,12 @@ export default function FreelancerProfile() {
                     />
                   </div>
 
-                  <Button className="w-full" disabled={!selectedDate} onClick={() => setShowBookingForm(true)}>
-                    Continue to Booking
+                  <Button
+                    className="w-full"
+                    disabled={!selectedDate || !selectedCategoryId}
+                    onClick={() => setShowBookingForm(true)}
+                  >
+                     Continue to Booking
                   </Button>
                 </div>
               ) : (
@@ -244,6 +360,7 @@ export default function FreelancerProfile() {
                   freelancer={freelancer}
                   selectedDate={selectedDate}
                   onBack={() => setShowBookingForm(false)}
+                  selectedCategoryId={selectedCategoryId}
                 />
               )}
             </CardContent>
