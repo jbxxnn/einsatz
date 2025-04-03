@@ -1,49 +1,433 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
     Tables: {
       profiles: {
-        Row: any;
-        Insert: any;
-        Update: any;
-      };
+        Row: {
+          id: string
+          first_name: string | null
+          last_name: string | null
+          email: string
+          user_type: "client" | "freelancer"
+          avatar_url: string | null
+          bio: string | null
+          skills: string[] | null
+          hourly_rate: number | null
+          location: string | null
+          availability: Json | null
+          created_at: string
+          updated_at: string
+          metadata: Json | null
+          latitude: number | null
+          longitude: number | null
+          formatted_address: string | null
+          service_radius: number | null
+        }
+        Insert: {
+          id: string
+          first_name?: string | null
+          last_name?: string | null
+          email: string
+          user_type: "client" | "freelancer"
+          avatar_url?: string | null
+          bio?: string | null
+          skills?: string[] | null
+          hourly_rate?: number | null
+          location?: string | null
+          availability?: Json | null
+          created_at?: string
+          updated_at?: string
+          metadata?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          formatted_address?: string | null
+          service_radius?: number | null
+        }
+        Update: {
+          id?: string
+          first_name?: string | null
+          last_name?: string | null
+          email?: string
+          user_type?: "client" | "freelancer"
+          avatar_url?: string | null
+          bio?: string | null
+          skills?: string[] | null
+          hourly_rate?: number | null
+          location?: string | null
+          availability?: Json | null
+          created_at?: string
+          updated_at?: string
+          metadata?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          formatted_address?: string | null
+          service_radius?: number | null
+        }
+      }
       bookings: {
-        Row: any;
-        Insert: any;
-        Update: any;
-      };
+        Row: {
+          id: string
+          client_id: string
+          freelancer_id: string
+          title: string
+          description: string | null
+          status: "pending" | "confirmed" | "completed" | "cancelled" | "disputed"
+          start_time: string
+          end_time: string
+          location: string | null
+          hourly_rate: number
+          total_amount: number
+          payment_status: "unpaid" | "paid" | "refunded"
+          payment_intent_id: string | null
+          created_at: string
+          updated_at: string
+          category_id: string | null
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          freelancer_id: string
+          title: string
+          description?: string | null
+          status?: "pending" | "confirmed" | "completed" | "cancelled" | "disputed"
+          start_time: string
+          end_time: string
+          location?: string | null
+          hourly_rate: number
+          total_amount: number
+          payment_status?: "unpaid" | "paid" | "refunded"
+          payment_intent_id?: string | null
+          created_at?: string
+          updated_at?: string
+          category_id?: string | null
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          freelancer_id?: string
+          title?: string
+          description?: string | null
+          status?: "pending" | "confirmed" | "completed" | "cancelled" | "disputed"
+          start_time?: string
+          end_time?: string
+          location?: string | null
+          hourly_rate?: number
+          total_amount?: number
+          payment_status?: "unpaid" | "paid" | "refunded"
+          payment_intent_id?: string | null
+          created_at?: string
+          updated_at?: string
+          category_id?: string | null
+        }
+      }
       reviews: {
-        Row: any;
-        Insert: any;
-        Update: any;
-      };
+        Row: {
+          id: string
+          booking_id: string
+          reviewer_id: string
+          reviewee_id: string
+          rating: number
+          comment: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          reviewer_id: string
+          reviewee_id: string
+          rating: number
+          comment?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          reviewer_id?: string
+          reviewee_id?: string
+          rating?: number
+          comment?: string | null
+          created_at?: string
+        }
+      }
       invoices: {
-        Row: any;
-        Insert: any;
-        Update: any;
-      };
-       job_categories: {
-        Row: any;
-        Insert: any;
-        Update: any;
-      };
+        Row: {
+          id: string
+          booking_id: string
+          client_id: string
+          freelancer_id: string
+          amount: number
+          status: "draft" | "sent" | "paid" | "cancelled"
+          due_date: string | null
+          paid_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          client_id: string
+          freelancer_id: string
+          amount: number
+          status?: "draft" | "sent" | "paid" | "cancelled"
+          due_date?: string | null
+          paid_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          client_id?: string
+          freelancer_id?: string
+          amount?: number
+          status?: "draft" | "sent" | "paid" | "cancelled"
+          due_date?: string | null
+          paid_at?: string | null
+          created_at?: string
+        }
+      }
+      conversations: {
+        Row: {
+          id: string
+          booking_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          sender_id: string
+          content: string
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          sender_id: string
+          content: string
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          sender_id?: string
+          content?: string
+          read?: boolean
+          created_at?: string
+        }
+      }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          profile_id: string
+        }
+        Insert: {
+          conversation_id: string
+          profile_id: string
+        }
+        Update: {
+          conversation_id?: string
+          profile_id?: string
+        }
+      }
+      job_categories: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          icon: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          icon?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          icon?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       freelancer_job_offerings: {
-        Row: any;
-        Insert: any;
-        Update: any;
-      };
+        Row: {
+          id: string
+          freelancer_id: string
+          category_id: string
+          hourly_rate: number | null
+          fixed_rate: number | null
+          is_available_now: boolean
+          description: string | null
+          experience_years: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          freelancer_id: string
+          category_id: string
+          hourly_rate?: number | null
+          fixed_rate?: number | null
+          is_available_now?: boolean
+          description?: string | null
+          experience_years?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          freelancer_id?: string
+          category_id?: string
+          hourly_rate?: number | null
+          fixed_rate?: number | null
+          is_available_now?: boolean
+          description?: string | null
+          experience_years?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       availability_schedules: {
-        Row: any;
-        Insert: any;
-        Update: any;
-      };
+        Row: {
+          id: string
+          freelancer_id: string
+          category_id: string
+          day_of_week: number
+          start_time: string
+          end_time: string
+          is_available: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          freelancer_id: string
+          category_id: string
+          day_of_week: number
+          start_time: string
+          end_time: string
+          is_available?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          freelancer_id?: string
+          category_id?: string
+          day_of_week?: number
+          start_time?: string
+          end_time?: string
+          is_available?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
       real_time_availability: {
-        Row: any;
-        Insert: any;
-        Update: any;
-      };
-    };
-  };
+        Row: {
+          freelancer_id: string
+          category_id: string
+          is_available_now: boolean
+          last_updated: string
+        }
+        Insert: {
+          freelancer_id: string
+          category_id: string
+          is_available_now?: boolean
+          last_updated?: string
+        }
+        Update: {
+          freelancer_id?: string
+          category_id?: string
+          is_available_now?: boolean
+          last_updated?: string
+        }
+      }
+    }
+    Functions: {
+      get_user_conversations: {
+        Args: {
+          user_id: string
+        }
+        Returns: Json
+      }
+      create_or_get_conversation: {
+        Args: {
+          p_user_id: string
+          p_recipient_id: string
+          p_booking_id: string
+        }
+        Returns: Json
+      }
+      add_message: {
+        Args: {
+          p_conversation_id: string
+          p_sender_id: string
+          p_content: string
+        }
+        Returns: void
+      }
+    }
+  }
 }
+
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (Database["public"]["Tables"] & { [_ in string]: never })
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] & { [_ in string]: never })
+    : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] & { [_ in string]: never })[TableName]["Row"]
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] & { [_ in string]: never })
+    ? (Database["public"]["Tables"] & { [_ in string]: never })[PublicTableNameOrOptions]["Row"]
+    : never
+
+export type TableInsert<
+  PublicTableNameOrOptions extends
+    | keyof (Database["public"]["Tables"] & { [_ in string]: never })
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] & { [_ in string]: never })
+    : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] & { [_ in string]: never })[TableName]["Insert"]
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] & { [_ in string]: never })
+    ? (Database["public"]["Tables"] & { [_ in string]: never })[PublicTableNameOrOptions]["Insert"]
+    : never
+
+export type TableUpdate<
+  PublicTableNameOrOptions extends
+    | keyof (Database["public"]["Tables"] & { [_ in string]: never })
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] & { [_ in string]: never })
+    : never = never
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] & { [_ in string]: never })[TableName]["Update"]
+  : PublicTableNameOrOptions extends keyof (Database["public"]["Tables"] & { [_ in string]: never })
+    ? (Database["public"]["Tables"] & { [_ in string]: never })[PublicTableNameOrOptions]["Update"]
+    : never
 

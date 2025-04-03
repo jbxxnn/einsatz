@@ -2,21 +2,28 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { ArrowLeft, Calendar, MapPin } from "lucide-react"
-import { format } from "date-fns"
+import { ArrowLeft, Calendar, MapPin, Clock, Info, AlertCircle } from "lucide-react"
+import { format, addDays } from "date-fns"
 import type { Database } from "@/lib/database.types"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
   job_offerings?: any[]
   is_available_now?: boolean
+}
+
+interface AvailabilityBlock {
+  start: string
+  end: string
+  availableStartTimes: string[]
 }
 
 interface BookingFormProps {
@@ -31,12 +38,72 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const { supabase } = useSupabase()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
-  const [startTime, setStartTime] = useState("09:00")
-  const [endTime, setEndTime] = useState("10:00")
+  const [fetchingAvailability, setFetchingAvailability] = useState(false)
+  const [availabilityBlocks, setAvailabilityBlocks] = useState<AvailabilityBlock[]>([])
+  const [selectedStartTime, setSelectedStartTime] = useState<string | null>(null)
+  const [selectedEndTime, setSelectedEndTime] = useState<string | null>(null)
   const [location, setLocation] = useState("")
   const [description, setDescription] = useState("")
   const [hourlyRate, setHourlyRate] = useState<number | null>(null)
   const [categoryName, setCategoryName] = useState<string>("")
+  const [noAvailability, setNoAvailability] = useState(false)
+  const [suggestedDate, setSuggestedDate] = useState<Date | null>(null)
+
+  // Calculate valid end times based on selected start time
+  const validEndTimes = useMemo(() => {
+    if (!selectedStartTime || availabilityBlocks.length === 0) return []
+
+    // Find the block that contains the selected start time
+    const relevantBlock = availabilityBlocks.find((block) => {
+      // Check if the selected start time falls within this block
+      return isTimeInRange(selectedStartTime, block.start, block.end)
+    })
+
+    if (!relevantBlock) return []
+
+    // Convert times to minutes for easier comparison
+    const toMinutes = (timeStr: string) => {
+      const [hours, minutes] = timeStr.split(":").map(Number)
+      return hours * 60 + minutes
+    }
+
+    const fromMinutes = (minutes: number) => {
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`
+    }
+
+    const startMinutes = toMinutes(selectedStartTime)
+    const blockEndMinutes = toMinutes(relevantBlock.end)
+
+    // Generate possible end times (in hourly increments)
+    const endTimes = []
+    // Start with 1 hour after the selected start time
+    for (let time = startMinutes + 60; time <= blockEndMinutes; time += 60) {
+      endTimes.push(fromMinutes(time))
+    }
+
+    return endTimes
+  }, [selectedStartTime, availabilityBlocks])
+
+  // Helper function to check if a time is within a range
+  function isTimeInRange(time: string, start: string, end: string): boolean {
+    const toMinutes = (timeStr: string) => {
+      const [hours, minutes] = timeStr.split(":").map(Number)
+      return hours * 60 + minutes
+    }
+
+    const timeMinutes = toMinutes(time)
+    const startMinutes = toMinutes(start)
+    const endMinutes = toMinutes(end)
+
+    return timeMinutes >= startMinutes && timeMinutes < endMinutes
+  }
+
+  // Reset end time when start time changes
+  useEffect(() => {
+    setSelectedEndTime(null)
+  }, [selectedStartTime])
 
   useEffect(() => {
     // Set hourly rate based on selected category or default
@@ -51,9 +118,117 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     }
   }, [selectedCategoryId, freelancer])
 
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!selectedDate || !selectedCategoryId) return
+
+      setFetchingAvailability(true)
+      setNoAvailability(false)
+      setSuggestedDate(null)
+      setSelectedStartTime(null)
+      setSelectedEndTime(null)
+
+      try {
+        const formattedDate = format(selectedDate, "yyyy-MM-dd")
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+        const response = await fetch(
+          `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`,
+          { signal: controller.signal, cache: "no-store" },
+        )
+
+        clearTimeout(timeoutId)
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch availability")
+        }
+
+        const data = await response.json()
+
+        if (data.availabilityBlocks && data.availabilityBlocks.length > 0) {
+          setAvailabilityBlocks(data.availabilityBlocks)
+
+          // Flatten all available start times across all blocks
+          const allStartTimes = data.availabilityBlocks.flatMap((block: AvailabilityBlock) => block.availableStartTimes)
+
+          if (allStartTimes.length === 0) {
+            setNoAvailability(true)
+            findNextAvailableDate(selectedDate)
+          }
+        } else {
+          setAvailabilityBlocks([])
+          setNoAvailability(true)
+          findNextAvailableDate(selectedDate)
+        }
+      } catch (error: any) {
+        console.error("Error fetching availability:", error)
+        if (error.name === "AbortError") {
+          toast({
+            title: "Request timeout",
+            description: "Taking too long to load availability. Please try again.",
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to fetch freelancer availability",
+            variant: "destructive",
+          })
+        }
+        setAvailabilityBlocks([])
+      } finally {
+        setFetchingAvailability(false)
+      }
+    }
+
+    fetchAvailability()
+  }, [selectedDate, selectedCategoryId, freelancer.id, toast])
+
+  // Function to find the next available date
+  const findNextAvailableDate = async (startDate: Date) => {
+    // Try the next 7 days
+    for (let i = 1; i <= 7; i++) {
+      const nextDate = addDays(startDate, i)
+      const formattedDate = format(nextDate, "yyyy-MM-dd")
+
+      try {
+        const response = await fetch(
+          `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`,
+        )
+
+        if (!response.ok) continue
+
+        const data = await response.json()
+
+        if (data.availabilityBlocks && data.availabilityBlocks.length > 0) {
+          // Check if there are actually available start times
+          const hasAvailableTimes = data.availabilityBlocks.some(
+            (block: AvailabilityBlock) => block.availableStartTimes.length > 0,
+          )
+
+          if (hasAvailableTimes) {
+            setSuggestedDate(nextDate)
+            return
+          }
+        }
+      } catch (error) {
+        console.error("Error checking future date:", error)
+      }
+    }
+  }
+
+  // Get all available start times across all blocks
+  const allAvailableStartTimes = useMemo(() => {
+    const startTimes = availabilityBlocks.flatMap((block) => block.availableStartTimes)
+    return [...new Set(startTimes)].sort() // Remove duplicates and sort
+  }, [availabilityBlocks])
+
   const calculateHours = () => {
-    const start = startTime.split(":").map(Number)
-    const end = endTime.split(":").map(Number)
+    if (!selectedStartTime || !selectedEndTime) return 0
+
+    const start = selectedStartTime.split(":").map(Number)
+    const end = selectedEndTime.split(":").map(Number)
 
     const startMinutes = start[0] * 60 + start[1]
     const endMinutes = end[0] * 60 + end[1]
@@ -67,6 +242,13 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     return hours * rate
   }
 
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(":").map(Number)
+    const period = hours >= 12 ? "PM" : "AM"
+    const displayHours = hours % 12 || 12
+    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -74,6 +256,15 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       toast({
         title: "Error",
         description: "Please select a date",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!selectedStartTime || !selectedEndTime) {
+      toast({
+        title: "Error",
+        description: "Please select both start and end times",
         variant: "destructive",
       })
       return
@@ -99,8 +290,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       // Format date and times
       const bookingDate = format(selectedDate, "yyyy-MM-dd")
-      const startDateTime = new Date(`${bookingDate}T${startTime}:00`)
-      const endDateTime = new Date(`${bookingDate}T${endTime}:00`)
+      const startDateTime = new Date(`${bookingDate}T${selectedStartTime}:00`)
+      const endDateTime = new Date(`${bookingDate}T${selectedEndTime}:00`)
 
       // Create booking
       const { data, error } = await supabase
@@ -119,6 +310,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           total_amount: calculateTotal(),
           status: "pending",
           payment_status: "unpaid",
+          category_id: selectedCategoryId,
         })
         .select()
 
@@ -144,6 +336,16 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     }
   }
 
+  const handleSelectSuggestedDate = () => {
+    if (suggestedDate) {
+      onBack() // Go back to date selection
+      toast({
+        title: "Try this date instead",
+        description: `Please select ${format(suggestedDate, "MMMM d, yyyy")} in the calendar.`,
+      })
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Button type="button" variant="ghost" size="sm" className="mb-2 -ml-2 text-muted-foreground" onClick={onBack}>
@@ -164,22 +366,91 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           <span>{selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "Select a date"}</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="start-time">Start Time</Label>
-            <Input
-              id="start-time"
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              required
-            />
+        {fetchingAvailability ? (
+          <div className="flex justify-center py-4">
+            <Clock className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="end-time">End Time</Label>
-            <Input id="end-time" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required />
+        ) : noAvailability ? (
+          <div className="flex flex-col items-center justify-center p-4 border rounded-md bg-muted/50">
+            <div className="flex items-center mb-2">
+              <AlertCircle className="h-4 w-4 mr-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">No availability for this date.</p>
+            </div>
+
+            {suggestedDate ? (
+              <div className="mt-2 text-center">
+                <p className="text-sm mb-2">
+                  <Info className="h-4 w-4 inline mr-1 text-primary" />
+                  The freelancer has availability on {format(suggestedDate, "MMMM d, yyyy")}
+                </p>
+                <Button type="button" variant="outline" size="sm" onClick={handleSelectSuggestedDate}>
+                  Try this date instead
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-1">Please select another date.</p>
+            )}
           </div>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Start Time Selector */}
+            <div className="space-y-2">
+              <Label htmlFor="start-time">Start Time</Label>
+              <Select value={selectedStartTime || ""} onValueChange={setSelectedStartTime}>
+                <SelectTrigger id="start-time">
+                  <SelectValue placeholder="Select start time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allAvailableStartTimes.length > 0 ? (
+                    allAvailableStartTimes.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {formatTime(time)}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>
+                      No available times
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* End Time Selector - only enabled if start time is selected */}
+            <div className="space-y-2">
+              <Label htmlFor="end-time">End Time</Label>
+              <Select
+                value={selectedEndTime || ""}
+                onValueChange={setSelectedEndTime}
+                disabled={!selectedStartTime || validEndTimes.length === 0}
+              >
+                <SelectTrigger id="end-time">
+                  <SelectValue placeholder={selectedStartTime ? "Select end time" : "Select start time first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {validEndTimes.length > 0 ? (
+                    validEndTimes.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {formatTime(time)}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>
+                      {selectedStartTime ? "No available end times" : "Select start time first"}
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Duration Display */}
+            {selectedStartTime && selectedEndTime && (
+              <div className="text-sm text-muted-foreground">
+                Duration: {calculateHours()} {calculateHours() === 1 ? "hour" : "hours"}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -224,7 +495,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime}
+      >
         {loading ? "Processing..." : "Book and Pay"}
       </Button>
 

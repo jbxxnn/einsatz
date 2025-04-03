@@ -393,7 +393,13 @@ export default function BookingDetailsPage() {
                   <h3 className="text-sm font-medium mb-2">Rating</h3>
                   <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <button key={star} type="button" onClick={() => setRating(star)} className="focus:outline-none">
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setRating(star)}
+                        className="focus:outline-none"
+                        title={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                      >
                         <Star
                           className={`h-6 w-6 ${
                             star <= rating ? "fill-primary text-primary" : "text-muted-foreground"

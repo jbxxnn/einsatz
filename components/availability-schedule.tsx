@@ -6,14 +6,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2 } from "lucide-react"
+import { Loader2, Plus, Trash2 } from "lucide-react"
 import type { Database } from "@/lib/database.types"
 
 type AvailabilitySchedule = Database["public"]["Tables"]["availability_schedules"]["Row"]
 type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"]
 
 interface TimeSlot {
+  id?: string
   start: string
   end: string
 }
@@ -79,8 +81,8 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
           setIsAvailableNow(realTimeData.is_available_now)
         }
 
-        // Initialize schedule with default values
-        const initialSchedule = DAYS_OF_WEEK.map((day) => {
+        // Group schedules by day
+        const schedulesGroupedByDay = DAYS_OF_WEEK.map((day) => {
           const daySchedules = schedulesData?.filter((s) => s.day_of_week === day.index) || []
 
           return {
@@ -88,13 +90,17 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
             dayIndex: day.index,
             slots:
               daySchedules.length > 0
-                ? daySchedules.map((s) => ({ start: s.start_time.slice(0, 5), end: s.end_time.slice(0, 5) }))
+                ? daySchedules.map((s) => ({
+                    id: s.id,
+                    start: s.start_time.slice(0, 5),
+                    end: s.end_time.slice(0, 5),
+                  }))
                 : [...DEFAULT_SLOTS],
-            isAvailable: daySchedules.length > 0 ? daySchedules[0].is_available : false,
+            isAvailable: daySchedules.length > 0,
           }
         })
 
-        setSchedule(initialSchedule)
+        setSchedule(schedulesGroupedByDay)
       } catch (error) {
         console.error("Error fetching availability data:", error)
         toast({
@@ -147,6 +153,64 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
         variant: "destructive",
       })
     }
+  }
+
+  const handleAddTimeSlot = (dayIndex: number) => {
+    setSchedule((prev) =>
+      prev.map((day) => {
+        if (day.dayIndex === dayIndex) {
+          const lastSlot = day.slots[day.slots.length - 1]
+          // Calculate a new slot starting after the last one ends
+          const newStart = lastSlot.end
+          // Default to 1 hour later
+          const [hours, minutes] = newStart.split(":").map(Number)
+          let newEndHours = hours + 1
+          const newEndMinutes = minutes
+
+          // Handle overflow
+          if (newEndHours >= 24) {
+            newEndHours = 23
+          }
+
+          const newEnd = `${String(newEndHours).padStart(2, "0")}:${String(newEndMinutes).padStart(2, "0")}`
+
+          return {
+            ...day,
+            slots: [...day.slots, { start: newStart, end: newEnd }],
+          }
+        }
+        return day
+      }),
+    )
+  }
+
+  const handleRemoveTimeSlot = (dayIndex: number, slotIndex: number) => {
+    setSchedule((prev) =>
+      prev.map((day) => {
+        if (day.dayIndex === dayIndex) {
+          const newSlots = [...day.slots]
+          newSlots.splice(slotIndex, 1)
+          return {
+            ...day,
+            slots: newSlots.length > 0 ? newSlots : [{ start: "09:00", end: "17:00" }],
+          }
+        }
+        return day
+      }),
+    )
+  }
+
+  const handleTimeChange = (dayIndex: number, slotIndex: number, field: "start" | "end", value: string) => {
+    setSchedule((prev) =>
+      prev.map((day) => {
+        if (day.dayIndex === dayIndex) {
+          const newSlots = [...day.slots]
+          newSlots[slotIndex] = { ...newSlots[slotIndex], [field]: value }
+          return { ...day, slots: newSlots }
+        }
+        return day
+      }),
+    )
   }
 
   const handleSaveSchedule = async () => {
@@ -222,19 +286,77 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
 
         <div className="space-y-4">
           <h3 className="font-medium">Weekly Schedule</h3>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {schedule.map((day) => (
-              <div key={day.dayIndex} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
+              <div key={day.dayIndex} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
                   <Label htmlFor={`day-${day.dayIndex}`} className="font-medium">
                     {day.dayName}
                   </Label>
+                  <Switch
+                    id={`day-${day.dayIndex}`}
+                    checked={day.isAvailable}
+                    onCheckedChange={() => handleToggleDay(day.dayIndex)}
+                  />
                 </div>
-                <Switch
-                  id={`day-${day.dayIndex}`}
-                  checked={day.isAvailable}
-                  onCheckedChange={() => handleToggleDay(day.dayIndex)}
-                />
+
+                {day.isAvailable && (
+                  <div className="space-y-4 mt-4">
+                    {day.slots.map((slot, slotIndex) => (
+                      <div key={slotIndex} className="flex items-center gap-2">
+                        <div className="grid grid-cols-2 gap-2 flex-1">
+                          <div>
+                            <Label
+                              htmlFor={`start-${day.dayIndex}-${slotIndex}`}
+                              className="text-xs text-muted-foreground"
+                            >
+                              Start Time
+                            </Label>
+                            <Input
+                              id={`start-${day.dayIndex}-${slotIndex}`}
+                              type="time"
+                              value={slot.start}
+                              onChange={(e) => handleTimeChange(day.dayIndex, slotIndex, "start", e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label
+                              htmlFor={`end-${day.dayIndex}-${slotIndex}`}
+                              className="text-xs text-muted-foreground"
+                            >
+                              End Time
+                            </Label>
+                            <Input
+                              id={`end-${day.dayIndex}-${slotIndex}`}
+                              type="time"
+                              value={slot.end}
+                              onChange={(e) => handleTimeChange(day.dayIndex, slotIndex, "end", e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="mt-6"
+                          onClick={() => handleRemoveTimeSlot(day.dayIndex, slotIndex)}
+                          disabled={day.slots.length <= 1}
+                        >
+                          <Trash2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => handleAddTimeSlot(day.dayIndex)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Add Time Slot
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

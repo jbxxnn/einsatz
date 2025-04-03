@@ -18,6 +18,11 @@ export interface Database {
           availability: Json | null
           created_at: string
           updated_at: string
+          metadata: Json | null
+          latitude: number | null
+          longitude: number | null
+          formatted_address: string | null
+          service_radius: number | null
         }
         Insert: {
           id: string
@@ -33,6 +38,11 @@ export interface Database {
           availability?: Json | null
           created_at?: string
           updated_at?: string
+          metadata?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          formatted_address?: string | null
+          service_radius?: number | null
         }
         Update: {
           id?: string
@@ -48,6 +58,11 @@ export interface Database {
           availability?: Json | null
           created_at?: string
           updated_at?: string
+          metadata?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          formatted_address?: string | null
+          service_radius?: number | null
         }
       }
       bookings: {
@@ -67,6 +82,7 @@ export interface Database {
           payment_intent_id: string | null
           created_at: string
           updated_at: string
+          category_id: string | null
         }
         Insert: {
           id?: string
@@ -84,6 +100,7 @@ export interface Database {
           payment_intent_id?: string | null
           created_at?: string
           updated_at?: string
+          category_id?: string | null
         }
         Update: {
           id?: string
@@ -101,6 +118,7 @@ export interface Database {
           payment_intent_id?: string | null
           created_at?: string
           updated_at?: string
+          category_id?: string | null
         }
       }
       reviews: {
@@ -167,6 +185,66 @@ export interface Database {
           created_at?: string
         }
       }
+      conversations: {
+        Row: {
+          id: string
+          booking_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          sender_id: string
+          content: string
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          sender_id: string
+          content: string
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          sender_id?: string
+          content?: string
+          read?: boolean
+          created_at?: string
+        }
+      }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          profile_id: string
+        }
+        Insert: {
+          conversation_id: string
+          profile_id: string
+        }
+        Update: {
+          conversation_id?: string
+          profile_id?: string
+        }
+      }
       job_categories: {
         Row: {
           id: string
@@ -193,11 +271,38 @@ export interface Database {
           updated_at?: string
         }
       }
+      job_subcategories: {
+        Row: {
+          id: string
+          category_id: string
+          name: string
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          category_id: string
+          name: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          category_id?: string
+          name?: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       freelancer_job_offerings: {
         Row: {
           id: string
           freelancer_id: string
           category_id: string
+          subcategory_id: string | null
           hourly_rate: number | null
           fixed_rate: number | null
           is_available_now: boolean
@@ -210,6 +315,7 @@ export interface Database {
           id?: string
           freelancer_id: string
           category_id: string
+          subcategory_id?: string | null
           hourly_rate?: number | null
           fixed_rate?: number | null
           is_available_now?: boolean
@@ -222,6 +328,7 @@ export interface Database {
           id?: string
           freelancer_id?: string
           category_id?: string
+          subcategory_id?: string | null
           hourly_rate?: number | null
           fixed_rate?: number | null
           is_available_now?: boolean
@@ -285,6 +392,30 @@ export interface Database {
           is_available_now?: boolean
           last_updated?: string
         }
+      }
+    }
+    Functions: {
+      get_user_conversations: {
+        Args: {
+          user_id: string
+        }
+        Returns: Json
+      }
+      create_or_get_conversation: {
+        Args: {
+          p_user_id: string
+          p_recipient_id: string
+          p_booking_id: string
+        }
+        Returns: Json
+      }
+      add_message: {
+        Args: {
+          p_conversation_id: string
+          p_sender_id: string
+          p_content: string
+        }
+        Returns: void
       }
     }
   }

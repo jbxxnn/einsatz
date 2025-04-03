@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar } from "@/components/ui/calendar"
+import FreelancerAvailabilityCalendar from "@/components/freelancer-availability-calendar"
 import { useToast } from "@/components/ui/use-toast"
 import { MapPin, Star, Clock, CheckCircle } from "lucide-react"
 import Image from "next/image"
@@ -219,6 +219,19 @@ export default function FreelancerProfile() {
                 <p className="text-muted-foreground whitespace-pre-line">{freelancer.bio || "No bio provided."}</p>
               </div>
 
+              {freelancer.latitude && freelancer.longitude && freelancer.service_radius && (
+                <div className="mt-4">
+                  <h2 className="text-xl font-semibold mb-2">Service Area</h2>
+                  <div className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-2 text-primary" />
+                    <span>
+                      Serves clients within {freelancer.service_radius} miles of {freelancer.location}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+
               
               {selectedOffering && (
                 <div>
@@ -338,12 +351,10 @@ export default function FreelancerProfile() {
 
                   <div>
                     <p className="text-sm text-muted-foreground mb-2">Select a date:</p>
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      className="border rounded-md"
-                      disabled={(date) => date < new Date()}
+                    <FreelancerAvailabilityCalendar
+                      freelancerId={freelancer.id}
+                      categoryId={selectedCategoryId}
+                      onSelectDate={setSelectedDate}
                     />
                   </div>
 

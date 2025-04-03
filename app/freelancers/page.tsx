@@ -15,6 +15,7 @@ import Link from "next/link"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
 import JobCategorySelector from "@/components/job-category-selector"
+import { LocationInput } from "@/components/location-input"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"]
@@ -23,6 +24,7 @@ type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row
 interface FreelancerWithOfferings extends Profile {
   job_offerings: (JobOffering & { category_name: string })[]
   is_available_now: boolean
+  distance: number | null
 }
 
 export default function FreelancersPage() {
@@ -35,92 +37,48 @@ export default function FreelancersPage() {
   const [availableSkills, setAvailableSkills] = useState<string[]>([])
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [availableNowOnly, setAvailableNowOnly] = useState(false)
+  const [locationSearch, setLocationSearch] = useState("")
+  const [searchCoordinates, setSearchCoordinates] = useState<{ lat: number; lng: number } | null>(null)
+  const [searchRadius, setSearchRadius] = useState<number>(25)
 
   useEffect(() => {
     const fetchFreelancers = async () => {
       setLoading(true)
 
       try {
-        // First, get all job categories
-        const { data: categories } = await supabase.from("job_categories").select("*").order("name")
+        // Build the query URL with all filters
+        let queryUrl = `/api/freelancers?search=${encodeURIComponent(searchTerm)}&minPrice=${priceRange[0]}&maxPrice=${priceRange[1]}`
 
-        // Fetch freelancers with their job offerings
-        let query = supabase
-          .from("profiles")
-          .select(`
-          *,
-          job_offerings:freelancer_job_offerings(
-            *,
-            job_categories(id, name)
-          )
-        `)
-          .eq("user_type", "freelancer")
-
-        // Apply search filter
-        if (searchTerm) {
-          query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%`)
-        }
-
-        // Apply price range filter to the default hourly rate
-        if (priceRange[0] > 0 || priceRange[1] < 200) {
-          query = query.gte("hourly_rate", priceRange[0]).lte("hourly_rate", priceRange[1])
-        }
-
-        // Apply skills filter
         if (selectedSkills.length > 0) {
-          query = query.overlaps("skills", selectedSkills)
+          queryUrl += `&skills=${selectedSkills.join(",")}`
         }
 
-        const { data: profilesData, error } = await query
-
-        if (error) {
-          throw error
-        }
-
-        // Process the data to include availability and filter by categories
-        let processedFreelancers = await Promise.all(
-          (profilesData || []).map(async (profile) => {
-            // Format job offerings
-            const formattedOfferings = profile.job_offerings.map((offering: any) => ({
-              ...offering,
-              category_name: offering.job_categories.name,
-            }))
-
-            // Check real-time availability
-            const { data: availabilityData } = await supabase
-              .from("real_time_availability")
-              .select("*")
-              .eq("freelancer_id", profile.id)
-              .eq("is_available_now", true)
-
-            const isAvailableNow = availabilityData && availabilityData.length > 0
-
-            return {
-              ...profile,
-              job_offerings: formattedOfferings,
-              is_available_now: isAvailableNow,
-            }
-          }),
-        )
-
-        // Filter by selected categories if any
         if (selectedCategories.length > 0) {
-          processedFreelancers = processedFreelancers.filter((freelancer) =>
-            freelancer.job_offerings.some((offering: JobOffering) => selectedCategories.includes(offering.category_id)),
-          )
+          queryUrl += `&categories=${selectedCategories.join(",")}`
         }
 
-        // Filter by available now if selected
         if (availableNowOnly) {
-          processedFreelancers = processedFreelancers.filter((freelancer) => freelancer.is_available_now)
+          queryUrl += `&availableNow=true`
         }
 
-        setFreelancers(processedFreelancers)
+        // Add location parameters if available
+        if (searchCoordinates) {
+          queryUrl += `&latitude=${searchCoordinates.lat}&longitude=${searchCoordinates.lng}&radius=${searchRadius}`
+        }
+
+        const response = await fetch(queryUrl)
+        const data = await response.json()
+
+        if (data.error) {
+          throw new Error(data.error)
+        }
+
+        setFreelancers(data.freelancers || [])
 
         // Extract all unique skills for the filter
         const allSkills = new Set<string>()
-        processedFreelancers.forEach((freelancer) => {
-          freelancer.skills?.forEach((skill: string) => {
+        data.freelancers.forEach((freelancer: FreelancerWithOfferings) => {
+          freelancer.skills?.forEach((skill) => {
             allSkills.add(skill)
           })
         })
@@ -133,7 +91,16 @@ export default function FreelancersPage() {
     }
 
     fetchFreelancers()
-  }, [supabase, searchTerm, priceRange, selectedSkills, selectedCategories, availableNowOnly])
+  }, [
+    supabase,
+    searchTerm,
+    priceRange,
+    selectedSkills,
+    selectedCategories,
+    availableNowOnly,
+    searchCoordinates,
+    searchRadius,
+  ])
 
   const toggleSkill = (skill: string) => {
     setSelectedSkills((prev) => (prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]))
@@ -145,6 +112,9 @@ export default function FreelancersPage() {
     setSelectedSkills([])
     setSelectedCategories([])
     setAvailableNowOnly(false)
+    setLocationSearch("")
+    setSearchCoordinates(null)
+    setSearchRadius(25)
   }
 
   return (
@@ -220,6 +190,32 @@ export default function FreelancersPage() {
                 </div>
               </div>
 
+              <div>
+                <Label className="mb-2 block">Location</Label>
+                <LocationInput
+                  value={locationSearch}
+                  onChange={(value, result) => {
+                    setLocationSearch(value)
+                    if (result) {
+                      setSearchCoordinates({
+                        lat: result.lat,
+                        lng: result.lng,
+                      })
+                    } else {
+                      setSearchCoordinates(null)
+                    }
+                  }}
+                  placeholder="Search by location"
+                  showRadius={!!searchCoordinates}
+                  radiusValue={searchRadius}
+                  onRadiusChange={setSearchRadius}
+                  className="mb-2"
+                />
+                {searchCoordinates && (
+                  <p className="text-xs text-muted-foreground">Showing freelancers within {searchRadius} miles</p>
+                )}
+              </div>
+
               <Button variant="outline" className="w-full" onClick={resetFilters}>
                 Reset Filters
               </Button>
@@ -281,6 +277,13 @@ export default function FreelancersPage() {
                         <div className="flex items-center mt-1 text-sm text-muted-foreground">
                           <MapPin className="h-3 w-3 mr-1" />
                           <span>{freelancer.location}</span>
+                        </div>
+                      )}
+
+                      {freelancer.distance !== null && (
+                        <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          <span>{Math.round(freelancer.distance * 10) / 10} miles away</span>
                         </div>
                       )}
 

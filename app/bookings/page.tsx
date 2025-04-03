@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
@@ -21,7 +21,7 @@ type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   client: Database["public"]["Tables"]["profiles"]["Row"]
 }
 
-export default function Dashboard() {
+export default function BookingsPage() {
   const router = useRouter()
   const { supabase } = useSupabase()
   const { toast } = useToast()
@@ -91,7 +91,7 @@ export default function Dashboard() {
         console.error("Error fetching data:", error)
         toast({
           title: "Error",
-          description: "Failed to load dashboard data. Please try again.",
+          description: "Failed to load bookings data. Please try again.",
           variant: "destructive",
         })
       } finally {
@@ -202,45 +202,12 @@ export default function Dashboard() {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">Dashboard</h1>
+              <h1 className="text-3xl font-bold">Bookings</h1>
               {profile.user_type === "client" && (
                 <Link href="/freelancers">
                   <Button>Book a Freelancer</Button>
                 </Link>
               )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Bookings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{bookings.length}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {
-                      bookings.filter(
-                        (b) => new Date(b.start_time) > new Date() && ["pending", "confirmed"].includes(b.status),
-                      ).length
-                    }
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{bookings.filter((b) => b.status === "completed").length}</div>
-                </CardContent>
-              </Card>
             </div>
 
             <Tabs defaultValue="upcoming">
@@ -339,6 +306,12 @@ export default function Dashboard() {
                               </div>
 
                               <div className="mt-4 flex flex-wrap gap-2">
+                                <Link href={`/bookings/${booking.id}`}>
+                                  <Button size="sm" variant="outline">
+                                    View Details
+                                  </Button>
+                                </Link>
+
                                 {profile.user_type === "client" && booking.status === "pending" && (
                                   <Button
                                     variant="outline"
@@ -367,14 +340,6 @@ export default function Dashboard() {
                                       Decline
                                     </Button>
                                   </>
-                                )}
-
-                                {booking.status === "confirmed" && (
-                                  <Link href={`/bookings/${booking.id}`}>
-                                    <Button size="sm" variant="outline">
-                                      View Details
-                                    </Button>
-                                  </Link>
                                 )}
                               </div>
                             </div>
@@ -458,13 +423,11 @@ export default function Dashboard() {
                               </div>
 
                               <div className="mt-4 flex flex-wrap gap-2">
-                                {booking.status === "completed" && (
-                                  <Link href={`/bookings/${booking.id}`}>
-                                    <Button size="sm" variant="outline">
-                                      View Details
-                                    </Button>
-                                  </Link>
-                                )}
+                                <Link href={`/bookings/${booking.id}`}>
+                                  <Button size="sm" variant="outline">
+                                    View Details
+                                  </Button>
+                                </Link>
 
                                 {profile.user_type === "client" && booking.status === "confirmed" && (
                                   <Button size="sm" onClick={() => handleBookingAction(booking.id, "complete")}>
