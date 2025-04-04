@@ -4,15 +4,20 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2 } from "lucide-react"
+import { Loader2, Calendar } from "lucide-react"
 import type { Database } from "@/lib/database.types"
 import SidebarNav from "@/components/sidebar-nav"
-import JobOfferingsManager from "@/components/job-offerings-manager"
+import AvailabilityCalendar from "@/components/availability-calendar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"] & {
-  category_name: string
+  job_categories: {
+    id: string
+    name: string
+  }
 }
 
 export default function AvailabilityPage() {
@@ -22,7 +27,7 @@ export default function AvailabilityPage() {
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [offerings, setOfferings] = useState<JobOffering[]>([])
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+  const [selectedOffering, setSelectedOffering] = useState<JobOffering | null>(null)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -82,14 +87,14 @@ export default function AvailabilityPage() {
       } else {
         const formattedOfferings = offeringsData.map((offering) => ({
           ...offering,
-          category_name: offering.job_categories.name,
+          job_categories: offering.job_categories,
         }))
 
         setOfferings(formattedOfferings)
 
-        // Select the first category by default
+        // Select the first offering by default
         if (formattedOfferings.length > 0) {
-          setSelectedCategoryId(formattedOfferings[0].category_id)
+          setSelectedOffering(formattedOfferings[0])
         }
       }
 
@@ -131,14 +136,52 @@ export default function AvailabilityPage() {
               <h1 className="text-3xl font-bold">Manage Availability</h1>
             </div>
 
-            <div className="bg-background rounded-lg shadow-sm border p-8">
-              <h2 className="text-xl font-semibold mb-6">Job Offerings</h2>
-              <p className="text-muted-foreground mb-6">
-                Add job categories you offer and set your availability for each one.
-              </p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Availability</CardTitle>
+                <CardDescription>Set your availability for each service you offer</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {offerings.length === 0 ? (
+                  <div className="text-center p-6 border rounded-lg">
+                    <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No services added yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Add job offerings in your profile before setting availability
+                    </p>
+                    <Button onClick={() => router.push("/profile/edit")}>Add Job Offerings</Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <Tabs
+                      defaultValue={selectedOffering?.id}
+                      onValueChange={(value) => {
+                        const offering = offerings.find((o) => o.id === value)
+                        if (offering) setSelectedOffering(offering)
+                      }}
+                    >
+                      <TabsList className="mb-4">
+                        {offerings.map((offering) => (
+                          <TabsTrigger key={offering.id} value={offering.id}>
+                            {offering.job_categories.name}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
 
-              <JobOfferingsManager freelancerId={profile.id} />
-            </div>
+                      {offerings.map((offering) => (
+                        <TabsContent key={offering.id} value={offering.id}>
+                          <AvailabilityCalendar
+                            freelancerId={profile.id}
+                            categoryId={offering.category_id}
+                            categoryName={offering.job_categories.name}
+                          />
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

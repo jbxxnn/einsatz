@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { ArrowLeft, Calendar, MapPin, Clock, Info, AlertCircle } from "lucide-react"
+import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2 } from "lucide-react"
 import { format, addDays } from "date-fns"
 import type { Database } from "@/lib/database.types"
 
@@ -21,9 +21,13 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
 }
 
 interface AvailabilityBlock {
+  id: string
   start: string
   end: string
   availableStartTimes: string[]
+  certainty_level: "guaranteed" | "tentative" | "unavailable"
+  is_recurring: boolean
+  recurrence_pattern?: string | null
 }
 
 interface BookingFormProps {
@@ -48,6 +52,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [categoryName, setCategoryName] = useState<string>("")
   const [noAvailability, setNoAvailability] = useState(false)
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null)
+  const [debugInfo, setDebugInfo] = useState<string>("")
 
   // Calculate valid end times based on selected start time
   const validEndTimes = useMemo(() => {
@@ -127,6 +132,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       setSuggestedDate(null)
       setSelectedStartTime(null)
       setSelectedEndTime(null)
+      setDebugInfo("")
 
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd")
@@ -145,6 +151,9 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         }
 
         const data = await response.json()
+
+        // Add debug info
+        setDebugInfo(JSON.stringify(data, null, 2))
 
         if (data.availabilityBlocks && data.availabilityBlocks.length > 0) {
           setAvailabilityBlocks(data.availabilityBlocks)
@@ -222,6 +231,20 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const allAvailableStartTimes = useMemo(() => {
     const startTimes = availabilityBlocks.flatMap((block) => block.availableStartTimes)
     return [...new Set(startTimes)].sort() // Remove duplicates and sort
+  }, [availabilityBlocks])
+
+  // Get certainty level for display
+  const getCertaintyLevel = useMemo(() => {
+    if (availabilityBlocks.length === 0) return null
+
+    // Find the lowest certainty level among blocks
+    if (availabilityBlocks.some((block) => block.certainty_level === "unavailable")) {
+      return "unavailable"
+    } else if (availabilityBlocks.some((block) => block.certainty_level === "tentative")) {
+      return "tentative"
+    } else {
+      return "guaranteed"
+    }
   }, [availabilityBlocks])
 
   const calculateHours = () => {
@@ -368,7 +391,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
         {fetchingAvailability ? (
           <div className="flex justify-center py-4">
-            <Clock className="h-5 w-5 animate-spin text-muted-foreground" />
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : noAvailability ? (
           <div className="flex flex-col items-center justify-center p-4 border rounded-md bg-muted/50">
@@ -393,6 +416,28 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Availability Status Indicator */}
+            {getCertaintyLevel && (
+              <div className="flex items-center p-2 rounded-md bg-muted/30 text-sm">
+                {getCertaintyLevel === "guaranteed" ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                    <span>The freelancer has confirmed availability on this date</span>
+                  </>
+                ) : getCertaintyLevel === "tentative" ? (
+                  <>
+                    <HelpCircle className="h-4 w-4 mr-2 text-amber-500" />
+                    <span>The freelancer's availability is tentative on this date</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="h-4 w-4 mr-2 text-gray-400" />
+                    <span>The freelancer has marked this date as unavailable</span>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Start Time Selector */}
             <div className="space-y-2">
               <Label htmlFor="start-time">Start Time</Label>

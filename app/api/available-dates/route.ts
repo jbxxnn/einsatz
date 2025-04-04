@@ -1,7 +1,7 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { format, eachDayOfInterval, startOfMonth, endOfMonth, parseISO } from "date-fns"
+import { format, eachDayOfInterval, startOfMonth, endOfMonth, parseISO, isSameDay } from "date-fns"
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
@@ -27,16 +27,15 @@ export async function GET(request: Request) {
       end: endOfMonth(endDateObj),
     })
 
-    // Fetch all availability schedules for this freelancer and category
-    const { data: schedules, error: schedulesError } = await supabase
-      .from("availability_schedules")
+    // Fetch all availability entries for this freelancer and category
+    const { data: availabilityEntries, error: availabilityError } = await supabase
+      .from("freelancer_availability")
       .select("*")
       .eq("freelancer_id", freelancerId)
       .eq("category_id", categoryId)
-      .eq("is_available", true)
 
-    if (schedulesError) {
-      throw schedulesError
+    if (availabilityError) {
+      throw availabilityError
     }
 
     // Fetch all bookings for this freelancer in the date range
@@ -52,41 +51,92 @@ export async function GET(request: Request) {
       throw bookingsError
     }
 
-    // Create a map of day of week to availability
-    const availabilityByDay = new Map()
-    schedules?.forEach((schedule) => {
-      availabilityByDay.set(schedule.day_of_week, true)
-    })
-
-    // Create a map of dates that have bookings
-    const bookedDates = new Map()
-    bookings?.forEach((booking) => {
-      const bookingDate = new Date(booking.start_time).toISOString().split("T")[0]
-      bookedDates.set(bookingDate, (bookedDates.get(bookingDate) || 0) + 1)
-    })
-
-    // Filter available dates - a date is available if:
-    // 1. It has an availability schedule for that day of week
-    // 2. It doesn't have bookings that take up the entire day
+    // Process each day in the month
     const availableDates = daysInMonth
-      .filter((date) => {
+      .map((date) => {
         // Skip dates in the past
-        if (date < new Date()) return false
+        if (date < new Date()) {
+          return null
+        }
 
-        const dayOfWeek = date.getDay()
         const dateStr = format(date, "yyyy-MM-dd")
 
-        // Check if there's availability for this day of week
-        const hasAvailability = availabilityByDay.has(dayOfWeek)
+        // Check for direct (non-recurring) availability on this date
+        const directAvailability = availabilityEntries?.filter((entry) => {
+          const entryDate = new Date(entry.start_time)
+          return !entry.is_recurring && isSameDay(entryDate, date)
+        })
 
-        // Check if the date is fully booked
-        // This is a simplification - in a real app, you'd check time slots
-        const bookingsOnDate = bookedDates.get(dateStr) || 0
-        const isFullyBooked = bookingsOnDate >= (schedules?.filter((s) => s.day_of_week === dayOfWeek).length || 0)
+        // Check for recurring availability that applies to this date
+        const recurringAvailability = availabilityEntries?.filter((entry) => {
+          if (!entry.is_recurring) return false
 
-        return hasAvailability && !isFullyBooked
+          const entryStartDate = new Date(entry.start_time)
+          const entryEndDate = entry.recurrence_end_date ? new Date(entry.recurrence_end_date) : null
+
+          // Check if the date is after the start date of the recurring pattern
+          if (date < entryStartDate) return false
+
+          // Check if the date is before the end date of the recurring pattern (if any)
+          if (entryEndDate && date > entryEndDate) return false
+
+          // Check if the day of week matches
+          const entryDayOfWeek = entryStartDate.getDay()
+          const dateDayOfWeek = date.getDay()
+
+          if (entry.recurrence_pattern === "weekly") {
+            return entryDayOfWeek === dateDayOfWeek
+          } else if (entry.recurrence_pattern === "biweekly") {
+            // Calculate weeks difference
+            const diffTime = Math.abs(date.getTime() - entryStartDate.getTime())
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+            const diffWeeks = Math.floor(diffDays / 7)
+
+            return entryDayOfWeek === dateDayOfWeek && diffWeeks % 2 === 0
+          } else if (entry.recurrence_pattern === "monthly") {
+            // Check if it's the same day of the month
+            return entryStartDate.getDate() === date.getDate()
+          }
+
+          return false
+        })
+
+        // Combine all applicable availability entries
+        const allAvailability = [...directAvailability, ...recurringAvailability]
+
+        if (allAvailability.length === 0) {
+          return null // No availability for this date
+        }
+
+        // Check if there are bookings that take up the entire day
+        const bookingsOnDate = bookings?.filter((booking) => {
+          const bookingStart = new Date(booking.start_time)
+          return isSameDay(bookingStart, date)
+        })
+
+        // Determine if the date is fully booked
+        // This is a simplification - in a real app, you'd check time slots more precisely
+        const isFullyBooked = bookingsOnDate && bookingsOnDate.length >= allAvailability.length
+
+        if (isFullyBooked) {
+          return null
+        }
+
+        // Determine the availability status for this date
+        let status: "guaranteed" | "tentative" | "unavailable" = "unavailable"
+
+        if (allAvailability.some((entry) => entry.certainty_level === "guaranteed")) {
+          status = "guaranteed"
+        } else if (allAvailability.some((entry) => entry.certainty_level === "tentative")) {
+          status = "tentative"
+        }
+
+        return {
+          date: dateStr,
+          status,
+        }
       })
-      .map((date) => format(date, "yyyy-MM-dd"))
+      .filter(Boolean) // Remove null entries
 
     return NextResponse.json({
       availableDates,

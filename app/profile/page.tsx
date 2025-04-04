@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
 import {
   User,
@@ -21,8 +20,6 @@ import {
   CreditCard,
   Upload,
   Globe,
-  Plus,
-  X,
   Pencil,
   Loader2,
   LogOut,
@@ -57,8 +54,6 @@ export default function ProfilePage() {
   })
   const [serviceRadius, setServiceRadius] = useState(10)
   const [hourlyRate, setHourlyRate] = useState("")
-  const [skills, setSkills] = useState<string[]>([])
-  const [newSkill, setNewSkill] = useState("")
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [activeTab, setActiveTab] = useState("profile")
@@ -70,26 +65,6 @@ export default function ProfilePage() {
     instagram: "",
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // Industry/interests options
-  const industryOptions = [
-    "UI Design",
-    "UX Design",
-    "Web Development",
-    "Mobile Apps",
-    "Graphic Design",
-    "Marketing",
-    "Writing",
-    "Translation",
-    "Video Editing",
-    "Photography",
-    "Music",
-    "Voice Over",
-    "Data Entry",
-    "Virtual Assistant",
-    "Customer Service",
-    "Consulting",
-  ]
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -120,7 +95,6 @@ export default function ProfilePage() {
         setBio(data.bio || "")
         setLocation(data.location || "")
         setHourlyRate(data.hourly_rate?.toString() || "")
-        setSkills(data.skills || [])
         setAvatarUrl(data.avatar_url)
         setServiceRadius(data.service_radius || 10)
 
@@ -148,17 +122,6 @@ export default function ProfilePage() {
 
     fetchProfile()
   }, [supabase, router, toast])
-
-  const handleAddSkill = () => {
-    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
-      setSkills([...skills, newSkill.trim()])
-      setNewSkill("")
-    }
-  }
-
-  const handleRemoveSkill = (skillToRemove: string) => {
-    setSkills(skills.filter((skill) => skill !== skillToRemove))
-  }
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click()
@@ -235,7 +198,6 @@ export default function ProfilePage() {
         bio,
         location,
         hourly_rate: hourlyRate ? Number.parseFloat(hourlyRate) : null,
-        skills,
         avatar_url: newAvatarUrl,
         updated_at: new Date().toISOString(),
         metadata: {
@@ -541,48 +503,6 @@ export default function ProfilePage() {
                           <p className="text-xs text-muted-foreground">
                             This is your default rate. You can set specific rates for each job category.
                           </p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Industry/Interests</Label>
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            {industryOptions.map((industry) => {
-                              const isSelected = skills.includes(industry)
-                              return (
-                                <Badge
-                                  key={industry}
-                                  variant={isSelected ? "default" : "outline"}
-                                  className="cursor-pointer"
-                                  onClick={() => {
-                                    if (isSelected) {
-                                      handleRemoveSkill(industry)
-                                    } else {
-                                      setSkills([...skills, industry])
-                                    }
-                                  }}
-                                >
-                                  {industry}
-                                  {isSelected && <X className="ml-1 h-3 w-3" />}
-                                </Badge>
-                              )
-                            })}
-                          </div>
-                          <div className="flex gap-2">
-                            <Input
-                              placeholder="Add a custom skill"
-                              value={newSkill}
-                              onChange={(e) => setNewSkill(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault()
-                                  handleAddSkill()
-                                }
-                              }}
-                            />
-                            <Button type="button" onClick={handleAddSkill}>
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
                         </div>
                       </div>
                     </div>

@@ -20,7 +20,7 @@ interface JobCategorySelectorProps {
 }
 
 export default function JobCategorySelector({
-  selectedCategories,
+  selectedCategories = [],
   onChange,
   multiple = true,
   className,

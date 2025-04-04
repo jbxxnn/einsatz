@@ -16,6 +16,7 @@ import Image from "next/image"
 import type { Database } from "@/lib/database.types"
 import JobCategorySelector from "@/components/job-category-selector"
 import { LocationInput } from "@/components/location-input"
+import JobSubcategorySelector from "@/components/job-subcategory-selector"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"]
@@ -40,6 +41,7 @@ export default function FreelancersPage() {
   const [locationSearch, setLocationSearch] = useState("")
   const [searchCoordinates, setSearchCoordinates] = useState<{ lat: number; lng: number } | null>(null)
   const [searchRadius, setSearchRadius] = useState<number>(25)
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchFreelancers = async () => {
@@ -65,6 +67,9 @@ export default function FreelancersPage() {
         if (searchCoordinates) {
           queryUrl += `&latitude=${searchCoordinates.lat}&longitude=${searchCoordinates.lng}&radius=${searchRadius}`
         }
+
+         if (selectedCategories) queryUrl += `&category=${selectedCategories}`
+        if (selectedSubcategory) queryUrl += `&subcategory=${selectedSubcategory}`
 
         const response = await fetch(queryUrl)
         const data = await response.json()
@@ -100,6 +105,7 @@ export default function FreelancersPage() {
     availableNowOnly,
     searchCoordinates,
     searchRadius,
+    selectedSubcategory,
   ])
 
   const toggleSkill = (skill: string) => {
@@ -115,7 +121,12 @@ export default function FreelancersPage() {
     setLocationSearch("")
     setSearchCoordinates(null)
     setSearchRadius(25)
+    setSelectedSubcategory(null)
   }
+  
+  useEffect(() => {
+    setSelectedSubcategory(null)
+  }, [selectedCategories])
 
   return (
     <div className="container py-10">
@@ -150,6 +161,16 @@ export default function FreelancersPage() {
                   selectedCategories={selectedCategories}
                   onChange={setSelectedCategories}
                   className="mb-2"
+                />
+              </div>
+
+              
+              <div className="space-y-2">
+                <Label htmlFor="subcategory">Subcategory</Label>
+                <JobSubcategorySelector
+                  categoryId={selectedCategories[0] || ""}
+                  selectedSubcategory={selectedSubcategory}
+                  onChange={setSelectedSubcategory}
                 />
               </div>
 

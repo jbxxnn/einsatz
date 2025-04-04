@@ -11,6 +11,7 @@ export async function GET(request: Request) {
   const skills = url.searchParams.get("skills")?.split(",").filter(Boolean) || []
   const categories = url.searchParams.get("categories")?.split(",").filter(Boolean) || []
   const availableNow = url.searchParams.get("availableNow") === "true"
+  const subcategory = url.searchParams.get("subcategory")
 
   // Location parameters
   const latitude = url.searchParams.get("latitude")
@@ -43,6 +44,14 @@ export async function GET(request: Request) {
     // Apply skills filter
     if (skills.length > 0) {
       query = query.overlaps("skills", skills)
+    }
+
+    if (categories) {
+      query = query.eq("category_id", categories)
+    }
+
+    if (subcategory) {
+      query = query.eq("subcategory_id", subcategory)
     }
 
     const { data: profilesData, error } = await query

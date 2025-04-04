@@ -1,48 +1,7 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-
-// Helper function to check if two time ranges overlap
-function doTimesOverlap(start1: string, end1: string, start2: string, end2: string): boolean {
-  // Convert times to minutes since midnight for easier comparison
-  const toMinutes = (timeStr: string) => {
-    const [hours, minutes] = timeStr.split(":").map(Number)
-    return hours * 60 + minutes
-  }
-
-  const start1Min = toMinutes(start1)
-  const end1Min = toMinutes(end1)
-  const start2Min = toMinutes(start2)
-  const end2Min = toMinutes(end2)
-
-  // Check for overlap
-  return start1Min < end2Min && start2Min < end1Min
-}
-
-// Helper function to generate hourly time slots within a range
-function generateHourlyTimeSlots(startTime: string, endTime: string) {
-  const slots = []
-  const toMinutes = (timeStr: string) => {
-    const [hours, minutes] = timeStr.split(":").map(Number)
-    return hours * 60 + minutes
-  }
-
-  const fromMinutes = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`
-  }
-
-  const startMinutes = toMinutes(startTime)
-  const endMinutes = toMinutes(endTime)
-
-  // Generate hourly slots
-  for (let time = startMinutes; time < endMinutes; time += 60) {
-    slots.push(fromMinutes(time))
-  }
-
-  return slots
-}
+import { format, parseISO, isSameDay, addHours, isWithinInterval } from "date-fns"
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
@@ -58,116 +17,144 @@ export async function GET(request: Request) {
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
 
   try {
-    // Get day of week from date
-    const dateObj = new Date(date)
-    const dayOfWeek = dateObj.getDay() // 0 = Sunday, 6 = Saturday
+    const selectedDate = parseISO(date)
+    const dayOfWeek = selectedDate.getDay() // 0 = Sunday, 1 = Monday, etc.
 
-    // Format date for database queries
-    const formattedDate = dateObj.toISOString().split("T")[0]
-
-    // Fetch availability schedules for the freelancer, category, and day
-    const { data: schedules, error } = await supabase
-      .from("availability_schedules")
+    // Fetch all availability entries for this freelancer and category
+    const { data: availabilityEntries, error: availabilityError } = await supabase
+      .from("freelancer_availability")
       .select("*")
       .eq("freelancer_id", freelancerId)
       .eq("category_id", categoryId)
-      .eq("day_of_week", dayOfWeek)
-      .eq("is_available", true)
 
-    if (error) {
-      throw error
+    if (availabilityError) {
+      throw availabilityError
     }
 
-    // Fetch existing bookings for the freelancer on the selected date
-    const startOfDay = new Date(formattedDate)
-    startOfDay.setUTCHours(0, 0, 0, 0)
+    // Filter availability entries for this specific date
+    const directAvailability = availabilityEntries?.filter((entry) => {
+      const entryDate = new Date(entry.start_time)
+      return !entry.is_recurring && isSameDay(entryDate, selectedDate)
+    })
 
-    const endOfDay = new Date(formattedDate)
-    endOfDay.setUTCHours(23, 59, 59, 999)
+    // Filter recurring availability that applies to this date
+    const recurringAvailability = availabilityEntries?.filter((entry) => {
+      if (!entry.is_recurring) return false
 
-    const { data: existingBookings, error: bookingsError } = await supabase
+      const entryStartDate = new Date(entry.start_time)
+      const entryEndDate = entry.recurrence_end_date ? new Date(entry.recurrence_end_date) : null
+
+      // Check if the date is after the start date of the recurring pattern
+      if (selectedDate < entryStartDate) return false
+
+      // Check if the date is before the end date of the recurring pattern (if any)
+      if (entryEndDate && selectedDate > entryEndDate) return false
+
+      // Check if the day of week matches
+      const entryDayOfWeek = entryStartDate.getDay()
+
+      if (entry.recurrence_pattern === "weekly") {
+        return entryDayOfWeek === dayOfWeek
+      } else if (entry.recurrence_pattern === "biweekly") {
+        // Calculate weeks difference
+        const diffTime = Math.abs(selectedDate.getTime() - entryStartDate.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        const diffWeeks = Math.floor(diffDays / 7)
+
+        return entryDayOfWeek === dayOfWeek && diffWeeks % 2 === 0
+      } else if (entry.recurrence_pattern === "monthly") {
+        // Check if it's the same day of the month
+        return entryStartDate.getDate() === selectedDate.getDate()
+      }
+
+      return false
+    })
+
+    // Combine all applicable availability entries
+    const allAvailability = [...directAvailability, ...recurringAvailability]
+
+    if (allAvailability.length === 0) {
+      return NextResponse.json({
+        availabilityBlocks: [],
+      })
+    }
+
+    // Fetch all bookings for this freelancer on this date
+    const { data: bookings, error: bookingsError } = await supabase
       .from("bookings")
       .select("start_time, end_time")
       .eq("freelancer_id", freelancerId)
-      .gte("start_time", startOfDay.toISOString())
-      .lte("end_time", endOfDay.toISOString())
-      .not("status", "eq", "cancelled") // Exclude cancelled bookings
+      .eq("category_id", categoryId)
+      .not("status", "in", '("cancelled")')
 
     if (bookingsError) {
       throw bookingsError
     }
 
-    // Process the schedules to identify available time blocks
-    const availableBlocks = []
-    const bookedTimes = new Set()
-
-    // First, collect all booked times in hourly increments
-    if (existingBookings && existingBookings.length > 0) {
-      for (const booking of existingBookings) {
+    // Filter bookings for this specific date
+    const bookingsOnDate =
+      bookings?.filter((booking) => {
         const bookingStart = new Date(booking.start_time)
-        const bookingEnd = new Date(booking.end_time)
+        return isSameDay(bookingStart, selectedDate)
+      }) || []
 
-        // Convert to hours and iterate through each hour in the booking
-        const startHour = bookingStart.getHours()
-        const endHour = bookingEnd.getHours()
-        const startMinutes = bookingStart.getMinutes()
-        const endMinutes = bookingEnd.getMinutes()
+    // Process each availability entry into blocks with available start times
+    const availabilityBlocks = allAvailability.map((entry) => {
+      // Get the time part from the entry
+      const entryStartTime = new Date(entry.start_time)
+      const entryEndTime = new Date(entry.end_time)
 
-        // Mark each hour as booked
-        for (let hour = startHour; hour < endHour; hour++) {
-          bookedTimes.add(`${hour.toString().padStart(2, "0")}:00`)
-        }
+      // For recurring entries, we need to adjust the date to the selected date
+      const startTime = new Date(selectedDate)
+      startTime.setHours(entryStartTime.getHours(), entryStartTime.getMinutes(), 0, 0)
 
-        // Handle partial hours
-        if (startMinutes > 0) {
-          bookedTimes.add(`${startHour.toString().padStart(2, "0")}:${startMinutes.toString().padStart(2, "0")}`)
-        }
+      const endTime = new Date(selectedDate)
+      endTime.setHours(entryEndTime.getHours(), entryEndTime.getMinutes(), 0, 0)
 
-        if (endMinutes > 0) {
-          bookedTimes.add(`${endHour.toString().padStart(2, "0")}:${endMinutes.toString().padStart(2, "0")}`)
-        }
-      }
-    }
+      // Format times for display
+      const startTimeStr = format(startTime, "HH:mm")
+      const endTimeStr = format(endTime, "HH:mm")
 
-    // Process each availability schedule
-    if (schedules && schedules.length > 0) {
-      for (const schedule of schedules) {
-        const scheduleStart = schedule.start_time.slice(0, 5) // Format: HH:MM
-        const scheduleEnd = schedule.end_time.slice(0, 5)
+      // Generate available start times in hourly increments
+      const availableStartTimes = []
+      let currentTime = new Date(startTime)
 
-        // Generate hourly time slots
-        const hourlySlots = generateHourlyTimeSlots(scheduleStart, scheduleEnd)
+      while (addHours(currentTime, 1) <= endTime) {
+        const timeStr = format(currentTime, "HH:mm")
 
-        // Filter out booked slots
-        const availableSlots = hourlySlots.filter((slot) => !bookedTimes.has(slot))
+        // Check if this time slot is already booked
+        const isBooked = bookingsOnDate.some((booking) => {
+          const bookingStart = new Date(booking.start_time)
+          const bookingEnd = new Date(booking.end_time)
 
-        if (availableSlots.length > 0) {
-          availableBlocks.push({
-            start: scheduleStart,
-            end: scheduleEnd,
-            availableStartTimes: availableSlots,
-            // We'll calculate valid end times on the client based on the selected start time
+          return isWithinInterval(currentTime, {
+            start: bookingStart,
+            end: bookingEnd,
           })
+        })
+
+        if (!isBooked) {
+          availableStartTimes.push(timeStr)
         }
+
+        // Move to next hour
+        currentTime = addHours(currentTime, 1)
       }
-    }
 
-    // Check real-time availability
-    const { data: realTimeAvailability } = await supabase
-      .from("real_time_availability")
-      .select("*")
-      .eq("freelancer_id", freelancerId)
-      .eq("category_id", categoryId)
-      .eq("is_available_now", true)
-      .single()
+      return {
+        id: entry.id,
+        start: startTimeStr,
+        end: endTimeStr,
+        availableStartTimes,
+        certainty_level: entry.certainty_level,
+        is_recurring: entry.is_recurring,
+        recurrence_pattern: entry.recurrence_pattern,
+      }
+    })
 
-    return NextResponse.json(
-      {
-        availabilityBlocks: availableBlocks,
-        isAvailableNow: !!realTimeAvailability,
-      },
-      { headers: { "Cache-Control": "private, max-age=60" } },
-    ) // Cache for 1 minute
+    return NextResponse.json({
+      availabilityBlocks,
+    })
   } catch (error) {
     console.error("Error fetching availability:", error)
     return NextResponse.json({ error: "Failed to fetch availability" }, { status: 500 })

@@ -13,6 +13,13 @@ interface FreelancerAvailabilityCalendarProps {
   onSelectDate: (date: Date | undefined) => void
 }
 
+type AvailabilityStatus = "guaranteed" | "tentative" | "unavailable" | null
+
+interface DateAvailability {
+  date: Date
+  status: AvailabilityStatus
+}
+
 export default function FreelancerAvailabilityCalendar({
   freelancerId,
   categoryId,
@@ -20,21 +27,21 @@ export default function FreelancerAvailabilityCalendar({
 }: FreelancerAvailabilityCalendarProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
-  const [availableDates, setAvailableDates] = useState<Date[]>([])
+  const [availableDates, setAvailableDates] = useState<Map<string, DateAvailability>>(new Map())
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
-  const [cachedMonths, setCachedMonths] = useState<Map<string, Date[]>>(new Map())
+  const [cachedMonths, setCachedMonths] = useState<Map<string, Map<string, DateAvailability>>>(new Map())
   const [initialLoad, setInitialLoad] = useState(true)
 
   // Memoized function to fetch available dates
   const fetchAvailableDates = useCallback(
     async (month: Date) => {
-      if (!categoryId) return []
+      if (!categoryId) return new Map<string, DateAvailability>()
 
       // Check if we have cached data for this month
       const cacheKey = `${freelancerId}-${categoryId}-${format(month, "yyyy-MM")}`
       if (cachedMonths.has(cacheKey)) {
-        return cachedMonths.get(cacheKey) || []
+        return cachedMonths.get(cacheKey) || new Map<string, DateAvailability>()
       }
 
       setLoading(true)
@@ -52,12 +59,23 @@ export default function FreelancerAvailabilityCalendar({
         }
 
         const data = await response.json()
-        const dates = data.availableDates.map((dateStr: string) => new Date(dateStr))
+        const datesMap = new Map<string, DateAvailability>()
+
+        // Process available dates with their status
+        if (data.availableDates) {
+          data.availableDates.forEach((dateInfo: any) => {
+            const date = new Date(dateInfo.date)
+            datesMap.set(format(date, "yyyy-MM-dd"), {
+              date,
+              status: dateInfo.status,
+            })
+          })
+        }
 
         // Cache the results
-        setCachedMonths((prev) => new Map(prev).set(cacheKey, dates))
+        setCachedMonths((prev) => new Map(prev).set(cacheKey, datesMap))
 
-        return dates
+        return datesMap
       } catch (error) {
         console.error("Error fetching available dates:", error)
         toast({
@@ -65,7 +83,7 @@ export default function FreelancerAvailabilityCalendar({
           description: "Failed to fetch freelancer availability",
           variant: "destructive",
         })
-        return []
+        return new Map<string, DateAvailability>()
       } finally {
         setLoading(false)
       }
@@ -99,17 +117,13 @@ export default function FreelancerAvailabilityCalendar({
     // If we're still loading and it's the initial load, don't disable anything yet
     if (loading && initialLoad) return false
 
-    // Disable dates that are not in the available dates list
-    if (availableDates.length > 0) {
-      return !availableDates.some(
-        (availableDate) =>
-          availableDate.getFullYear() === date.getFullYear() &&
-          availableDate.getMonth() === date.getMonth() &&
-          availableDate.getDate() === date.getDate(),
-      )
-    }
+    // Disable dates that are not in the available dates list or marked as unavailable
+    const dateKey = format(date, "yyyy-MM-dd")
+    const dateInfo = availableDates.get(dateKey)
 
-    return false
+    if (!dateInfo) return true
+
+    return dateInfo.status === "unavailable"
   }
 
   const handleSelectDate = (date: Date | undefined) => {
@@ -140,15 +154,50 @@ export default function FreelancerAvailabilityCalendar({
               onMonthChange={handleMonthChange}
               disabled={isDateDisabled}
               className="rounded-md"
+              modifiers={{
+                // Add custom modifiers for styling instead of using a custom Day component
+                available: (date) => {
+                  const dateKey = format(date, "yyyy-MM-dd")
+                  return availableDates.has(dateKey) && availableDates.get(dateKey)?.status !== "unavailable"
+                },
+                guaranteed: (date) => {
+                  const dateKey = format(date, "yyyy-MM-dd")
+                  return availableDates.has(dateKey) && availableDates.get(dateKey)?.status === "guaranteed"
+                },
+                tentative: (date) => {
+                  const dateKey = format(date, "yyyy-MM-dd")
+                  return availableDates.has(dateKey) && availableDates.get(dateKey)?.status === "tentative"
+                },
+              }}
+              modifiersClassNames={{
+                guaranteed: "availability-indicator guaranteed-day",
+                tentative: "availability-indicator tentative-day",
+                unavailable: "availability-indicator unavailable-day",
+              }}
             />
             {loading && !initialLoad && (
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             )}
+
+            <div className="mt-4 flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-green-500" />
+                <span>Guaranteed</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-amber-500" />
+                <span>Tentative</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-gray-300" />
+                <span>Unavailable</span>
+              </div>
+            </div>
           </>
         )}
-        {!loading && availableDates.length === 0 && categoryId && (
+        {!loading && availableDates.size === 0 && categoryId && (
           <div className="text-center mt-2 text-sm text-muted-foreground">No available dates in this month</div>
         )}
       </CardContent>

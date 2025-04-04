@@ -70,3 +70,49 @@
   }
 }
 
+/* Replace the current indicator styles with these improved versions */
+.availability-indicator {
+  position: relative;
+}
+
+.guaranteed-day::after,
+.tentative-day::after,
+.unavailable-day::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
+  z-index: 10;
+}
+
+.guaranteed-day::after {
+  background-color: rgb(34, 197, 94); /* green-500 */
+}
+
+.tentative-day::after {
+  background-color: rgb(245, 158, 11); /* amber-500 */
+}
+
+.unavailable-day::after {
+  background-color: rgb(209, 213, 219); /* gray-300 */
+}
+
+/* Add styles for selected and today */
+.rdp-day_selected:not(.rdp-day_disabled) {
+  background-color: var(--primary);
+  color: white;
+}
+
+.rdp-day_today {
+  border: 1px solid var(--primary);
+}
+
+/* Make sure calendar days are clickable */
+.rdp-day {
+  position: relative;
+  cursor: pointer;
+}
+
