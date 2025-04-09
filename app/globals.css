@@ -70,6 +70,10 @@
   }
 }
 
+.main-container {
+  background-color: #edf1f4;
+}
+
 /* Replace the current indicator styles with these improved versions */
 .availability-indicator {
   position: relative;

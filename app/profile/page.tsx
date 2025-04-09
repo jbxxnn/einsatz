@@ -29,6 +29,7 @@ import Link from "next/link"
 import JobOfferingsManager from "@/components/job-offerings-manager"
 import type { Database } from "@/lib/database.types"
 import { LocationInput } from "@/components/location-input"
+import { AvatarUpload } from "@/components/avatar-upload"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
@@ -180,16 +181,18 @@ export default function ProfilePage() {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setUpdating(true)
+    console.log('Update started')
 
     try {
       // Upload avatar if changed
       const newAvatarUrl = await uploadAvatar()
+      console.log('Avatar uploaded:', newAvatarUrl)
 
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) throw new Error("User not found")
+      if (!user) throw new Error('User not found')
 
       const updates = {
         id: user.id,
@@ -208,16 +211,17 @@ export default function ProfilePage() {
         latitude: coordinates.lat,
         longitude: coordinates.lng,
         formatted_address: coordinates.formattedAddress,
-        service_radius: profile?.user_type === "freelancer" ? serviceRadius : null,
+        service_radius: profile?.user_type === 'freelancer' ? serviceRadius : null,
       }
 
-      const { error } = await supabase.from("profiles").update(updates).eq("id", user.id)
+      const { error } = await supabase.from('profiles').update(updates).eq('id', user.id)
+      console.log('Profile updated')
 
       if (error) throw error
 
       toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully",
+        title: 'Profile updated',
+        description: 'Your profile has been updated successfully',
       })
 
       // Update local state
@@ -226,14 +230,15 @@ export default function ProfilePage() {
         ...updates,
       } as Profile)
     } catch (error: any) {
-      console.error("Error updating profile:", error)
+      console.error('Error updating profile:', error)
       toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setUpdating(false)
+      console.log('Update finished')
     }
   }
 
@@ -507,7 +512,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <div className="bg-background rounded-lg shadow-sm border p-8">
+                    {/* <div className="bg-background rounded-lg shadow-sm border p-8">
                       <h2 className="text-xl font-semibold mb-6">Social Media Accounts</h2>
 
                       <div className="space-y-4">
@@ -610,7 +615,7 @@ export default function ProfilePage() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </div> */}
 
                     <div className="bg-background rounded-lg shadow-sm border p-8">
                       <h2 className="text-xl font-semibold mb-6">Job Offerings</h2>

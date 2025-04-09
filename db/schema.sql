@@ -138,6 +138,13 @@ CREATE POLICY "Freelancers can create invoices"
     auth.uid() = freelancer_id
   );
 
+-- Allow authenticated users to upload to their own folder
+  CREATE POLICY "Allow uploads for authenticated users"
+ON storage.objects
+FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = owner);
+
 CREATE POLICY "Freelancers can update their invoices" 
   ON invoices FOR UPDATE USING (
     auth.uid() = freelancer_id

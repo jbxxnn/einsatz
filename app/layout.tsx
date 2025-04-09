@@ -6,11 +6,11 @@ import { ThemeProvider } from "@/components/theme-provider"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { SupabaseProvider } from "@/components/supabase-provider"
+import { UserProvider } from "@/components/user-provider"
 
 export const metadata = {
   title: "Einsatz - Instant Freelancer Booking",
   description: "Book local, in-person freelancers for urgent jobs instantly",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -22,18 +22,16 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${GeistSans.className} min-h-screen flex flex-col`}>
         <SupabaseProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <Toaster />
-          </ThemeProvider>
+          <UserProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+              <Header />
+              <main className="main-container">{children}</main>
+              <Footer />
+              <Toaster />
+            </ThemeProvider>
+          </UserProvider>
         </SupabaseProvider>
       </body>
     </html>
   )
 }
-
-
-
-import './globals.css'
