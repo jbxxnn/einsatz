@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   // Location parameters
   const latitude = url.searchParams.get("latitude")
   const longitude = url.searchParams.get("longitude")
-  const radius = url.searchParams.get("radius") || "25" // Default 25 miles
+  const radius = url.searchParams.get("radius") || "10" // Default 10 km
 
   const cookieStore = cookies()
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
             Number.parseFloat(longitude),
             profile.latitude,
             profile.longitude,
-          )
+          ) * 1.60934 // Convert miles to kilometers
         }
 
         return {

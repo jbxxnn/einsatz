@@ -17,6 +17,13 @@ import type { Database } from "@/lib/database.types"
 import JobCategorySelector from "@/components/job-category-selector"
 import { LocationInput } from "@/components/location-input"
 import JobSubcategorySelector from "@/components/job-subcategory-selector"
+import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
+import {
+  IconClipboardCopy,
+  IconFileBroken,
+  IconSignature,
+  IconTableColumn,
+} from "@tabler/icons-react";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"]
@@ -139,7 +146,7 @@ export default function FreelancersPage() {
             <h2 className="text-lg font-semibold mb-4">Filters</h2>
 
             <div className="space-y-6">
-              <div>
+              {/* <div>
                 <Label htmlFor="search" className="mb-2 block">
                   Search
                 </Label>
@@ -153,7 +160,7 @@ export default function FreelancersPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-              </div>
+              </div> */}
 
               <div>
                 <Label className="mb-2 block">Job Categories</Label>
@@ -233,7 +240,7 @@ export default function FreelancersPage() {
                   className="mb-2"
                 />
                 {searchCoordinates && (
-                  <p className="text-xs text-muted-foreground">Showing freelancers within {searchRadius} miles</p>
+                  <p className="text-xs text-muted-foreground">Showing freelancers within {searchRadius} km</p>
                 )}
               </div>
 
@@ -256,19 +263,20 @@ export default function FreelancersPage() {
               <p className="text-muted-foreground mt-2">Try adjusting your filters</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <BentoGrid className="max-w-4xl mx-auto md:auto-rows-[20rem]">
               {freelancers.map((freelancer) => (
                 <Link key={freelancer.id} href={`/freelancers/${freelancer.id}`}>
-                  <Card className="h-full overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="relative h-40">
+                <BentoGridItem
+                  key={freelancer.id}
+                  title={`${freelancer.first_name} ${freelancer.last_name}`}
+                  description={freelancer.location || 'Location not specified'}
+                  header={
+                    <div className="relative h-40 w-full">
                       <Image
-                        src={
-                          freelancer.avatar_url ||
-                          `/placeholder.svg?height=160&width=320&text=${freelancer.first_name || "Freelancer"}`
-                        }
+                        src={freelancer.avatar_url || `/placeholder.svg?height=160&width=320&text=${freelancer.first_name || "Freelancer"}`}
                         alt={`${freelancer.first_name} ${freelancer.last_name}`}
                         fill
-                        className="object-cover"
+                        className="object-cover rounded-t-lg"
                       />
                       {freelancer.is_available_now && (
                         <div className="absolute top-2 right-2">
@@ -279,56 +287,18 @@ export default function FreelancersPage() {
                         </div>
                       )}
                     </div>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-semibold text-lg">
-                          {freelancer.first_name} {freelancer.last_name}
-                        </h3>
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 fill-primary text-primary" />
-                          <span className="ml-1 text-sm font-medium">4.9</span>
-                        </div>
-                      </div>
-
-                      {freelancer.hourly_rate && (
-                        <p className="font-medium text-primary">€{freelancer.hourly_rate}/hour</p>
-                      )}
-
-                      {freelancer.location && (
-                        <div className="flex items-center mt-1 text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span>{freelancer.location}</span>
-                        </div>
-                      )}
-
-                      {freelancer.distance !== null && (
-                        <div className="flex items-center mt-1 text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          <span>{Math.round(freelancer.distance * 10) / 10} miles away</span>
-                        </div>
-                      )}
-
-                      {freelancer.bio && (
-                        <p className="mt-2 text-sm line-clamp-2 text-muted-foreground">{freelancer.bio}</p>
-                      )}
-
-                      <div className="mt-3 flex flex-wrap gap-1">
-                        {freelancer.job_offerings.slice(0, 2).map((offering) => (
-                          <Badge key={offering.id} variant="outline" className="text-xs">
-                            {offering.category_name}
-                          </Badge>
-                        ))}
-                        {freelancer.job_offerings.length > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{freelancer.job_offerings.length - 2} more
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  }
+                  className="hover:shadow-lg transition-shadow"
+                  icon={
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 fill-primary text-primary" />
+                      <span className="ml-1 text-sm font-medium">4.9</span>
+                    </div>
+                  }
+                />
                 </Link>
               ))}
-            </div>
+            </BentoGrid>
           )}
         </div>
       </div>

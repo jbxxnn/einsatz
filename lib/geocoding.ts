@@ -120,12 +120,19 @@ export async function searchLocations(query: string): Promise<
     lastRequestTime = Date.now()
 
     const encodedQuery = encodeURIComponent(query)
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=5`, {
-      headers: {
-        "User-Agent": "Einsatz Platform/1.0",
-        "Accept-Language": "en",
-      },
-    })
+    // Add viewbox parameter to restrict results to Kampen area
+    // Kampen coordinates: approximately 52.55°N, 5.91°E
+    // Using a 10km radius around Kampen
+    const viewbox = "5.76,52.45,6.06,52.65" // left,bottom,right,top
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=5&viewbox=${viewbox}&bounded=1`,
+      {
+        headers: {
+          "User-Agent": "Einsatz Platform/1.0",
+          "Accept-Language": "en",
+        },
+      }
+    )
 
     if (!response.ok) {
       throw new Error(`Location search failed: ${response.statusText}`)
