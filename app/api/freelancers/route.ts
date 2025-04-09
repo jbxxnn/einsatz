@@ -3,6 +3,13 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { calculateDistance } from "@/lib/geocoding"
 
+type JobOffering = {
+  id: string
+  category_id: string
+  subcategory_id?: string
+  // Add other fields as necessary
+};
+
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const searchTerm = url.searchParams.get("search") || ""
@@ -46,13 +53,8 @@ export async function GET(request: Request) {
       query = query.overlaps("skills", skills)
     }
 
-    if (categories) {
-      query = query.eq("category_id", categories)
-    }
-
-    if (subcategory) {
-      query = query.eq("subcategory_id", subcategory)
-    }
+    // DO NOT filter by category_id on profiles table - it doesn't exist
+    // We'll filter by category in JavaScript after fetching the data
 
     const { data: profilesData, error } = await query
 
@@ -101,7 +103,14 @@ export async function GET(request: Request) {
     // Filter by selected categories if any
     if (categories.length > 0) {
       processedFreelancers = processedFreelancers.filter((freelancer) =>
-        freelancer.job_offerings.some((offering) => categories.includes(offering.category_id)),
+        freelancer.job_offerings.some((offering: JobOffering) => categories.includes(offering.category_id)),
+      )
+    }
+
+    // Filter by subcategory if specified
+    if (subcategory) {
+      processedFreelancers = processedFreelancers.filter((freelancer) =>
+        freelancer.job_offerings.some((offering: JobOffering) => offering.subcategory_id === subcategory),
       )
     }
 
@@ -142,4 +151,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Failed to fetch freelancers" }, { status: 500 })
   }
 }
-

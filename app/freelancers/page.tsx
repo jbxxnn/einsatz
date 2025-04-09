@@ -174,13 +174,13 @@ export default function FreelancersPage() {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
+              {/* <div className="flex items-center space-x-2">
                 <Switch id="available-now" checked={availableNowOnly} onCheckedChange={setAvailableNowOnly} />
                 <Label htmlFor="available-now" className="flex items-center">
                   <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
                   Available Now Only
                 </Label>
-              </div>
+              </div> */}
 
               <div>
                 <Label className="mb-2 block">Hourly Rate (€)</Label>
@@ -193,7 +193,7 @@ export default function FreelancersPage() {
                 </div>
               </div>
 
-              <div>
+              {/* <div>
                 <Label className="mb-2 block">Skills</Label>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {availableSkills.map((skill) => (
@@ -209,7 +209,7 @@ export default function FreelancersPage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
               <div>
                 <Label className="mb-2 block">Location</Label>
