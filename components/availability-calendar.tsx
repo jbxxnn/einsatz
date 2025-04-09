@@ -110,7 +110,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
         const endDateTime = entry.recurrence_end_date ? new Date(entry.recurrence_end_date) : addMonths(new Date(), 6)
 
         // Generate recurring dates based on pattern
-        let currentDate = new Date(startDateTime)
+        let currentDate = addWeeks(new Date(startDateTime), 1) // Start from the next occurrence
 
         while (isBefore(currentDate, endDateTime)) {
           const dateKey = format(currentDate, "yyyy-MM-dd")
