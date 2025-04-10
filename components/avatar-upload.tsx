@@ -36,9 +36,7 @@ export function AvatarUpload({ userId, avatarUrl, firstName, onAvatarChange }: A
 
     // Validate file size (max 5MB)
     if (fileSize > 5) {
-      toast.error("File too large", {
-        description: "Please select an image under 5MB",
-      })
+      toast.error("File too large. Please select an image under 5MB")
       return
     }
 
@@ -83,9 +81,7 @@ export function AvatarUpload({ userId, avatarUrl, firstName, onAvatarChange }: A
       toast.success("Avatar updated successfully")
     } catch (error: any) {
       console.error("Error uploading avatar:", error)
-      toast.error("Upload failed", {
-        description: error.message || "Something went wrong. Please try again.",
-      })
+      toast.error("Upload failed. " + (error.message || "Something went wrong. Please try again."))
 
       // Revert to previous avatar if upload fails
       setPreviewUrl(avatarUrl)

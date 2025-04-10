@@ -77,11 +77,7 @@ export default function FreelancerAvailabilityCalendar({
         return datesMap
       } catch (error) {
         console.error("Error fetching available dates:", error)
-        toast({
-          title: "Error",
-          description: "Failed to fetch freelancer availability",
-          variant: "destructive",
-        })
+        toast.error("Failed to fetch freelancer availability")
         return new Map<string, DateAvailability>()
       } finally {
         setLoading(false)

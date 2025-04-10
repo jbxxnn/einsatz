@@ -28,16 +28,16 @@ import {
   Facebook,
   Youtube,
   Twitch,
-  Discord,
+  // Discord,
   Slack,
-  Skype,
-  Zoom,
-  Whatsapp,
-  Telegram,
+  // Skype,
+  // Zoom,
+  // Whatsapp,
+  // Telegram,
   Signal,
-  Keybase,
-  Matrix,
-  Element,
+  // Keybase,
+  // Matrix,
+  // Element,
   Rocket,
   Send,
   Share2,
@@ -60,13 +60,13 @@ import type { Database } from "@/lib/database.types"
 import { LocationInput } from "@/components/location-input"
 import { AvatarUpload } from "@/components/avatar-upload"
 import { toast } from "@/lib/toast"
-import { LocationSearch } from "@/components/location-search"
-import { JobCategorySelector } from "@/components/job-category-selector"
-import { JobSubcategorySelector } from "@/components/job-subcategory-selector"
-import { AvailabilityCalendar } from "@/components/availability-calendar"
-import { AvailabilitySchedule } from "@/components/availability-schedule"
-import { LoadingSpinner } from "@/components/loading-spinner"
-import { SidebarNav } from "@/components/sidebar-nav"
+// import { LocationSearch } from "@/components/location-search"
+// import { JobCategorySelector } from "@/components/job-category-selector"
+// import { JobSubcategorySelector } from "@/components/job-subcategory-selector"
+// import { AvailabilityCalendar } from "@/components/availability-calendar"
+// import { AvailabilitySchedule } from "@/components/availability-schedule"
+// import { LoadingSpinner } from "@/components/loading-spinner"
+// import { SidebarNav } from "@/components/sidebar-nav"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 

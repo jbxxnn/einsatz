@@ -10,7 +10,7 @@ import { format } from "date-fns"
 import Link from "next/link"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
-import { toast } from "@/lib/toast"
+import { toast } from "sonner"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -50,11 +50,7 @@ export default function PaymentPage() {
 
       if (error) {
         console.error("Error fetching booking:", error)
-        toast({
-          title: "Error",
-          description: "Could not load booking details",
-          variant: "destructive",
-        })
+        toast.error("Could not load booking details")
         router.push("/dashboard")
       } else {
         setBooking(data as Booking)
@@ -91,16 +87,9 @@ export default function PaymentPage() {
 
       setPaymentSuccess(true)
 
-      toast({
-        title: "Payment successful",
-        description: "Your booking has been confirmed",
-      })
+      toast.success("Your booking has been confirmed")
     } catch (error: any) {
-      toast({
-        title: "Payment failed",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Something went wrong. Please try again.")
     } finally {
       setProcessing(false)
     }
