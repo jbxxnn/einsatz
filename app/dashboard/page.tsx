@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/components/ui/use-toast"
 import { Calendar, Clock, MapPin, CheckCircle, XCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -15,6 +14,7 @@ import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import LoadingSpinner from "@/components/loading-spinner"
 import SidebarNav from "@/components/sidebar-nav"
+import { toast } from "@/lib/toast"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -24,10 +24,10 @@ type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
 export default function Dashboard() {
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("upcoming")
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,11 +89,7 @@ export default function Dashboard() {
         setBookings(bookingsData as Booking[])
       } catch (error) {
         console.error("Error fetching data:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load dashboard data. Please try again.",
-          variant: "destructive",
-        })
+        toast.error("Failed to load dashboard data. Please try again.")
       } finally {
         setLoading(false)
       }
@@ -123,16 +119,9 @@ export default function Dashboard() {
       // Update local state
       setBookings(bookings.map((booking) => (booking.id === bookingId ? { ...booking, ...updateData } : booking)))
 
-      toast({
-        title: "Success",
-        description: `Booking ${action}ed successfully`,
-      })
+      toast.success(`Booking ${action}ed successfully`)
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Something went wrong. Please try again.")
     }
   }
 

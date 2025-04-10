@@ -11,10 +11,10 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/components/ui/use-toast"
 import { useSupabase } from "@/components/supabase-provider"
 import { format, isAfter, isBefore, addWeeks, addMonths } from "date-fns"
 import { CalendarIcon, Clock, Plus, Trash2, RefreshCw, AlertCircle, CheckCircle, HelpCircle } from "lucide-react"
+import { toast } from "@/lib/toast"
 
 type AvailabilityEntry = {
   id?: string
@@ -36,13 +36,12 @@ type AvailabilityCalendarProps = {
 
 export default function AvailabilityCalendar({ freelancerId, categoryId, categoryName }: AvailabilityCalendarProps) {
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [date, setDate] = useState<Date>(new Date())
-  const [availabilityEntries, setAvailabilityEntries] = useState<AvailabilityEntry[]>([])
+  const [availability, setAvailability] = useState<AvailabilityEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedEntry, setSelectedEntry] = useState<AvailabilityEntry | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
+  const [selectedEntry, setSelectedEntry] = useState<AvailabilityEntry | null>(null)
+  const [formData, setFormData] = useState<Partial<AvailabilityEntry>>({})
 
   // Form state
   const [startDate, setStartDate] = useState<Date>(new Date())
@@ -67,14 +66,10 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
 
         if (error) throw error
 
-        setAvailabilityEntries(data || [])
+        setAvailability(data || [])
       } catch (error) {
         console.error("Error fetching availability:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load availability data",
-          variant: "destructive",
-        })
+        toast.error("Failed to load availability")
       } finally {
         setLoading(false)
       }
@@ -88,7 +83,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
     const result = new Map<string, { date: Date; entries: AvailabilityEntry[] }>()
 
     // Process one-time availability entries
-    availabilityEntries.forEach((entry) => {
+    availability.forEach((entry) => {
       const startDateTime = new Date(entry.start_time)
       const dateKey = format(startDateTime, "yyyy-MM-dd")
 
@@ -103,7 +98,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
     })
 
     // Process recurring entries
-    availabilityEntries
+    availability
       .filter((entry) => entry.is_recurring)
       .forEach((entry) => {
         const startDateTime = new Date(entry.start_time)
@@ -138,7 +133,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
       })
 
     return result
-  }, [availabilityEntries])
+  }, [availability])
 
   // Get availability entries for selected date
   const selectedDateEntries = useMemo(() => {
@@ -157,7 +152,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
     setRecurrenceEndDate(addMonths(new Date(), 3))
     setCertaintyLevel("guaranteed")
     setSelectedEntry(null)
-    setIsEditMode(false)
+    setFormData({})
   }
 
   // Open dialog for adding new availability
@@ -171,7 +166,10 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
   // Open dialog for editing existing availability
   const handleEditAvailability = (entry: AvailabilityEntry) => {
     setSelectedEntry(entry)
-    setIsEditMode(true)
+    setIsRecurring(entry.is_recurring)
+    setRecurrencePattern(entry.recurrence_pattern || "weekly")
+    setRecurrenceEndDate(entry.recurrence_end_date ? new Date(entry.recurrence_end_date) : undefined)
+    setCertaintyLevel(entry.certainty_level)
 
     const startDateTime = new Date(entry.start_time)
     const endDateTime = new Date(entry.end_time)
@@ -180,10 +178,6 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
     setEndDate(endDateTime)
     setStartTime(format(startDateTime, "HH:mm"))
     setEndTime(format(endDateTime, "HH:mm"))
-    setIsRecurring(entry.is_recurring)
-    setRecurrencePattern(entry.recurrence_pattern || "weekly")
-    setRecurrenceEndDate(entry.recurrence_end_date ? new Date(entry.recurrence_end_date) : undefined)
-    setCertaintyLevel(entry.certainty_level)
 
     setIsDialogOpen(true)
   }
@@ -195,19 +189,12 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
 
       if (error) throw error
 
-      setAvailabilityEntries((prev) => prev.filter((entry) => entry.id !== entryId))
+      setAvailability((prev) => prev.filter((entry) => entry.id !== entryId))
 
-      toast({
-        title: "Availability deleted",
-        description: "Your availability has been removed",
-      })
+      toast.success("Availability deleted")
     } catch (error) {
       console.error("Error deleting availability:", error)
-      toast({
-        title: "Error",
-        description: "Failed to delete availability",
-        variant: "destructive",
-      })
+      toast.error("Failed to delete availability")
     }
   }
 
@@ -216,11 +203,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
     try {
       // Validate form
       if (!startDate || !endDate || !startTime || !endTime) {
-        toast({
-          title: "Missing information",
-          description: "Please fill in all required fields",
-          variant: "destructive",
-        })
+        toast.error("Please fill in all required fields")
         return
       }
 
@@ -235,11 +218,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
 
       // Validate time range
       if (isAfter(startDateTime, endDateTime)) {
-        toast({
-          title: "Invalid time range",
-          description: "End time must be after start time",
-          variant: "destructive",
-        })
+        toast.error("End time must be after start time")
         return
       }
 
@@ -254,7 +233,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
         certainty_level: certaintyLevel,
       }
 
-      if (isEditMode && selectedEntry?.id) {
+      if (selectedEntry?.id) {
         // Update existing entry
         const { data, error } = await supabase
           .from("freelancer_availability")
@@ -264,35 +243,25 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
 
         if (error) throw error
 
-        setAvailabilityEntries((prev) => prev.map((entry) => (entry.id === selectedEntry.id ? { ...data[0] } : entry)))
+        setAvailability((prev) => prev.map((entry) => (entry.id === selectedEntry.id ? { ...data[0] } : entry)))
 
-        toast({
-          title: "Availability updated",
-          description: "Your availability has been updated",
-        })
+        toast.success("Availability updated")
       } else {
         // Create new entry
         const { data, error } = await supabase.from("freelancer_availability").insert(availabilityData).select()
 
         if (error) throw error
 
-        setAvailabilityEntries((prev) => [...prev, ...data])
+        setAvailability((prev) => [...prev, ...data])
 
-        toast({
-          title: "Availability added",
-          description: "Your availability has been saved",
-        })
+        toast.success("Availability added")
       }
 
       setIsDialogOpen(false)
       resetForm()
     } catch (error) {
       console.error("Error saving availability:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save availability",
-        variant: "destructive",
-      })
+      toast.error("Failed to save availability")
     }
   }
 
@@ -455,7 +424,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{isEditMode ? "Edit Availability" : "Add Availability"}</DialogTitle>
+            <DialogTitle>{selectedEntry ? "Edit Availability" : "Add Availability"}</DialogTitle>
           </DialogHeader>
 
           <Tabs defaultValue="date-time">
@@ -609,7 +578,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveAvailability}>{isEditMode ? "Update" : "Save"}</Button>
+            <Button onClick={handleSaveAvailability}>{selectedEntry ? "Update" : "Save"}</Button>
           </div>
         </DialogContent>
       </Dialog>

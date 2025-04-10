@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "@/lib/toast"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
 
@@ -19,8 +19,7 @@ export default function Register() {
   const searchParams = useSearchParams()
   const defaultType = searchParams.get("type") || "client"
   const { supabase } = useSupabase()
-  const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [firstName, setFirstName] = useState("")
@@ -31,7 +30,7 @@ export default function Register() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setLoading(true)
 
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -64,10 +63,8 @@ export default function Register() {
           throw profileError
         }
 
-        toast({
-          title: "Account created!",
-          description: "Please check your email to confirm your account.",
-        })
+        toast.success("Account created!")
+        toast.info("Please check your email to confirm your account.")
 
         // If freelancer, redirect to complete profile
         if (userType === "freelancer") {
@@ -77,13 +74,9 @@ export default function Register() {
         }
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Something went wrong. Please try again.")
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
@@ -103,11 +96,7 @@ export default function Register() {
         throw error
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Something went wrong. Please try again.")
     }
   }
 
@@ -169,8 +158,8 @@ export default function Register() {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Creating account...
@@ -258,8 +247,8 @@ export default function Register() {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Creating account...

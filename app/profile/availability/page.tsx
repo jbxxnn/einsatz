@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "@/lib/toast"
 import { Loader2, Calendar } from "lucide-react"
 import type { Database } from "@/lib/database.types"
 import SidebarNav from "@/components/sidebar-nav"
@@ -23,7 +23,6 @@ type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row
 export default function AvailabilityPage() {
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [offerings, setOfferings] = useState<JobOffering[]>([])
@@ -51,11 +50,7 @@ export default function AvailabilityPage() {
 
       if (profileError) {
         console.error("Error fetching profile:", profileError)
-        toast({
-          title: "Error",
-          description: "Could not load your profile",
-          variant: "destructive",
-        })
+        toast.error("Failed to load profile")
         router.push("/dashboard")
         return
       }
@@ -64,11 +59,7 @@ export default function AvailabilityPage() {
 
       // If not a freelancer, redirect
       if (profileData.user_type !== "freelancer") {
-        toast({
-          title: "Access denied",
-          description: "Only freelancers can access this page",
-          variant: "destructive",
-        })
+        toast.error("Access denied")
         router.push("/dashboard")
         return
       }
@@ -102,7 +93,7 @@ export default function AvailabilityPage() {
     }
 
     fetchProfile()
-  }, [supabase, router, toast])
+  }, [supabase, router])
 
   if (loading) {
     return (

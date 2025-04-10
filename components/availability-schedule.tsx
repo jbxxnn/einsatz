@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
 import { Loader2, Plus, Trash2 } from "lucide-react"
 import type { Database } from "@/lib/database.types"
+import { toast } from "@/lib/toast"
 
 type AvailabilitySchedule = Database["public"]["Tables"]["availability_schedules"]["Row"]
 type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"]
@@ -45,7 +45,6 @@ const DAYS_OF_WEEK = [
 
 export default function AvailabilityScheduleComponent({ freelancerId, categoryId }: AvailabilityScheduleProps) {
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [schedule, setSchedule] = useState<DaySchedule[]>([])
@@ -103,11 +102,7 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
         setSchedule(schedulesGroupedByDay)
       } catch (error) {
         console.error("Error fetching availability data:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load availability data",
-          variant: "destructive",
-        })
+        toast.error("Failed to load availability data")
       } finally {
         setLoading(false)
       }
@@ -138,20 +133,11 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
 
       if (error) throw error
 
-      toast({
-        title: newStatus ? "You're now available" : "You're now unavailable",
-        description: newStatus
-          ? "Clients can now book you immediately"
-          : "You won't receive immediate booking requests",
-      })
+      toast.success(newStatus ? "You're now available" : "You're now unavailable")
     } catch (error) {
       console.error("Error updating real-time availability:", error)
       setIsAvailableNow(!isAvailableNow) // Revert UI state
-      toast({
-        title: "Error",
-        description: "Failed to update availability status",
-        variant: "destructive",
-      })
+      toast.error("Failed to update availability status")
     }
   }
 
@@ -244,17 +230,10 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
         if (error) throw error
       }
 
-      toast({
-        title: "Schedule saved",
-        description: "Your availability schedule has been updated",
-      })
+      toast.success("Schedule updated successfully")
     } catch (error) {
       console.error("Error saving schedule:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save availability schedule",
-        variant: "destructive",
-      })
+      toast.error("Failed to save availability schedule")
     } finally {
       setSaving(false)
     }

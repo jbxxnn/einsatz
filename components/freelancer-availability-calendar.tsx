@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
 import { format, isSameMonth, startOfMonth, endOfMonth, addMonths } from "date-fns"
+import { toast } from "@/lib/toast"
 
 interface FreelancerAvailabilityCalendarProps {
   freelancerId: string
@@ -25,11 +25,10 @@ export default function FreelancerAvailabilityCalendar({
   categoryId,
   onSelectDate,
 }: FreelancerAvailabilityCalendarProps) {
-  const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
-  const [availableDates, setAvailableDates] = useState<Map<string, DateAvailability>>(new Map())
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [availability, setAvailability] = useState<DateAvailability[]>([])
+  const [loading, setLoading] = useState(false)
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
   const [cachedMonths, setCachedMonths] = useState<Map<string, Map<string, DateAvailability>>>(new Map())
   const [initialLoad, setInitialLoad] = useState(true)
 
@@ -95,7 +94,7 @@ export default function FreelancerAvailabilityCalendar({
   useEffect(() => {
     if (freelancerId && categoryId) {
       fetchAvailableDates(currentMonth).then((dates) => {
-        setAvailableDates(dates)
+        setAvailability(Array.from(dates.values()))
         setInitialLoad(false)
       })
     }
@@ -119,7 +118,7 @@ export default function FreelancerAvailabilityCalendar({
 
     // Disable dates that are not in the available dates list or marked as unavailable
     const dateKey = format(date, "yyyy-MM-dd")
-    const dateInfo = availableDates.get(dateKey)
+    const dateInfo = availability.find((d) => format(d.date, "yyyy-MM-dd") === dateKey)
 
     if (!dateInfo) return true
 
@@ -158,15 +157,15 @@ export default function FreelancerAvailabilityCalendar({
                 // Add custom modifiers for styling instead of using a custom Day component
                 available: (date) => {
                   const dateKey = format(date, "yyyy-MM-dd")
-                  return availableDates.has(dateKey) && availableDates.get(dateKey)?.status !== "unavailable"
+                  return availability.some((d) => format(d.date, "yyyy-MM-dd") === dateKey && d.status !== "unavailable")
                 },
                 guaranteed: (date) => {
                   const dateKey = format(date, "yyyy-MM-dd")
-                  return availableDates.has(dateKey) && availableDates.get(dateKey)?.status === "guaranteed"
+                  return availability.some((d) => format(d.date, "yyyy-MM-dd") === dateKey && d.status === "guaranteed")
                 },
                 tentative: (date) => {
                   const dateKey = format(date, "yyyy-MM-dd")
-                  return availableDates.has(dateKey) && availableDates.get(dateKey)?.status === "tentative"
+                  return availability.some((d) => format(d.date, "yyyy-MM-dd") === dateKey && d.status === "tentative")
                 },
               }}
               modifiersClassNames={{
@@ -197,7 +196,7 @@ export default function FreelancerAvailabilityCalendar({
             </div>
           </>
         )}
-        {!loading && availableDates.size === 0 && categoryId && (
+        {!loading && availability.length === 0 && categoryId && (
           <div className="text-center mt-2 text-sm text-muted-foreground">No available dates in this month</div>
         )}
       </CardContent>

@@ -11,27 +11,25 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/components/ui/use-toast"
 import { Loader2, CreditCard } from "lucide-react"
 import type { Database } from "@/lib/database.types"
 import LoadingSpinner from "@/components/loading-spinner"
 import SidebarNav from "@/components/sidebar-nav"
+import { toast } from "@/lib/toast"
 
 export default function SettingsPage() {
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
   const [loading, setLoading] = useState(true)
-  const [updating, setUpdating] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [emailNotifications, setEmailNotifications] = useState({
-    bookings: true,
-    messages: true,
-    payments: true,
-    marketing: false,
+  const [notifications, setNotifications] = useState({
+    email: true,
+    push: true,
+    sms: false,
   })
 
   useEffect(() => {
@@ -64,18 +62,14 @@ export default function SettingsPage() {
 
         // Load notification settings from metadata if available
         if (profileData.metadata && typeof profileData.metadata === "object" && profileData.metadata.notifications) {
-          setEmailNotifications({
-            ...emailNotifications,
+          setNotifications({
+            ...notifications,
             ...profileData.metadata.notifications,
           })
         }
       } catch (error) {
         console.error("Error fetching profile:", error)
-        toast({
-          title: "Error",
-          description: "Could not load your profile",
-          variant: "destructive",
-        })
+        toast.error("Failed to load settings")
       } finally {
         setLoading(false)
       }
@@ -88,15 +82,11 @@ export default function SettingsPage() {
     e.preventDefault()
 
     if (newPassword !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "New passwords do not match",
-        variant: "destructive",
-      })
+      toast.error("New passwords do not match")
       return
     }
 
-    setUpdating(true)
+    setSaving(true)
 
     try {
       const { error } = await supabase.auth.updateUser({
@@ -105,46 +95,36 @@ export default function SettingsPage() {
 
       if (error) throw error
 
-      toast({
-        title: "Success",
-        description: "Your password has been updated",
-      })
+      toast.success("Your password has been updated")
 
       // Clear form
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update password",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Failed to update password")
     } finally {
-      setUpdating(false)
+      setSaving(false)
     }
   }
 
   const handleUpdateNotifications = async () => {
     if (!profile) return
 
-    setUpdating(true)
+    setSaving(true)
 
     try {
       // Update profile metadata with notification settings
       const metadata = {
         ...(typeof profile.metadata === 'object' && profile.metadata !== null ? profile.metadata : {}),
-        notifications: emailNotifications,
+        notifications: notifications,
       }
 
       const { error } = await supabase.from("profiles").update({ metadata }).eq("id", profile.id)
 
       if (error) throw error
 
-      toast({
-        title: "Success",
-        description: "Notification settings updated",
-      })
+      toast.success("Notification settings updated")
 
       // Update local state
       setProfile({
@@ -152,13 +132,9 @@ export default function SettingsPage() {
         metadata,
       })
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update notification settings",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Failed to update notification settings")
     } finally {
-      setUpdating(false)
+      setSaving(false)
     }
   }
 
@@ -251,9 +227,9 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         id="booking-notifications"
-                        checked={emailNotifications.bookings}
+                        checked={notifications.email}
                         onCheckedChange={(checked) =>
-                          setEmailNotifications({ ...emailNotifications, bookings: checked })
+                          setNotifications({ ...notifications, email: checked })
                         }
                       />
                     </div>
@@ -264,9 +240,9 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         id="message-notifications"
-                        checked={emailNotifications.messages}
+                        checked={notifications.push}
                         onCheckedChange={(checked) =>
-                          setEmailNotifications({ ...emailNotifications, messages: checked })
+                          setNotifications({ ...notifications, push: checked })
                         }
                       />
                     </div>
@@ -277,31 +253,16 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         id="payment-notifications"
-                        checked={emailNotifications.payments}
+                        checked={notifications.sms}
                         onCheckedChange={(checked) =>
-                          setEmailNotifications({ ...emailNotifications, payments: checked })
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="marketing-notifications">Marketing</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Receive emails about new features and promotions
-                        </p>
-                      </div>
-                      <Switch
-                        id="marketing-notifications"
-                        checked={emailNotifications.marketing}
-                        onCheckedChange={(checked) =>
-                          setEmailNotifications({ ...emailNotifications, marketing: checked })
+                          setNotifications({ ...notifications, sms: checked })
                         }
                       />
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button onClick={handleUpdateNotifications} disabled={updating}>
-                      {updating ? (
+                    <Button onClick={handleUpdateNotifications} disabled={saving}>
+                      {saving ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Saving...
@@ -352,8 +313,8 @@ export default function SettingsPage() {
                           required
                         />
                       </div>
-                      <Button type="submit" disabled={updating}>
-                        {updating ? (
+                      <Button type="submit" disabled={saving}>
+                        {saving ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Updating...

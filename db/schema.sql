@@ -190,3 +190,8 @@ CREATE TRIGGER update_profiles_updated_at
 CREATE TRIGGER update_bookings_updated_at
   BEFORE UPDATE ON bookings
   FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+
+
+  ALTER TABLE bookings
+ADD COLUMN payment_method TEXT DEFAULT 'platform';

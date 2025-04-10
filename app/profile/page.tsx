@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
 import {
   User,
   Briefcase,
@@ -18,10 +17,40 @@ import {
   Calendar,
   Settings,
   CreditCard,
-  Upload,
+  MapPin,
+  Mail,
+  Phone,
   Globe,
-  Pencil,
+  Linkedin,
+  Github,
+  Twitter,
+  Instagram,
+  Facebook,
+  Youtube,
+  Twitch,
+  Discord,
+  Slack,
+  Skype,
+  Zoom,
+  Whatsapp,
+  Telegram,
+  Signal,
+  Keybase,
+  Matrix,
+  Element,
+  Rocket,
+  Send,
+  Share2,
+  Link2,
+  Copy,
+  Check,
+  X,
+  AlertCircle,
+  Info,
+  HelpCircle,
   Loader2,
+  Pencil,
+  Upload,
   LogOut,
 } from "lucide-react"
 import Image from "next/image"
@@ -30,29 +59,35 @@ import JobOfferingsManager from "@/components/job-offerings-manager"
 import type { Database } from "@/lib/database.types"
 import { LocationInput } from "@/components/location-input"
 import { AvatarUpload } from "@/components/avatar-upload"
+import { toast } from "@/lib/toast"
+import { LocationSearch } from "@/components/location-search"
+import { JobCategorySelector } from "@/components/job-category-selector"
+import { JobSubcategorySelector } from "@/components/job-subcategory-selector"
+import { AvailabilityCalendar } from "@/components/availability-calendar"
+import { AvailabilitySchedule } from "@/components/availability-schedule"
+import { LoadingSpinner } from "@/components/loading-spinner"
+import { SidebarNav } from "@/components/sidebar-nav"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
 export default function ProfilePage() {
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
   const [bio, setBio] = useState("")
   const [location, setLocation] = useState("")
-  const [coordinates, setCoordinates] = useState<{
-    lat: number | null
-    lng: number | null
-    formattedAddress: string | null
-  }>({
-    lat: null,
-    lng: null,
-    formattedAddress: null,
-  })
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number; formattedAddress: string } | null>(null)
+  const [jobCategories, setJobCategories] = useState<string[]>([])
+  const [jobSubcategories, setJobSubcategories] = useState<string[]>([])
+  const [availability, setAvailability] = useState<{ start: string; end: string }[]>([])
+  const [jobOfferings, setJobOfferings] = useState<any[]>([])
+  const [availabilitySchedule, setAvailabilitySchedule] = useState<any[]>([])
   const [serviceRadius, setServiceRadius] = useState(10)
   const [hourlyRate, setHourlyRate] = useState("")
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
@@ -84,15 +119,13 @@ export default function ProfilePage() {
 
       if (error) {
         console.error("Error fetching profile:", error)
-        toast({
-          title: "Error",
-          description: "Could not load your profile. Please try again.",
-          variant: "destructive",
-        })
+        toast.error("Failed to load profile")
       } else if (data) {
         setProfile(data)
         setFirstName(data.first_name || "")
         setLastName(data.last_name || "")
+        setEmail(data.email || "")
+        setPhone(data.phone || "")
         setBio(data.bio || "")
         setLocation(data.location || "")
         setHourlyRate(data.hourly_rate?.toString() || "")
@@ -100,7 +133,7 @@ export default function ProfilePage() {
         setServiceRadius(data.service_radius || 10)
 
         // Set coordinates if available
-        setCoordinates({
+        setLocationCoords({
           lat: data.latitude || null,
           lng: data.longitude || null,
           formattedAddress: data.formatted_address || null,
@@ -170,7 +203,7 @@ export default function ProfilePage() {
   const handleLocationChange = (value: string, coords?: { lat: number; lng: number; formattedAddress: string }) => {
     setLocation(value)
     if (coords) {
-      setCoordinates({
+      setLocationCoords({
         lat: coords.lat,
         lng: coords.lng,
         formattedAddress: coords.formattedAddress,
@@ -198,6 +231,8 @@ export default function ProfilePage() {
         id: user.id,
         first_name: firstName,
         last_name: lastName,
+        email,
+        phone,
         bio,
         location,
         hourly_rate: hourlyRate ? Number.parseFloat(hourlyRate) : null,
@@ -208,9 +243,9 @@ export default function ProfilePage() {
           ...socialLinks,
         },
         // Add location data
-        latitude: coordinates.lat,
-        longitude: coordinates.lng,
-        formatted_address: coordinates.formattedAddress,
+        latitude: locationCoords?.lat,
+        longitude: locationCoords?.lng,
+        formatted_address: locationCoords?.formattedAddress,
         service_radius: profile?.user_type === 'freelancer' ? serviceRadius : null,
       }
 
@@ -219,10 +254,7 @@ export default function ProfilePage() {
 
       if (error) throw error
 
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile has been updated successfully',
-      })
+      toast.success("Profile updated successfully")
 
       // Update local state
       setProfile({
@@ -231,11 +263,7 @@ export default function ProfilePage() {
       } as Profile)
     } catch (error: any) {
       console.error('Error updating profile:', error)
-      toast({
-        title: 'Error',
-        description: error.message || 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      })
+      toast.error(error.message || 'Something went wrong. Please try again.')
     } finally {
       setUpdating(false)
       console.log('Update finished')
@@ -424,7 +452,12 @@ export default function ProfilePage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Address</Label>
-                      <Input id="email" type="email" value={profile.email} disabled />
+                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
                     </div>
 
                     {/* New Location Input Component */}
@@ -440,7 +473,7 @@ export default function ProfilePage() {
                       className="space-y-2"
                     />
 
-                    {profile.user_type === "freelancer" && coordinates.lat && coordinates.lng && (
+                    {profile.user_type === "freelancer" && locationCoords && locationCoords.lat && locationCoords.lng && (
                       <div className="text-sm text-muted-foreground">
                         <p>
                           Your location has been verified. Clients will be able to find you based on your location and
@@ -511,111 +544,6 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     </div>
-
-                    {/* <div className="bg-background rounded-lg shadow-sm border p-8">
-                      <h2 className="text-xl font-semibold mb-6">Social Media Accounts</h2>
-
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="website">Personal Website</Label>
-                          <div className="relative">
-                            <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              id="website"
-                              placeholder="https://yourwebsite.com"
-                              value={socialLinks.website}
-                              onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
-                              className="pl-10"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="linkedin">LinkedIn</Label>
-                          <div className="relative">
-                            <svg
-                              className="absolute left-3 top-3 h-4 w-4 text-muted-foreground"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                              <rect x="2" y="9" width="4" height="12"></rect>
-                              <circle cx="4" cy="4" r="2"></circle>
-                            </svg>
-                            <Input
-                              id="linkedin"
-                              placeholder="https://linkedin.com/in/username"
-                              value={socialLinks.linkedin}
-                              onChange={(e) => setSocialLinks({ ...socialLinks, linkedin: e.target.value })}
-                              className="pl-10"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="twitter">Twitter</Label>
-                          <div className="relative">
-                            <svg
-                              className="absolute left-3 top-3 h-4 w-4 text-muted-foreground"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
-                            </svg>
-                            <Input
-                              id="twitter"
-                              placeholder="https://twitter.com/username"
-                              value={socialLinks.twitter}
-                              onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
-                              className="pl-10"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="instagram">Instagram</Label>
-                          <div className="relative">
-                            <svg
-                              className="absolute left-3 top-3 h-4 w-4 text-muted-foreground"
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                            </svg>
-                            <Input
-                              id="instagram"
-                              placeholder="https://instagram.com/username"
-                              value={socialLinks.instagram}
-                              onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
-                              className="pl-10"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div> */}
 
                     <div className="bg-background rounded-lg shadow-sm border p-8">
                       <h2 className="text-xl font-semibold mb-6">Job Offerings</h2>

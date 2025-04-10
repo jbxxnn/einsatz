@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import FreelancerAvailabilityCalendar from "@/components/freelancer-availability-calendar"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "@/lib/toast"
 import { MapPin, Star, Clock, CheckCircle } from "lucide-react"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
@@ -28,7 +28,6 @@ export default function FreelancerProfile() {
   const params = useParams()
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [freelancer, setFreelancer] = useState<FreelancerWithOfferings | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
@@ -40,56 +39,54 @@ export default function FreelancerProfile() {
     const fetchFreelancer = async () => {
       setLoading(true)
 
-
-
-    try {
+      try {
         // Fetch freelancer profile
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", params.id)
-        .eq("user_type", "freelancer")
-        .single()
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", params.id)
+          .eq("user_type", "freelancer")
+          .single()
 
-      if (error) {
-        throw error
-      }
+        if (error) {
+          throw error
+        }
 
-      // Fetch job offerings
-      const { data: offeringsData, error: offeringsError } = await supabase
-        .from("freelancer_job_offerings")
-        .select(`
-        *,
-        job_categories (id, name)
-      `)
-        .eq("freelancer_id", params.id)
+        // Fetch job offerings
+        const { data: offeringsData, error: offeringsError } = await supabase
+          .from("freelancer_job_offerings")
+          .select(`
+          *,
+          job_categories (id, name)
+        `)
+          .eq("freelancer_id", params.id)
 
-      if (offeringsError) {
-        throw offeringsError
-      }
+        if (offeringsError) {
+          throw offeringsError
+        }
 
-      // Format job offerings
-      const formattedOfferings = offeringsData.map((offering) => ({
-        ...offering,
-        category_name: offering.job_categories.name,
-      }))
+        // Format job offerings
+        const formattedOfferings = offeringsData.map((offering) => ({
+          ...offering,
+          category_name: offering.job_categories.name,
+        }))
 
-      // Check real-time availability
-      const { data: availabilityData } = await supabase
-        .from("real_time_availability")
-        .select("*")
-        .eq("freelancer_id", params.id)
-        .eq("is_available_now", true)
+        // Check real-time availability
+        const { data: availabilityData } = await supabase
+          .from("real_time_availability")
+          .select("*")
+          .eq("freelancer_id", params.id)
+          .eq("is_available_now", true)
 
-      const isAvailableNow = availabilityData && availabilityData.length > 0
+        const isAvailableNow = availabilityData && availabilityData.length > 0
 
-      // Set the freelancer with offerings
-      setFreelancer({
-        ...data,
-        job_offerings: formattedOfferings,
-        is_available_now: isAvailableNow,
+        // Set the freelancer with offerings
+        setFreelancer({
+          ...data,
+          job_offerings: formattedOfferings,
+          is_available_now: isAvailableNow,
         })
-       
+        
         // If there are job offerings, select the first one by default
         if (formattedOfferings.length > 0) {
           setSelectedCategoryId(formattedOfferings[0].category_id)
@@ -108,11 +105,7 @@ export default function FreelancerProfile() {
         setReviews(reviewsData || [])
       } catch (error) {
         console.error("Error fetching freelancer:", error)
-        toast({
-          title: "Error",
-          description: "Could not load freelancer profile",
-          variant: "destructive",
-        })
+        toast.error("Failed to load freelancer profile")
         router.push("/freelancers")
       } finally {
         setLoading(false)
@@ -120,7 +113,7 @@ export default function FreelancerProfile() {
     }
 
     fetchFreelancer()
-  }, [supabase, params.id, router, toast])
+  }, [supabase, params.id, router])
   
   const getSelectedOffering = () => {
     if (!freelancer || !selectedCategoryId) return null

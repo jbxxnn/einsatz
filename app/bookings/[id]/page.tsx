@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/components/ui/use-toast"
 import { ArrowLeft, Calendar, CheckCircle, Clock, Loader2, MapPin, MessageSquare, Star, XCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
+import { toast } from "@/lib/toast"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -23,7 +23,6 @@ export default function BookingDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
   const [userType, setUserType] = useState<"client" | "freelancer" | null>(null)
@@ -58,11 +57,7 @@ export default function BookingDetailsPage() {
 
       if (error) {
         console.error("Error fetching booking:", error)
-        toast({
-          title: "Error",
-          description: "Could not load booking details",
-          variant: "destructive",
-        })
+        toast.error("Failed to load booking")
         router.push("/dashboard")
         return
       }
@@ -76,11 +71,7 @@ export default function BookingDetailsPage() {
         setUserType("freelancer")
       } else {
         // User is not authorized to view this booking
-        toast({
-          title: "Unauthorized",
-          description: "You are not authorized to view this booking",
-          variant: "destructive",
-        })
+        toast.error("Unauthorized")
         router.push("/dashboard")
         return
       }
@@ -127,16 +118,9 @@ export default function BookingDetailsPage() {
         ...updateData,
       } as Booking)
 
-      toast({
-        title: "Success",
-        description: `Booking ${action}ed successfully`,
-      })
+      toast.success(`Booking ${action}ed successfully`)
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Something went wrong. Please try again.")
     }
   }
 
@@ -166,16 +150,9 @@ export default function BookingDetailsPage() {
 
       setHasReviewed(true)
 
-      toast({
-        title: "Review submitted",
-        description: "Thank you for your feedback",
-      })
+      toast.success("Review submitted")
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Something went wrong. Please try again.")
     } finally {
       setSubmittingReview(false)
     }

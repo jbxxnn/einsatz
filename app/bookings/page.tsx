@@ -15,6 +15,7 @@ import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import LoadingSpinner from "@/components/loading-spinner"
 import SidebarNav from "@/components/sidebar-nav"
+import { toast } from "@/lib/toast"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -89,11 +90,7 @@ export default function BookingsPage() {
         setBookings(bookingsData as Booking[])
       } catch (error) {
         console.error("Error fetching data:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load bookings data. Please try again.",
-          variant: "destructive",
-        })
+        toast.error("Failed to load bookings data. Please try again.")
       } finally {
         setLoading(false)
       }
@@ -123,16 +120,9 @@ export default function BookingsPage() {
       // Update local state
       setBookings(bookings.map((booking) => (booking.id === bookingId ? { ...booking, ...updateData } : booking)))
 
-      toast({
-        title: "Success",
-        description: `Booking ${action}ed successfully`,
-      })
+      toast.success(`Booking ${action}ed successfully`)
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Something went wrong. Please try again.")
     }
   }
 

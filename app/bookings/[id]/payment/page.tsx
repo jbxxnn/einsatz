@@ -5,12 +5,12 @@ import { useParams, useRouter } from "next/navigation"
 import { useSupabase } from "@/components/supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
 import { ArrowLeft, CheckCircle, CreditCard, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
+import { toast } from "@/lib/toast"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -20,7 +20,6 @@ export default function PaymentPage() {
   const params = useParams()
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)

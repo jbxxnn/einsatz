@@ -9,14 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "@/lib/toast"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
 
 export default function Login() {
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -38,11 +37,7 @@ export default function Login() {
       router.push("/dashboard")
       router.refresh()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -61,11 +56,7 @@ export default function Login() {
         throw error
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Something went wrong. Please try again.")
     }
   }
 

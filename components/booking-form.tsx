@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "@/lib/toast"
 import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2 } from "lucide-react"
 import { format, addDays } from "date-fns"
 import type { Database } from "@/lib/database.types"
@@ -40,7 +40,6 @@ interface BookingFormProps {
 export default function BookingForm({ freelancer, selectedDate, selectedCategoryId, onBack }: BookingFormProps) {
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [fetchingAvailability, setFetchingAvailability] = useState(false)
   const [availabilityBlocks, setAvailabilityBlocks] = useState<AvailabilityBlock[]>([])
@@ -53,7 +52,6 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [noAvailability, setNoAvailability] = useState(false)
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null)
   const [debugInfo, setDebugInfo] = useState<string>("")
-  const [paymentMethod, setPaymentMethod] = useState<"platform" | "offline">("platform")
 
   // Calculate valid end times based on selected start time
   const validEndTimes = useMemo(() => {
@@ -125,75 +123,66 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   }, [selectedCategoryId, freelancer])
 
   useEffect(() => {
+    const controller = new AbortController()
+    const signal = controller.signal
+
     const fetchAvailability = async () => {
-      if (!selectedDate || !selectedCategoryId) return
+      if (!selectedDate) return
 
       setFetchingAvailability(true)
-      setNoAvailability(false)
-      setSuggestedDate(null)
+      setAvailabilityBlocks([])
       setSelectedStartTime(null)
       setSelectedEndTime(null)
-      setDebugInfo("")
 
       try {
-        const formattedDate = format(selectedDate, "yyyy-MM-dd")
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        const { data, error } = await supabase
+          .from("availability_blocks")
+          .select("*")
+          .eq("freelancer_id", freelancer.id)
+          .eq("date", format(selectedDate, "yyyy-MM-dd"))
+          .order("start_time", { ascending: true })
 
-        const response = await fetch(
-          `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`,
-          { signal: controller.signal, cache: "no-store" },
-        )
+        if (error) throw error
 
-        clearTimeout(timeoutId)
+        // Process availability blocks
+        const processedBlocks = data.map((block) => {
+          const startTime = new Date(block.start_time)
+          const endTime = new Date(block.end_time)
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch availability")
-        }
+          // Generate available start times every 30 minutes
+          const availableStartTimes: string[] = []
+          let currentTime = startTime
 
-        const data = await response.json()
-
-        // Add debug info
-        setDebugInfo(JSON.stringify(data, null, 2))
-
-        if (data.availabilityBlocks && data.availabilityBlocks.length > 0) {
-          setAvailabilityBlocks(data.availabilityBlocks)
-
-          // Flatten all available start times across all blocks
-          const allStartTimes = data.availabilityBlocks.flatMap((block: AvailabilityBlock) => block.availableStartTimes)
-
-          if (allStartTimes.length === 0) {
-            setNoAvailability(true)
-            findNextAvailableDate(selectedDate)
+          while (currentTime < endTime) {
+            availableStartTimes.push(format(currentTime, "HH:mm"))
+            currentTime = new Date(currentTime.getTime() + 30 * 60000) // Add 30 minutes
           }
-        } else {
-          setAvailabilityBlocks([])
-          setNoAvailability(true)
-          findNextAvailableDate(selectedDate)
-        }
+
+          return {
+            ...block,
+            availableStartTimes,
+          }
+        })
+
+        setAvailabilityBlocks(processedBlocks)
       } catch (error: any) {
         console.error("Error fetching availability:", error)
         if (error.name === "AbortError") {
-          toast({
-            title: "Request timeout",
-            description: "Taking too long to load availability. Please try again.",
-            variant: "destructive",
-          })
+          toast.error("Taking too long to load availability. Please try again.")
         } else {
-          toast({
-            title: "Error",
-            description: "Failed to fetch freelancer availability",
-            variant: "destructive",
-          })
+          toast.error("Failed to fetch freelancer availability")
         }
-        setAvailabilityBlocks([])
       } finally {
         setFetchingAvailability(false)
       }
     }
 
     fetchAvailability()
-  }, [selectedDate, selectedCategoryId, freelancer.id, toast])
+
+    return () => {
+      controller.abort()
+    }
+  }, [supabase, freelancer.id, selectedDate])
 
   // Function to find the next available date
   const findNextAvailableDate = async (startDate: Date) => {
@@ -277,20 +266,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     e.preventDefault()
 
     if (!selectedDate) {
-      toast({
-        title: "Error",
-        description: "Please select a date",
-        variant: "destructive",
-      })
+      toast.error("Please select a date")
       return
     }
 
     if (!selectedStartTime || !selectedEndTime) {
-      toast({
-        title: "Error",
-        description: "Please select both start and end times",
-        variant: "destructive",
-      })
+      toast.error("Please select both start and end times")
       return
     }
 
@@ -303,11 +284,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       } = await supabase.auth.getUser()
 
       if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to book a freelancer",
-          variant: "destructive",
-        })
+        toast.error("Please log in to book a freelancer")
         router.push("/login")
         return
       }
@@ -333,8 +310,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           hourly_rate: hourlyRate || freelancer.hourly_rate || 0,
           total_amount: calculateTotal(),
           status: "pending",
-          payment_status: paymentMethod === "platform" ? "unpaid" : "offline",
-          payment_method: paymentMethod,
+          payment_status: "unpaid",
           category_id: selectedCategoryId,
         })
         .select()
@@ -343,25 +319,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         throw error
       }
 
-      toast({
-        title: "Booking created",
-        description: paymentMethod === "platform" 
-          ? "Your booking request has been sent to the freelancer. Please complete the payment to confirm your booking."
-          : "Your booking request has been sent to the freelancer. Please coordinate payment details with the freelancer.",
-      })
+      toast.success("Your booking request has been sent to the freelancer")
 
-      // Redirect based on payment method
-      if (paymentMethod === "platform") {
-        router.push(`/bookings/${data[0].id}/payment`)
-      } else {
-        router.push(`/bookings/${data[0].id}`)
-      }
+      // Redirect to payment page
+      router.push(`/bookings/${data[0].id}/payment`)
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Something went wrong. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -370,15 +333,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const handleSelectSuggestedDate = () => {
     if (suggestedDate) {
       onBack() // Go back to date selection
-      toast({
-        title: "Try this date instead",
-        description: `Please select ${format(suggestedDate, "MMMM d, yyyy")} in the calendar.`,
-      })
+      toast.info(`Please select ${format(suggestedDate, "MMMM d, yyyy")} in the calendar.`)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Button type="button" variant="ghost" size="sm" className="mb-2 -ml-2 text-muted-foreground" onClick={onBack}>
         <ArrowLeft className="h-4 w-4 mr-1" />
         Back
@@ -533,27 +493,6 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         />
       </div>
 
-      <div className="space-y-4">
-        <Label>Payment Method</Label>
-        <Select
-          value={paymentMethod}
-          onValueChange={(value: "platform" | "offline") => setPaymentMethod(value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select payment method" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="platform">Pay through platform</SelectItem>
-            <SelectItem value="offline">Handle payment offline</SelectItem>
-          </SelectContent>
-        </Select>
-        {paymentMethod === "offline" && (
-          <div className="text-sm text-muted-foreground">
-            You will need to coordinate payment details directly with the freelancer.
-          </div>
-        )}
-      </div>
-
       <div className="border-t pt-4 mt-4">
         <div className="flex justify-between mb-2">
           <span>Duration</span>
@@ -574,14 +513,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         className="w-full"
         disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime}
       >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating booking...
-          </>
-        ) : (
-          "Create Booking"
-        )}
+        {loading ? "Processing..." : "Book and Pay"}
       </Button>
 
       <p className="text-xs text-center text-muted-foreground">

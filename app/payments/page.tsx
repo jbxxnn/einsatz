@@ -7,13 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/components/ui/use-toast"
 import { CreditCard, Download, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import LoadingSpinner from "@/components/loading-spinner"
 import SidebarNav from "@/components/sidebar-nav"
+import { toast } from "@/lib/toast"
 
 type Invoice = Database["public"]["Tables"]["invoices"]["Row"] & {
   booking: {
@@ -22,13 +22,16 @@ type Invoice = Database["public"]["Tables"]["invoices"]["Row"] & {
   }
 }
 
+type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"]
+
 export default function PaymentsPage() {
   const router = useRouter()
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
+  const [activeTab, setActiveTab] = useState("invoices")
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,11 +93,7 @@ export default function PaymentsPage() {
         setInvoices(invoicesData as Invoice[])
       } catch (error) {
         console.error("Error fetching data:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load payments data. Please try again.",
-          variant: "destructive",
-        })
+        toast.error("Failed to load payments data. Please try again.")
       } finally {
         setLoading(false)
       }

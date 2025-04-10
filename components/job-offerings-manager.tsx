@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "@/lib/toast"
 import { Loader2, Plus, Trash2, AlertCircle, Calendar } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -30,7 +30,6 @@ const MAX_JOB_OFFERINGS = 3
 
 export default function JobOfferingsManager({ freelancerId }: JobOfferingsManagerProps) {
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [offerings, setOfferings] = useState<(JobOffering & { category_name: string; subcategory_name?: string })[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
@@ -59,6 +58,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
             )
           `)
           .eq("freelancer_id", freelancerId)
+          .order("created_at", { ascending: false })
 
         if (error) throw error
 
@@ -71,11 +71,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         setOfferings(formattedOfferings)
       } catch (error) {
         console.error("Error fetching job offerings:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load job offerings",
-          variant: "destructive",
-        })
+        toast.error("Failed to load job offerings")
       } finally {
         setLoading(false)
       }
@@ -84,24 +80,16 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
     if (freelancerId) {
       fetchOfferings()
     }
-  }, [supabase, freelancerId, toast])
+  }, [supabase, freelancerId])
 
   const handleAddOffering = async () => {
     if (!selectedCategoryId || !hourlyRate) {
-      toast({
-        title: "Missing information",
-        description: "Please select a category and enter an hourly rate",
-        variant: "destructive",
-      })
+      toast.error("Please select a category and enter an hourly rate")
       return
     }
 
     if (offerings.length >= MAX_JOB_OFFERINGS) {
-      toast({
-        title: "Maximum offerings reached",
-        description: `You can only add up to ${MAX_JOB_OFFERINGS} job offerings at this time.`,
-        variant: "destructive",
-      })
+      toast.error(`You can only add up to ${MAX_JOB_OFFERINGS} job offerings at this time.`)
       return
     }
 
@@ -116,11 +104,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       )
 
       if (existingOffering) {
-        toast({
-          title: "Category already added",
-          description: "You already have an offering for this job category and subcategory",
-          variant: "destructive",
-        })
+        toast.error("You already have an offering for this job category and subcategory")
         setSaving(false)
         return
       }
@@ -166,19 +150,12 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       setDescription("")
       setExperienceYears("")
 
-      toast({
-        title: "Job offering added",
-        description: `You can now be booked for ${data.job_categories.name} ${
-          data.job_subcategories?.name ? `- ${data.job_subcategories.name}` : ""
-        } jobs`,
-      })
+      toast.success(`You can now be booked for ${data.job_categories.name} ${
+        data.job_subcategories?.name ? `- ${data.job_subcategories.name}` : ""
+      } jobs`)
     } catch (error) {
       console.error("Error adding job offering:", error)
-      toast({
-        title: "Error",
-        description: "Failed to add job offering",
-        variant: "destructive",
-      })
+      toast.error("Failed to add job offering")
     } finally {
       setSaving(false)
     }
@@ -193,17 +170,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       // Update local state
       setOfferings(offerings.filter((o) => o.id !== offeringId))
 
-      toast({
-        title: "Job offering removed",
-        description: "The job category has been removed from your profile",
-      })
+      toast.success("The job category has been removed from your profile")
     } catch (error) {
       console.error("Error removing job offering:", error)
-      toast({
-        title: "Error",
-        description: "Failed to remove job offering",
-        variant: "destructive",
-      })
+      toast.error("Failed to remove job offering")
     }
   }
 

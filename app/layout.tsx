@@ -1,7 +1,7 @@
 import type React from "react"
 import { GeistSans } from "geist/font/sans"
 import "./globals.css"
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/components/theme-provider"
 import Header from "@/components/header"
 import Footer from "@/components/footer"

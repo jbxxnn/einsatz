@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useRef } from "react"
 import { useSupabase } from "./supabase-provider"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "@/lib/toast"
 import { Button } from "@/components/ui/button"
 import { Pencil, Upload, Loader2 } from "lucide-react"
 import Image from "next/image"
@@ -18,7 +18,6 @@ interface AvatarUploadProps {
 
 export function AvatarUpload({ userId, avatarUrl, firstName, onAvatarChange }: AvatarUploadProps) {
   const { supabase } = useSupabase()
-  const { toast } = useToast()
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(avatarUrl)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -37,10 +36,8 @@ export function AvatarUpload({ userId, avatarUrl, firstName, onAvatarChange }: A
 
     // Validate file size (max 5MB)
     if (fileSize > 5) {
-      toast({
-        title: "File too large",
+      toast.error("File too large", {
         description: "Please select an image under 5MB",
-        variant: "destructive",
       })
       return
     }
@@ -83,16 +80,11 @@ export function AvatarUpload({ userId, avatarUrl, firstName, onAvatarChange }: A
       // Call the callback with the new URL
       onAvatarChange(publicUrlData.publicUrl)
 
-      toast({
-        title: "Avatar updated",
-        description: "Your profile picture has been updated successfully",
-      })
+      toast.success("Avatar updated successfully")
     } catch (error: any) {
       console.error("Error uploading avatar:", error)
-      toast({
-        title: "Upload failed",
+      toast.error("Upload failed", {
         description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
       })
 
       // Revert to previous avatar if upload fails
