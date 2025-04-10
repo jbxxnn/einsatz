@@ -78,7 +78,10 @@ export default function FreelancersPage() {
          if (selectedCategories) queryUrl += `&category=${selectedCategories}`
         if (selectedSubcategory) queryUrl += `&subcategory=${selectedSubcategory}`
 
-        const response = await fetch(queryUrl)
+        const response = await fetch(queryUrl, {
+          credentials: 'include',
+          cache: 'no-store'
+        })
         const data = await response.json()
 
         if (data.error) {
@@ -269,7 +272,19 @@ export default function FreelancersPage() {
                 <BentoGridItem
                   key={freelancer.id}
                   title={`${freelancer.first_name} ${freelancer.last_name}`}
-                  description={freelancer.location || 'Location not specified'}
+                  hour={(<p>€{freelancer.hourly_rate}/hour</p>)}
+                  distance={freelancer.distance !== null && (
+                    <div className="flex items-center mt-1">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      <span>{Math.round(freelancer.distance * 10) / 10} km away</span>
+                    </div>
+                  )}
+                  description={freelancer.location && (
+                    <div className="flex items-center">
+                      <MapPin className="mr-1 h-4 w-4 text-muted-foreground" />
+                      <span>{freelancer.location || 'Location not specified'}</span>
+                    </div>
+                    )}
                   header={
                     <div className="relative h-40 w-full">
                       <Image
