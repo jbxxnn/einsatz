@@ -53,6 +53,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [noAvailability, setNoAvailability] = useState(false)
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null)
   const [debugInfo, setDebugInfo] = useState<string>("")
+  const [paymentMethod, setPaymentMethod] = useState<"platform" | "offline">("platform")
 
   // Calculate valid end times based on selected start time
   const validEndTimes = useMemo(() => {
@@ -332,7 +333,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           hourly_rate: hourlyRate || freelancer.hourly_rate || 0,
           total_amount: calculateTotal(),
           status: "pending",
-          payment_status: "unpaid",
+          payment_status: paymentMethod === "platform" ? "unpaid" : "offline",
+          payment_method: paymentMethod,
           category_id: selectedCategoryId,
         })
         .select()
@@ -343,11 +345,17 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       toast({
         title: "Booking created",
-        description: "Your booking request has been sent to the freelancer",
+        description: paymentMethod === "platform" 
+          ? "Your booking request has been sent to the freelancer. Please complete the payment to confirm your booking."
+          : "Your booking request has been sent to the freelancer. Please coordinate payment details with the freelancer.",
       })
 
-      // Redirect to payment page
-      router.push(`/bookings/${data[0].id}/payment`)
+      // Redirect based on payment method
+      if (paymentMethod === "platform") {
+        router.push(`/bookings/${data[0].id}/payment`)
+      } else {
+        router.push(`/bookings/${data[0].id}`)
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -370,7 +378,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <Button type="button" variant="ghost" size="sm" className="mb-2 -ml-2 text-muted-foreground" onClick={onBack}>
         <ArrowLeft className="h-4 w-4 mr-1" />
         Back
@@ -525,6 +533,27 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         />
       </div>
 
+      <div className="space-y-4">
+        <Label>Payment Method</Label>
+        <Select
+          value={paymentMethod}
+          onValueChange={(value: "platform" | "offline") => setPaymentMethod(value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select payment method" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="platform">Pay through platform</SelectItem>
+            <SelectItem value="offline">Handle payment offline</SelectItem>
+          </SelectContent>
+        </Select>
+        {paymentMethod === "offline" && (
+          <div className="text-sm text-muted-foreground">
+            You will need to coordinate payment details directly with the freelancer.
+          </div>
+        )}
+      </div>
+
       <div className="border-t pt-4 mt-4">
         <div className="flex justify-between mb-2">
           <span>Duration</span>
@@ -545,7 +574,14 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         className="w-full"
         disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime}
       >
-        {loading ? "Processing..." : "Book and Pay"}
+        {loading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Creating booking...
+          </>
+        ) : (
+          "Create Booking"
+        )}
       </Button>
 
       <p className="text-xs text-center text-muted-foreground">

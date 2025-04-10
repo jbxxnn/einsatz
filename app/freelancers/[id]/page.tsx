@@ -177,19 +177,22 @@ export default function FreelancerProfile() {
                 {freelancer.first_name} {freelancer.last_name}
               </h1>
 
-              <div className="flex items-center mt-2">
+              <div className="flex justify-between flex-col mt-2">
                 <div className="flex items-center">
                   <Star className="h-5 w-5 fill-primary text-primary" />
                   <span className="ml-1 font-medium">4.9</span>
                   <span className="text-muted-foreground ml-1">({reviews.length} reviews)</span>
                 </div>
-
+                <div>
                 {freelancer.location && (
-                  <div className="flex items-center ml-4">
-                    <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
-                    <span className="text-muted-foreground">{freelancer.location}</span>
-                  </div>
+                  <div className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-2 text-primary" />
+                  <span>
+                    Serves clients within {freelancer.service_radius} miles of {freelancer.location}
+                  </span>
+                </div>
                 )}
+                </div>
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
@@ -219,7 +222,7 @@ export default function FreelancerProfile() {
                 <p className="text-muted-foreground whitespace-pre-line">{freelancer.bio || "No bio provided."}</p>
               </div>
 
-              {freelancer.latitude && freelancer.longitude && freelancer.service_radius && (
+              {/* {freelancer.latitude && freelancer.longitude && freelancer.service_radius && (
                 <div className="mt-4">
                   <h2 className="text-xl font-semibold mb-2">Service Area</h2>
                   <div className="flex items-center">
@@ -229,10 +232,10 @@ export default function FreelancerProfile() {
                     </span>
                   </div>
                 </div>
-              )}
+              )} */}
 
 
-              
+{/*               
               {selectedOffering && (
                 <div>
                   <h2 className="text-xl font-semibold mb-2">{selectedOffering.category_name} Services</h2>
@@ -248,9 +251,9 @@ export default function FreelancerProfile() {
                     </p>
                   )}
                 </div>
-              )}
+              )} */}
 
-              <div>
+              {/* <div>
               <h2 className="text-xl font-semibold mb-2">Skills</h2>
                 <div className="flex flex-wrap gap-2">
                   {freelancer.skills?.map((skill) => (
@@ -262,6 +265,38 @@ export default function FreelancerProfile() {
                     <p className="text-muted-foreground">No skills listed.</p>
                   )}
                 </div>
+              </div> */}
+
+              <div>
+              <h2 className="text-xl font-semibold mb-2">Select a service</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  {freelancer.job_offerings.map((offering) => (
+                    <Card key={offering.category_id} className="p-4">
+                      <CardContent>
+                        <h3 className="text-lg font-semibold">{offering.category_name}</h3>
+                        <p className="text-primary font-bold">€{offering.hourly_rate}/hour</p>
+                        {offering.description && (
+                          <p className="text-muted-foreground mt-2">{offering.description}</p>
+                        )}
+                        {offering.experience_years && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {offering.experience_years} years of experience
+                          </p>
+                        )}
+                        <Button
+                          variant={selectedCategoryId === offering.category_id ? "default" : "outline"}
+                          className="mt-4 w-full"
+                          onClick={() => setSelectedCategoryId(offering.category_id)}
+                        >
+                          {selectedCategoryId === offering.category_id ? "Selected" : "Select"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                {/* {selectedOffering && (
+                  <p className="mt-2 font-medium text-primary">€{selectedOffering.hourly_rate}/hour</p>
+                )} */}
               </div>
             </TabsContent>
 
@@ -328,24 +363,12 @@ export default function FreelancerProfile() {
 
               {!showBookingForm ? (
                 <div className="space-y-4">
-                    {freelancer.job_offerings.length > 0 && (
+                    {freelancer.job_offerings.length > 0 && selectedOffering && (
                     <div>
-                      <p className="text-sm text-muted-foreground mb-2">Select a service:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {freelancer.job_offerings.map((offering) => (
-                          <Badge
-                            key={offering.category_id}
-                            variant={selectedCategoryId === offering.category_id ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={() => setSelectedCategoryId(offering.category_id)}
-                          >
-                            {offering.category_name}
-                          </Badge>
-                        ))}
+                      <p className="text-sm text-muted-foreground mb-2">Selected service:</p>
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold">{selectedOffering.category_name}</h3>
                       </div>
-                      {selectedOffering && (
-                        <p className="mt-2 font-medium text-primary">€{selectedOffering.hourly_rate}/hour</p>
-                      )}
                     </div>
                   )}
 
