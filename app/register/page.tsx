@@ -33,6 +33,7 @@ export default function Register() {
     setLoading(true)
 
     try {
+      console.log('Starting signup process...')
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -46,34 +47,43 @@ export default function Register() {
       })
 
       if (error) {
+        console.error('Signup error:', error)
         throw error
       }
 
       if (data.user) {
-        // Create profile in the database
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: data.user.id,
-          first_name: firstName,
-          last_name: lastName,
-          email: email,
-          user_type: userType,
-        })
+        console.log('User created successfully:', data.user.id)
+        
+        // Wait a moment to allow the database trigger to complete
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Verify the profile was created
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single()
 
         if (profileError) {
+          console.error('Error checking profile:', profileError)
           throw profileError
         }
 
-        toast.success("Account created!")
-        toast.info("Please check your email to confirm your account.")
+        console.log('Profile status:', profile ? 'Found' : 'Not found')
 
-        // If freelancer, redirect to complete profile
-        if (userType === "freelancer") {
-          router.push("/profile/edit")
-        } else {
-          router.push("/dashboard")
-        }
+        toast.success("Account created successfully!")
+        toast.info("Please check your email to verify your account before logging in.")
+        
+        // Clear the form
+        setEmail("")
+        setPassword("")
+        setFirstName("")
+        setLastName("")
+        
+        // Don't redirect, let them stay on the page to read the verification message
       }
     } catch (error: any) {
+      console.error('Registration error:', error)
       toast.error(error.message || "Something went wrong. Please try again.")
     } finally {
       setLoading(false)

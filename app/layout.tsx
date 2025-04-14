@@ -7,6 +7,8 @@ import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { SupabaseProvider } from "@/components/supabase-provider"
 import { UserProvider } from "@/components/user-provider"
+import {NextIntlClientProvider} from 'next-intl';
+import {getLocale} from 'next-intl/server';
 
 export const metadata = {
   title: "Einsatz - Instant Freelancer Booking",
@@ -18,6 +20,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${GeistSans.className} min-h-screen flex flex-col`}>
@@ -25,7 +28,9 @@ export default function RootLayout({
           <UserProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               <Header />
-              <main className="main-container">{children}</main>
+              <main className="main-container">
+                {children}
+              </main>
               <Footer />
               <Toaster />
             </ThemeProvider>

@@ -125,25 +125,46 @@ export default function Dashboard() {
     }
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, paymentMethod = "online") => {
     switch (status) {
       case "pending":
         return (
+          <div className="flex gap-1 flex-wrap">
           <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
             Pending
           </Badge>
+          {paymentMethod === "offline" && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                Offline
+              </Badge>
+            )}
+          </div>
         )
       case "confirmed":
         return (
+          <div className="flex gap-1 flex-wrap">
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
             Confirmed
           </Badge>
+          {paymentMethod === "offline" && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                Offline
+              </Badge>
+            )}
+          </div>
         )
       case "completed":
         return (
+          <div className="flex gap-1 flex-wrap">
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
             Completed
           </Badge>
+          {paymentMethod === "offline" && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                Offline
+              </Badge>
+            )}
+          </div>
         )
       case "cancelled":
         return (
@@ -295,7 +316,9 @@ export default function Dashboard() {
                                       : `Booking from ${booking.client?.first_name} ${booking.client?.last_name}`}
                                   </h3>
 
-                                  <div className="flex items-center mt-1">{getStatusBadge(booking.status)}</div>
+                                  <div className="flex items-center mt-1">
+                                    {getStatusBadge(booking.status, booking.payment_method  || 'online')}
+                                  </div>
                                 </div>
 
                                 <div className="mt-2 md:mt-0">
@@ -421,7 +444,9 @@ export default function Dashboard() {
                                       : `Booking from ${booking.client?.first_name} ${booking.client?.last_name}`}
                                   </h3>
 
-                                  <div className="flex items-center mt-1">{getStatusBadge(booking.status)}</div>
+                                  <div className="flex items-center mt-1">
+                                    {getStatusBadge(booking.status, booking.payment_method  || 'online')}
+                                  </div>
                                 </div>
 
                                 <div className="mt-2 md:mt-0">

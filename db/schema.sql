@@ -82,11 +82,24 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('profiles', 'profiles', t
 -- Profiles: Users can read any profile, but only update their own
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
+-- Allow public read access to profiles
 CREATE POLICY "Public profiles are viewable by everyone" 
   ON profiles FOR SELECT USING (true);
 
+-- Allow users to update their own profile
 CREATE POLICY "Users can update their own profile" 
   ON profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Allow profile creation for authenticated users
+CREATE POLICY "Users can create their own profile"
+  ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Allow the handle_new_user function to create profiles
+CREATE POLICY "Allow handle_new_user to create profiles"
+  ON profiles FOR INSERT
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
 
 -- Bookings: Users can only see bookings they're involved in
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;

@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Calendar, CheckCircle, Clock, Loader2, MapPin, MessageSquare, Star, XCircle } from "lucide-react"
+import { ArrowLeft, Calendar, CheckCircle, Clock, Loader2, MapPin, Star, XCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import { toast } from "@/lib/toast"
+import MessageButton from "@/components/message-button"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -158,25 +159,46 @@ export default function BookingDetailsPage() {
     }
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, paymentMethod = "online") => {
     switch (status) {
       case "pending":
         return (
+          <div className="flex gap-2">
           <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
             Pending
           </Badge>
+          {paymentMethod === "offline" && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                Offline Payment
+              </Badge>
+            )}
+          </div>
         )
       case "confirmed":
         return (
+          <div className="flex gap-2">
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
             Confirmed
           </Badge>
+          {paymentMethod === "offline" && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                Offline Payment
+              </Badge>
+            )}
+          </div>
         )
       case "completed":
         return (
+          <div className="flex gap-2">
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
             Completed
           </Badge>
+          {paymentMethod === "offline" && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                Offline Payment
+              </Badge>
+            )}
+          </div>
         )
       case "cancelled":
         return (
@@ -228,7 +250,7 @@ export default function BookingDetailsPage() {
                   <CardTitle>Booking Details</CardTitle>
                   <CardDescription>Booking ID: {booking.id.substring(0, 8)}</CardDescription>
                 </div>
-                <div>{getStatusBadge(booking.status)}</div>
+                <div>{getStatusBadge(booking.status, booking.payment_method || 'online')}</div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -319,8 +341,55 @@ export default function BookingDetailsPage() {
                       {booking.payment_status === "paid" ? "Paid" : "Unpaid"}
                     </span>
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Payment Method</span>
+                    <span>{booking.payment_method === "offline" ? "Offline Payment" : "Online Payment"}</span>
+                  </div>
                 </div>
               </div>
+              
+              {booking.payment_method === "offline" &&
+                userType === "freelancer" &&
+                booking.payment_status !== "paid" && (
+                  <div className="mt-4 border-t pt-4">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Offline Payment Management</h3>
+                    <div className="bg-muted/30 p-4 rounded-md">
+                      <p className="text-sm mb-3">
+                        This booking uses offline payment. Once you've received payment from the client, please mark it
+                        as paid.
+                      </p>
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const { error } = await supabase
+                              .from("bookings")
+                              .update({
+                                payment_status: "paid",
+                                status: "confirmed",
+                              })
+                              .eq("id", booking.id)
+
+                            if (error) throw error
+
+                            // Update local state
+                            setBooking({
+                              ...booking,
+                              payment_status: "paid",
+                              status: "confirmed",
+                            } as Booking)
+
+                            toast.success("Payment marked as received")
+                          } catch (error: any) {
+                            toast.error(error.message || "Something went wrong. Please try again.")
+                          }
+                        }}
+                      >
+                        Mark Payment as Received
+                      </Button>
+                    </div>
+                  </div>
+                )}
             </CardContent>
             <CardFooter className="flex flex-wrap gap-2">
               {userType === "client" && booking.status === "pending" && (
@@ -350,10 +419,16 @@ export default function BookingDetailsPage() {
                 </Button>
               )}
 
-              <Button variant="outline">
-                <MessageSquare className="h-4 w-4 mr-1" />
-                Message
-              </Button>
+                {booking.payment_method === "offline" &&
+                userType === "client" &&
+                booking.payment_status !== "paid" &&
+                booking.status !== "cancelled" && (
+                  <Link href={`/bookings/${booking.id}/payment`}>
+                    <Button variant="outline">View Payment Instructions</Button>
+                  </Link>
+                )}
+
+              <MessageButton bookingId={booking.id} clientId={booking.client_id} freelancerId={booking.freelancer_id} />
             </CardFooter>
           </Card>
 
@@ -440,7 +515,7 @@ export default function BookingDetailsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Button variant="outline" className="w-full justify-start">
-                <MessageSquare className="h-4 w-4 mr-2" />
+                {/* <MessageSquare className="h-4 w-4 mr-2" /> */}
                 Send Message
               </Button>
 

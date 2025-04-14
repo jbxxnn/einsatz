@@ -42,7 +42,7 @@ export default function PaymentPage() {
         .from("bookings")
         .select(`
           *,
-          freelancer:freelancer_id(id, first_name, last_name, avatar_url, hourly_rate)
+           freelancer:freelancer_id(id, first_name, last_name, avatar_url, hourly_rate, email)
         `)
         .eq("id", params.id)
         .eq("client_id", user.id)
@@ -160,6 +160,103 @@ export default function PaymentPage() {
               </div>
             </CardContent>
           </Card>
+            ) : booking.payment_method === "offline" ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Offline Payment Instructions</CardTitle>
+                  <CardDescription>
+                    Your booking has been created. Please follow these instructions to complete payment.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="border rounded-lg p-4 mb-4">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="relative h-12 w-12 rounded-full overflow-hidden">
+                        <Image
+                          src={booking.freelancer?.avatar_url || `/placeholder.svg?height=48&width=48`}
+                          alt={`${booking.freelancer?.first_name} ${booking.freelancer?.last_name}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">
+                          {booking.freelancer?.first_name} {booking.freelancer?.last_name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">Freelancer</p>
+                      </div>
+                    </div>
+    
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Date</span>
+                        <span>{format(new Date(booking.start_time), "MMMM d, yyyy")}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Time</span>
+                        <span>
+                          {format(new Date(booking.start_time), "h:mm a")} - {format(new Date(booking.end_time), "h:mm a")}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Location</span>
+                        <span>{booking.location || "Not specified"}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Total Amount</span>
+                        <span className="font-bold">€{booking.total_amount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+    
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Payment Instructions</h3>
+                    <div className="bg-muted/30 p-4 rounded-md space-y-4">
+                      <div>
+                        <h4 className="font-medium mb-1">1. Contact the Freelancer</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Use our messaging system to coordinate payment details with the freelancer.
+                        </p>
+                        <Button variant="outline" className="mt-2" asChild>
+                          <Link href={`/messages?freelancerId=${booking.freelancer_id}`}>Message Freelancer</Link>
+                        </Button>
+                      </div>
+    
+                      <div>
+                        <h4 className="font-medium mb-1">2. Agree on Payment Method</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Discuss and agree on a payment method that works for both of you (cash, bank transfer, etc.).
+                        </p>
+                      </div>
+    
+                      <div>
+                        <h4 className="font-medium mb-1">3. Complete the Payment</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Make the payment as agreed and ask the freelancer to mark the booking as paid on the platform.
+                        </p>
+                      </div>
+    
+                      <div className="pt-2 border-t">
+                        <p className="text-sm font-medium">Important Notes:</p>
+                        <ul className="text-xs text-muted-foreground list-disc pl-4 mt-1 space-y-1">
+                          <li>The platform does not handle or guarantee offline payments</li>
+                          <li>Always keep records of your payment transactions</li>
+                          <li>The freelancer will need to confirm receipt of payment</li>
+                          <li>For disputes, please contact our support team</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => router.push("/dashboard")}>
+                    Go to Dashboard
+                  </Button>
+                  <Link href={`/bookings/${booking.id}`}>
+                    <Button>View Booking Details</Button>
+                  </Link>
+                </CardFooter>
+              </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">

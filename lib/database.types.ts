@@ -83,6 +83,7 @@ export interface Database {
           created_at: string
           updated_at: string
           category_id: string | null
+          payment_method: "online" | "offline" | null
         }
         Insert: {
           id?: string
@@ -101,6 +102,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
           category_id?: string | null
+          payment_method?: "online" | "offline" | null
         }
         Update: {
           id?: string
@@ -119,6 +121,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
           category_id?: string | null
+          payment_method?: "online" | "offline" | null
         }
       }
       reviews: {
@@ -420,4 +423,3 @@ export interface Database {
     }
   }
 }
-

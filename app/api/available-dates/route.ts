@@ -146,4 +146,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Failed to fetch available dates" }, { status: 500 })
   }
 }
-

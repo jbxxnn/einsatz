@@ -52,6 +52,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [noAvailability, setNoAvailability] = useState(false)
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null)
   const [debugInfo, setDebugInfo] = useState<string>("")
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "offline">("online")
 
   // Calculate valid end times based on selected start time
   const validEndTimes = useMemo(() => {
@@ -123,48 +124,52 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   }, [selectedCategoryId, freelancer])
 
   useEffect(() => {
-    const controller = new AbortController()
-    const signal = controller.signal
-
     const fetchAvailability = async () => {
-      if (!selectedDate) return
+      if (!selectedDate || !selectedCategoryId) return
 
       setFetchingAvailability(true)
-      setAvailabilityBlocks([])
+      setNoAvailability(false)
+      setSuggestedDate(null)
       setSelectedStartTime(null)
       setSelectedEndTime(null)
+      setDebugInfo("")
 
       try {
-        const { data, error } = await supabase
-          .from("availability_blocks")
-          .select("*")
-          .eq("freelancer_id", freelancer.id)
-          .eq("date", format(selectedDate, "yyyy-MM-dd"))
-          .order("start_time", { ascending: true })
+        const formattedDate = format(selectedDate, "yyyy-MM-dd")
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
-        if (error) throw error
+        const response = await fetch(
+          `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`,
+          { signal: controller.signal, cache: "no-store" },
+        )
 
-        // Process availability blocks
-        const processedBlocks = data.map((block) => {
-          const startTime = new Date(block.start_time)
-          const endTime = new Date(block.end_time)
+        clearTimeout(timeoutId)
 
-          // Generate available start times every 30 minutes
-          const availableStartTimes: string[] = []
-          let currentTime = startTime
+        if (!response.ok) {
+          throw new Error("Failed to fetch availability")
+        }
 
-          while (currentTime < endTime) {
-            availableStartTimes.push(format(currentTime, "HH:mm"))
-            currentTime = new Date(currentTime.getTime() + 30 * 60000) // Add 30 minutes
+        const data = await response.json()
+
+        // Add debug info
+        setDebugInfo(JSON.stringify(data, null, 2))
+
+        if (data.availabilityBlocks && data.availabilityBlocks.length > 0) {
+          setAvailabilityBlocks(data.availabilityBlocks)
+
+          // Flatten all available start times across all blocks
+          const allStartTimes = data.availabilityBlocks.flatMap((block: AvailabilityBlock) => block.availableStartTimes)
+
+          if (allStartTimes.length === 0) {
+            setNoAvailability(true)
+            findNextAvailableDate(selectedDate)
           }
-
-          return {
-            ...block,
-            availableStartTimes,
-          }
-        })
-
-        setAvailabilityBlocks(processedBlocks)
+        } else {
+          setAvailabilityBlocks([])
+          setNoAvailability(true)
+          findNextAvailableDate(selectedDate)
+        }
       } catch (error: any) {
         console.error("Error fetching availability:", error)
         if (error.name === "AbortError") {
@@ -172,17 +177,14 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         } else {
           toast.error("Failed to fetch freelancer availability")
         }
+        setAvailabilityBlocks([])
       } finally {
         setFetchingAvailability(false)
       }
     }
 
     fetchAvailability()
-
-    return () => {
-      controller.abort()
-    }
-  }, [supabase, freelancer.id, selectedDate])
+  }, [selectedDate, selectedCategoryId, freelancer.id, toast])
 
   // Function to find the next available date
   const findNextAvailableDate = async (startDate: Date) => {
@@ -284,7 +286,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       } = await supabase.auth.getUser()
 
       if (!user) {
-        toast.error("Please log in to book a freelancer")
+        toast.error("Authentication required")
         router.push("/login")
         return
       }
@@ -312,6 +314,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           status: "pending",
           payment_status: "unpaid",
           category_id: selectedCategoryId,
+          payment_method: paymentMethod,
         })
         .select()
 
@@ -319,7 +322,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         throw error
       }
 
-      toast.success("Your booking request has been sent to the freelancer")
+      toast.success("Booking created")
 
       // Redirect to payment page
       router.push(`/bookings/${data[0].id}/payment`)
@@ -333,7 +336,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const handleSelectSuggestedDate = () => {
     if (suggestedDate) {
       onBack() // Go back to date selection
-      toast.info(`Please select ${format(suggestedDate, "MMMM d, yyyy")} in the calendar.`)
+      toast.success("Try this date instead")
     }
   }
 
@@ -508,12 +511,50 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         </div>
       </div>
 
+      <div className="space-y-2 border-t pt-4">
+        <Label>Payment Method</Label>
+        <div className="grid grid-cols-2 gap-4">
+          <div
+            className={`border rounded-md p-3 cursor-pointer flex items-center ${
+              paymentMethod === "online" ? "border-primary bg-primary/5" : "border-muted"
+            }`}
+            onClick={() => setPaymentMethod("online")}
+          >
+            <div
+              className={`w-4 h-4 rounded-full border mr-2 ${
+                paymentMethod === "online" ? "border-primary bg-primary" : "border-muted"
+              }`}
+            ></div>
+            <div>
+              <p className="font-medium">Online Payment</p>
+              <p className="text-xs text-muted-foreground">Pay securely through our platform</p>
+            </div>
+          </div>
+          <div
+            className={`border rounded-md p-3 cursor-pointer flex items-center ${
+              paymentMethod === "offline" ? "border-primary bg-primary/5" : "border-muted"
+            }`}
+            onClick={() => setPaymentMethod("offline")}
+          >
+            <div
+              className={`w-4 h-4 rounded-full border mr-2 ${
+                paymentMethod === "offline" ? "border-primary bg-primary" : "border-muted"
+              }`}
+            ></div>
+            <div>
+              <p className="font-medium">Offline Payment</p>
+              <p className="text-xs text-muted-foreground">Pay directly to the freelancer</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <Button
         type="submit"
         className="w-full"
         disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime}
       >
-        {loading ? "Processing..." : "Book and Pay"}
+        {loading ? "Processing..." : paymentMethod === "online" ? "Book and Pay Online" : "Book with Offline Payment"}
       </Button>
 
       <p className="text-xs text-center text-muted-foreground">
@@ -522,4 +563,3 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     </form>
   )
 }
-
