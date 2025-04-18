@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -25,7 +25,7 @@ export default function JobCategorySelector({
   multiple = true,
   className,
 }: JobCategorySelectorProps) {
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [open, setOpen] = useState(false)
   const [categories, setCategories] = useState<JobCategory[]>([])
   const [loading, setLoading] = useState(true)

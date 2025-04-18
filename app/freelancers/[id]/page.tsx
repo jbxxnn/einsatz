@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -27,7 +27,7 @@ interface FreelancerWithOfferings extends Profile {
 export default function FreelancerProfile() {
   const params = useParams()
   const router = useRouter()
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [freelancer, setFreelancer] = useState<FreelancerWithOfferings | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)

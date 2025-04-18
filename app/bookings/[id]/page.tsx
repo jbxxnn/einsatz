@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -13,7 +13,7 @@ import Image from "next/image"
 import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import { toast } from "@/lib/toast"
-import MessageButton from "@/components/message-button"
+// import MessageButton from "@/components/message-button"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -23,7 +23,7 @@ type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
 export default function BookingDetailsPage() {
   const params = useParams()
   const router = useRouter()
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
   const [userType, setUserType] = useState<"client" | "freelancer" | null>(null)
@@ -428,7 +428,7 @@ export default function BookingDetailsPage() {
                   </Link>
                 )}
 
-              <MessageButton bookingId={booking.id} clientId={booking.client_id} freelancerId={booking.freelancer_id} />
+              {/* <MessageButton bookingId={booking.id} clientId={booking.client_id} freelancerId={booking.freelancer_id} /> */}
             </CardFooter>
           </Card>
 

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "./optimized-supabase-provider"
 import { format, isAfter, isBefore, addWeeks, addMonths } from "date-fns"
 import { CalendarIcon, Clock, Plus, Trash2, RefreshCw, AlertCircle, CheckCircle, HelpCircle } from "lucide-react"
 import { toast } from "@/lib/toast"
@@ -35,7 +35,7 @@ type AvailabilityCalendarProps = {
 }
 
 export default function AvailabilityCalendar({ freelancerId, categoryId, categoryName }: AvailabilityCalendarProps) {
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [date, setDate] = useState<Date>(new Date())
   const [availability, setAvailability] = useState<AvailabilityEntry[]>([])
   const [loading, setLoading] = useState(true)

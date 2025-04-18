@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, usePathname } from "next/navigation"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "./optimized-supabase-provider"
 import { User, Briefcase, Calendar, Clock, CreditCard, Settings, LogOut } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -16,7 +16,7 @@ interface SidebarNavProps {
 export default function SidebarNav({ profile }: SidebarNavProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
 
   const isActive = (path: string) => {
     return pathname === path || pathname?.startsWith(`${path}/`)

@@ -16,6 +16,7 @@ export interface Database {
           hourly_rate: number | null
           location: string | null
           availability: Json | null
+          phone: string | null
           created_at: string
           updated_at: string
           metadata: Json | null
@@ -36,6 +37,7 @@ export interface Database {
           hourly_rate?: number | null
           location?: string | null
           availability?: Json | null
+          phone?: string | null
           created_at?: string
           updated_at?: string
           metadata?: Json | null
@@ -56,6 +58,7 @@ export interface Database {
           hourly_rate?: number | null
           location?: string | null
           availability?: Json | null
+          phone?: string | null
           created_at?: string
           updated_at?: string
           metadata?: Json | null

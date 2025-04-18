@@ -3,16 +3,32 @@ import { GeistSans } from "geist/font/sans"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { ThemeProvider } from "@/components/theme-provider"
-import Header from "@/components/header"
+import OptimizedHeader from "@/components/optimized-header"
 import Footer from "@/components/footer"
-import { SupabaseProvider } from "@/components/supabase-provider"
-import { UserProvider } from "@/components/user-provider"
-import {NextIntlClientProvider} from 'next-intl';
-import {getLocale} from 'next-intl/server';
+import { OptimizedSupabaseProvider } from "@/components/optimized-supabase-provider"
+import { OptimizedUserProvider } from "@/components/optimized-user-provider"
+import { Suspense } from "react"
+import PerformanceMonitor from "@/components/performance-monitor"
 
 export const metadata = {
   title: "Einsatz - Instant Freelancer Booking",
   description: "Book local, in-person freelancers for urgent jobs instantly",
+}
+
+// Simple loading skeleton for the main content
+function LoadingSkeleton() {
+  return (
+    <div className="container py-10 space-y-4">
+      <div className="h-8 w-1/3 bg-muted animate-pulse rounded-md"></div>
+      <div className="h-4 w-2/3 bg-muted animate-pulse rounded-md"></div>
+      <div className="h-4 w-1/2 bg-muted animate-pulse rounded-md"></div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-40 bg-muted animate-pulse rounded-md"></div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function RootLayout({
@@ -20,22 +36,22 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${GeistSans.className} min-h-screen flex flex-col`}>
-        <SupabaseProvider>
-          <UserProvider>
+        <OptimizedSupabaseProvider>
+          <OptimizedUserProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-              <Header />
-              <main className="main-container">
-                {children}
+              <OptimizedHeader />
+              <main className="flex-1">
+                <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>
               </main>
               <Footer />
               <Toaster />
+              <PerformanceMonitor />
             </ThemeProvider>
-          </UserProvider>
-        </SupabaseProvider>
+          </OptimizedUserProvider>
+        </OptimizedSupabaseProvider>
       </body>
     </html>
   )

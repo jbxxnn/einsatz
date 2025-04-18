@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -29,7 +29,7 @@ interface JobOfferingsManagerProps {
 const MAX_JOB_OFFERINGS = 3
 
 export default function JobOfferingsManager({ freelancerId }: JobOfferingsManagerProps) {
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
   const [offerings, setOfferings] = useState<(JobOffering & { category_name: string; subcategory_name?: string })[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)

@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -72,7 +72,7 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)

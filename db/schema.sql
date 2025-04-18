@@ -27,6 +27,7 @@ CREATE TABLE profiles (
   hourly_rate DECIMAL(10, 2),
   location TEXT,
   availability JSONB,
+  phone TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/components/user-provider"
 import { Button } from "@/components/ui/button"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "./optimized-supabase-provider"
 import { toast } from "@/lib/toast"
 import { MessageSquare, Loader2 } from "lucide-react"
 
@@ -17,7 +17,7 @@ interface MessageButtonProps {
 export default function MessageButton({ bookingId, clientId, freelancerId }: MessageButtonProps) {
   const router = useRouter()
   const { user } = useUser()
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(false)
 
   const handleClick = async () => {
