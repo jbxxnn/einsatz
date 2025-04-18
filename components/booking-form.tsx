@@ -552,9 +552,9 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       <Button
         type="submit"
         className="w-full"
-        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime}
+        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || paymentMethod === "online"}
       >
-        {loading ? "Processing..." : paymentMethod === "online" ? "Book and Pay Online" : "Book with Offline Payment"}
+        {loading ? "Processing..." : paymentMethod === "online" ? "Online Payment Coming soon..." : "Book with Offline Payment"}
       </Button>
 
       <p className="text-xs text-center text-muted-foreground">
