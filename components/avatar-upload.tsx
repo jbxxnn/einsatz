@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import { useSupabase } from "./supabase-provider"
+import { useOptimizedSupabase } from "./optimized-supabase-provider"
 import { toast } from "@/lib/toast"
 import { Button } from "@/components/ui/button"
 import { Pencil, Upload, Loader2 } from "lucide-react"
@@ -17,7 +17,7 @@ interface AvatarUploadProps {
 }
 
 export function AvatarUpload({ userId, avatarUrl, firstName, onAvatarChange }: AvatarUploadProps) {
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(avatarUrl)
   const fileInputRef = useRef<HTMLInputElement>(null)

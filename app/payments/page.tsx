@@ -22,15 +22,12 @@ type Invoice = Database["public"]["Tables"]["invoices"]["Row"] & {
   }
 }
 
-type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"]
-
 export default function PaymentsPage() {
   const router = useRouter()
   const { supabase } = useSupabase()
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
   const [activeTab, setActiveTab] = useState("invoices")
 
   useEffect(() => {

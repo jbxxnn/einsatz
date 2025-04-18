@@ -349,7 +349,11 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               <p className="text-sm text-muted-foreground mb-4">
                 Set your availability for this service. Clients will only be able to book you during these times.
               </p>
-              <AvailabilityCalendar freelancerId={freelancerId} categoryId={selectedOfferingCategoryId} />
+              <AvailabilityCalendar 
+                freelancerId={freelancerId} 
+                categoryId={selectedOfferingCategoryId} 
+                categoryName={offerings.find(o => o.category_id === selectedOfferingCategoryId)?.category_name || ''} 
+              />
               <div className="mt-4 text-center">
                 <p className="text-sm text-muted-foreground mb-2">Need more detailed availability management?</p>
                 <Link href="/profile/availability">

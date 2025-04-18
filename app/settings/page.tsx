@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -19,7 +19,7 @@ import { toast } from "@/lib/toast"
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)

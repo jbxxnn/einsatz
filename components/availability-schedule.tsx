@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "./optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -44,7 +44,7 @@ const DAYS_OF_WEEK = [
 ]
 
 export default function AvailabilityScheduleComponent({ freelancerId, categoryId }: AvailabilityScheduleProps) {
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [schedule, setSchedule] = useState<DaySchedule[]>([])

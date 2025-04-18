@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { toast } from "@/lib/toast"
@@ -22,7 +22,7 @@ type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row
 
 export default function AvailabilityPage() {
   const router = useRouter()
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [offerings, setOfferings] = useState<JobOffering[]>([])

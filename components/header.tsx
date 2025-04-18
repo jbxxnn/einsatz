@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { usePathname } from "next/navigation"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "./optimized-supabase-provider"
 import { useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import {
@@ -19,7 +19,7 @@ import { ModeToggle } from "./mode-toggle"
 
 export default function Header() {
   const pathname = usePathname()
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

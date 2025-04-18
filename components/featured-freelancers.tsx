@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "./optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -15,7 +15,7 @@ import LoadingSpinner from "@/components/loading-spinner"
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
 export default function FeaturedFreelancers() {
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [freelancers, setFreelancers] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>("all")
