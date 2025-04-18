@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useSupabase } from "@/components/supabase-provider"
+import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -24,7 +24,7 @@ type Invoice = Database["public"]["Tables"]["invoices"]["Row"] & {
 
 export default function PaymentsPage() {
   const router = useRouter()
-  const { supabase } = useSupabase()
+  const { supabase } = useOptimizedSupabase()
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
