@@ -1,11 +1,19 @@
 "use client"
 
 import { Suspense } from "react"
+
+import { useState, useEffect } from "react"
 import type { Database } from "@/lib/database.types"
 import DashboardStats from "@/components/dashboard-stats"
 import UpcomingBookings from "@/components/upcoming-bookings"
+import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 // import RecentMessages from "@/components/recent-messages"
 import { Skeleton } from "@/components/ui/skeleton"
+import SidebarNav from "@/components/sidebar-nav"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/lib/toast"
+import { useRouter } from "next/navigation"
+import LoadingSpinner from "@/components/loading-spinner"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -45,8 +53,157 @@ function MessagesSkeleton() {
 }
 
 export default function DashboardPage() {
+  const router = useRouter()
+  const { supabase } = useOptimizedSupabase()
+  const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [notifications, setNotifications] = useState({
+    email: true,
+    push: true,
+    sms: false,
+  })
+
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true)
+
+      try {
+        // Get current user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (!user) {
+          router.push("/login")
+          return
+        }
+
+        // Get profile
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single()
+
+        if (profileError) {
+          throw profileError
+        }
+
+        setProfile(profileData)
+
+        // Load notification settings from metadata if available
+        if (profileData.metadata && typeof profileData.metadata === "object" && profileData.metadata.notifications) {
+          setNotifications({
+            ...notifications,
+            ...profileData.metadata.notifications,
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error)
+        toast.error("Failed to load settings")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [supabase, router, toast])
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match")
+      return
+    }
+
+    setSaving(true)
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      })
+
+      if (error) throw error
+
+      toast.success("Your password has been updated")
+
+      // Clear form
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update password")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleUpdateNotifications = async () => {
+    if (!profile) return
+
+    setSaving(true)
+
+    try {
+      // Update profile metadata with notification settings
+      const metadata = {
+        ...(typeof profile.metadata === 'object' && profile.metadata !== null ? profile.metadata : {}),
+        notifications: notifications,
+      }
+
+      const { error } = await supabase.from("profiles").update({ metadata }).eq("id", profile.id)
+
+      if (error) throw error
+
+      toast.success("Notification settings updated")
+
+      // Update local state
+      setProfile({
+        ...profile,
+        metadata,
+      })
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update notification settings")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container py-10 flex justify-center items-center min-h-[50vh]">
+        <LoadingSpinner />
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="container py-10 text-center">
+        <h1 className="text-2xl font-bold mb-4">Profile not found</h1>
+        <Button onClick={() => router.push("/")}>Go to Home</Button>
+      </div>
+    )
+  }
+
+
   return (
-    <div className="container py-10">
+
+    <div className="bg-muted/30 min-h-screen">
+      <div className="container py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <SidebarNav profile={profile} />
+          </div>
+
+
+          <div className="lg:col-span-3 space-y-6">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
 
       <div className="space-y-8">
@@ -71,6 +228,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+    </div>
+    </div>
+    </div>
     </div>
   )
 }
