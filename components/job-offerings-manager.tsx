@@ -220,33 +220,41 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                         <p className="text-sm text-muted-foreground">{offering.subcategory_name}</p>
                       )}
                       <p className="text-sm text-muted-foreground">€{offering.hourly_rate}/hour</p>
-                      {offering.experience_years && (
+                      {/* {offering.experience_years && (
                         <p className="text-sm text-muted-foreground">
                           {offering.experience_years} {offering.experience_years === 1 ? "year" : "years"} of experience
                         </p>
-                      )}
+                      )} */}
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openAvailabilityDialog(offering.category_id)}>
+                      {/* <Button variant="outline" size="sm" onClick={() => openAvailabilityDialog(offering.category_id)}>
                         <Calendar className="h-4 w-4 mr-2" />
                         Set Availability
-                      </Button>
+                      </Button> */}
                       <Button variant="ghost" size="icon" onClick={() => handleDeleteOffering(offering.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </div>
 
-                  {offering.description && (
+                  {/* {offering.description && (
                     <div className="mt-2 text-sm text-muted-foreground">
                       <p>{offering.description}</p>
                     </div>
-                  )}
+                  )} */}
                 </div>
               ))}
             </div>
           )}
+          <div className="mt-5">
+           <Link href="/availability/global" >
+          <Button size="sm">
+            Set Global Availability
+          </Button>
+        </Link>
+        </div>
         </CardContent>
+       
       </Card>
 
       {hasReachedMaxOfferings ? (

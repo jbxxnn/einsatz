@@ -224,6 +224,13 @@ export default function GlobalAvailabilityCalendar({
         return
       }
 
+      // Validate that the selected date is not in the past
+      if (selectedDate < new Date()) {
+        toast.error("Cannot set availability for past dates")
+        setLoading(false)
+        return
+      }
+
       const userId = session.session.user.id
 
       // Create start and end datetime objects
@@ -344,24 +351,25 @@ export default function GlobalAvailabilityCalendar({
               tentative: (date) => availabilityDates[format(date, "yyyy-MM-dd")] === "tentative",
             }}
             modifiersClassNames={{
-              guaranteed: "availability-guaranteed",
-              tentative: "availability-tentative",
+              guaranteed: "guaranteed-day",
+              tentative: "tentative-day",
             }}
+            disabled={(date) => date < new Date()}
           />
 
-          <div className="mt-4 flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-1">
-              <div className="h-2 w-2 rounded-full bg-green-500" />
-              <span>Guaranteed</span>
+          <div className="mt-4 flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-green-500" />
+              <span className="text-sm">Guaranteed</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="h-2 w-2 rounded-full bg-amber-500" />
-              <span>Tentative</span>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-amber-500" />
+              <span className="text-sm">Tentative</span>
             </div>
           </div>
         </div>
 
-        <div>
+        <div >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium">{format(selectedDate, "EEEE, MMMM d, yyyy")}</h3>
 

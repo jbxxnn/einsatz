@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.freelancer_global_availability (
   is_recurring BOOLEAN DEFAULT false,
   recurrence_pattern TEXT CHECK (recurrence_pattern IN ('weekly', 'biweekly', 'monthly')),
   recurrence_end_date TIMESTAMPTZ,
-  certainty_level TEXT DEFAULT 'guaranteed' CHECK (certainty_level IN ('guaranteed', 'tentative')),
+  certainty_level TEXT DEFAULT 'guaranteed' CHECK (certainty_level IN ('guaranteed', 'tentative', 'unavailable')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
