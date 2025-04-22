@@ -58,8 +58,8 @@ export default function SidebarNav({ profile }: SidebarNavProps) {
         </Link>
         {profile.user_type === "freelancer" && (
           <Link
-            href="/profile/availability"
-            className={`flex items-center p-2 rounded-md ${isActive("/profile/availability") ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground hover:text-foreground"}`}
+            href="/availability/global"
+            className={`flex items-center p-2 rounded-md ${isActive("/availability/global") ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground hover:text-foreground"}`}
           >
             <Calendar className="h-4 w-4 mr-3" />
             <span>Availability</span>

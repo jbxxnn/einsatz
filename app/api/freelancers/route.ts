@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       .from("profiles")
       .select(`
         *,
-        job_offerings:freelancer_job_offerings(
+        job_offerings:freelancer_job_offerings!freelancer_job_offerings_freelancer_id_fkey(
           *,
           job_categories(id, name)
         )

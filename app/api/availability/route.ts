@@ -20,25 +20,58 @@ export async function GET(request: Request) {
     const selectedDate = parseISO(date)
     const dayOfWeek = selectedDate.getDay() // 0 = Sunday, 1 = Monday, etc.
 
-    // Fetch all availability entries for this freelancer and category
-    const { data: availabilityEntries, error: availabilityError } = await supabase
+    // Check if this job offering uses global availability
+    const { data: jobOfferingSetting } = await supabase
+      .from("job_offering_availability_settings")
+      .select("use_global_availability")
+      .eq("freelancer_id", freelancerId)
+      .eq(
+        "job_offering_id",
+        (
+          await supabase
+            .from("freelancer_job_offerings")
+            .select("id")
+            .eq("freelancer_id", freelancerId)
+            .eq("category_id", categoryId)
+            .single()
+        ).data?.id,
+      )
+      .single()
+
+    const useGlobalAvailability = jobOfferingSetting?.use_global_availability !== false
+
+    // Fetch availability entries based on the setting
+    let availabilityEntries = []
+
+    if (useGlobalAvailability) {
+      // Fetch global availability
+      const { data: globalAvailability, error: globalError } = await supabase
+        .from("freelancer_global_availability")
+        .select("*")
+        .eq("freelancer_id", freelancerId)
+
+      if (globalError) throw globalError
+      availabilityEntries = globalAvailability || []
+    } else {
+      // Fetch job-specific availability
+      const { data: specificAvailability, error: specificError } = await supabase
       .from("freelancer_availability")
       .select("*")
       .eq("freelancer_id", freelancerId)
       .eq("category_id", categoryId)
 
-    if (availabilityError) {
-      throw availabilityError
+      if (specificError) throw specificError
+      availabilityEntries = specificAvailability || []
     }
 
     // Filter availability entries for this specific date
-    const directAvailability = availabilityEntries?.filter((entry) => {
+    const directAvailability = availabilityEntries.filter((entry) => {
       const entryDate = new Date(entry.start_time)
       return !entry.is_recurring && isSameDay(entryDate, selectedDate)
     })
 
     // Filter recurring availability that applies to this date
-    const recurringAvailability = availabilityEntries?.filter((entry) => {
+    const recurringAvailability = availabilityEntries.filter((entry) => {
       if (!entry.is_recurring) return false
 
       const entryStartDate = new Date(entry.start_time)
@@ -149,11 +182,13 @@ export async function GET(request: Request) {
         certainty_level: entry.certainty_level,
         is_recurring: entry.is_recurring,
         recurrence_pattern: entry.recurrence_pattern,
+        is_global: useGlobalAvailability,
       }
     })
 
     return NextResponse.json({
       availabilityBlocks,
+      useGlobalAvailability,
     })
   } catch (error) {
     console.error("Error fetching availability:", error)
