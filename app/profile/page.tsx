@@ -61,6 +61,7 @@ import { LocationInput } from "@/components/location-input"
 import { AvatarUpload } from "@/components/avatar-upload"
 import { toast } from "@/lib/toast"
 import SidebarNav from "@/components/sidebar-nav"
+import LoadingSpinner from "@/components/loading-spinner"
 // import { LocationSearch } from "@/components/location-search"
 // import { JobCategorySelector } from "@/components/job-category-selector"
 // import { JobSubcategorySelector } from "@/components/job-subcategory-selector"
@@ -274,7 +275,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="container py-10 flex justify-center items-center min-h-[50vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <LoadingSpinner />
       </div>
     )
   }

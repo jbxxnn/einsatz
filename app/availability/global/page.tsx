@@ -10,6 +10,7 @@ import JobTypeAvailabilitySettings from "@/components/job-type-availability-sett
 import { Loader2 } from "lucide-react"
 import SidebarNav from "@/components/sidebar-nav"
 import type { Database } from "@/lib/database.types"
+import LoadingSpinner from "@/components/loading-spinner"
 
 export default function GlobalAvailabilityPage() {
   const [userId, setUserId] = useState<string | null>(null)
@@ -54,7 +55,7 @@ export default function GlobalAvailabilityPage() {
   if (loading) {
     return (
       <div className="container py-10 flex justify-center items-center min-h-[50vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <LoadingSpinner />
       </div>
     )
   }

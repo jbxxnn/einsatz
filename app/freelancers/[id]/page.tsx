@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import FreelancerAvailabilityCalendar from "@/components/freelancer-availability-calendar"
+import { FreelancerAvailabilityCalendar } from "@/components/freelancer-availability-calendar"
 import { toast } from "@/lib/toast"
 import { MapPin, Star, Clock, CheckCircle } from "lucide-react"
 import Image from "next/image"
@@ -367,11 +367,13 @@ export default function FreelancerProfile() {
 
                   <div>
                     <p className="text-sm text-muted-foreground mb-2">Select a date:</p>
-                    <FreelancerAvailabilityCalendar
-                      freelancerId={freelancer.id}
-                      categoryId={selectedCategoryId}
-                      onSelectDate={setSelectedDate}
-                    />
+                    {selectedCategoryId && (
+                      <FreelancerAvailabilityCalendar
+                        freelancerId={freelancer.id}
+                        categoryId={selectedCategoryId}
+                        onDateSelect={setSelectedDate}
+                      />
+                    )}
                   </div>
 
                   <Button

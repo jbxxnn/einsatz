@@ -187,6 +187,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   }, [selectedDate, selectedCategoryId, freelancer.id, toast])
 
   // Function to find the next available date
+  // this is just a test to see how thijngs will work out from our end init.
   const findNextAvailableDate = async (startDate: Date) => {
     // Try the next 7 days
     for (let i = 1; i <= 7; i++) {
