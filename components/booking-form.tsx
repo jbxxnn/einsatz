@@ -32,12 +32,12 @@ interface AvailabilityBlock {
 
 interface BookingFormProps {
   freelancer: Profile
-  selectedDate: Date | undefined
-  selectedCategoryId?: string | null
+  selectedDate: Date | null
+  selectedServiceId: string | null
   onBack: () => void
 }
 
-export default function BookingForm({ freelancer, selectedDate, selectedCategoryId, onBack }: BookingFormProps) {
+export default function BookingForm({ freelancer, selectedDate, selectedServiceId, onBack }: BookingFormProps) {
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(false)
@@ -47,7 +47,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [selectedEndTime, setSelectedEndTime] = useState<string | null>(null)
   const [location, setLocation] = useState("")
   const [description, setDescription] = useState("")
-  const [hourlyRate, setHourlyRate] = useState<number | null>(null)
+  const [hourlyRate, setHourlyRate] = useState<number>(0)
   const [categoryName, setCategoryName] = useState<string>("")
   const [noAvailability, setNoAvailability] = useState(false)
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null)
@@ -111,9 +111,9 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   }, [selectedStartTime])
 
   useEffect(() => {
-    // Set hourly rate based on selected category or default
-    if (selectedCategoryId && freelancer.job_offerings) {
-      const offering = freelancer.job_offerings.find((o: any) => o.category_id === selectedCategoryId)
+    // Set hourly rate based on selected service or default
+    if (selectedServiceId && freelancer.job_offerings) {
+      const offering = freelancer.job_offerings.find((o: any) => o.id === selectedServiceId)
       if (offering) {
         setHourlyRate(offering.hourly_rate)
         setCategoryName(offering.category_name)
@@ -121,11 +121,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     } else {
       setHourlyRate(freelancer.hourly_rate)
     }
-  }, [selectedCategoryId, freelancer])
+  }, [selectedServiceId, freelancer])
 
   useEffect(() => {
     const fetchAvailability = async () => {
-      if (!selectedDate || !selectedCategoryId) return
+      if (!selectedDate || !selectedServiceId) return
 
       setFetchingAvailability(true)
       setNoAvailability(false)
@@ -140,7 +140,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
         const response = await fetch(
-          `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`,
+          `/api/availability?freelancerId=${freelancer.id}&serviceId=${selectedServiceId}&date=${formattedDate}`,
           { signal: controller.signal, cache: "no-store" },
         )
 
@@ -184,10 +184,9 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     }
 
     fetchAvailability()
-  }, [selectedDate, selectedCategoryId, freelancer.id, toast])
+  }, [selectedDate, selectedServiceId, freelancer.id, toast])
 
   // Function to find the next available date
-  // this is just a test to see how thijngs will work out from our end init.
   const findNextAvailableDate = async (startDate: Date) => {
     // Try the next 7 days
     for (let i = 1; i <= 7; i++) {
@@ -196,7 +195,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       try {
         const response = await fetch(
-          `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`,
+          `/api/availability?freelancerId=${freelancer.id}&serviceId=${selectedServiceId}&date=${formattedDate}`,
         )
 
         if (!response.ok) continue
@@ -314,7 +313,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           total_amount: calculateTotal(),
           status: "pending",
           payment_status: "unpaid",
-          category_id: selectedCategoryId,
+          service_id: selectedServiceId,
           payment_method: paymentMethod,
         })
         .select()

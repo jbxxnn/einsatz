@@ -28,13 +28,13 @@ type AvailabilityEntry = {
   certainty_level: "guaranteed" | "tentative" | "unavailable"
 }
 
-type AvailabilityCalendarProps = {
+interface AvailabilityCalendarProps {
   freelancerId: string
-  categoryId: string
-  categoryName: string
+  serviceId: string
+  categoryName?: string
 }
 
-export default function AvailabilityCalendar({ freelancerId, categoryId, categoryName }: AvailabilityCalendarProps) {
+export default function AvailabilityCalendar({ freelancerId, serviceId, categoryName }: AvailabilityCalendarProps) {
   const { supabase } = useOptimizedSupabase()
   const [date, setDate] = useState<Date>(new Date())
   const [availability, setAvailability] = useState<AvailabilityEntry[]>([])
@@ -56,27 +56,24 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
   // Fetch availability data
   useEffect(() => {
     const fetchAvailability = async () => {
-      setLoading(true)
-      try {
-        const { data, error } = await supabase
-          .from("freelancer_availability")
-          .select("*")
-          .eq("freelancer_id", freelancerId)
-          .eq("category_id", categoryId)
+      if (!freelancerId || !serviceId) return
 
-        if (error) throw error
+      const { data: availability, error } = await supabase
+        .from("availability")
+        .select("*")
+        .eq("freelancer_id", freelancerId)
+        .eq("service_id", serviceId)
 
-        setAvailability(data || [])
-      } catch (error) {
-        console.error("Error fetching availability:", error)
-        toast.error("Failed to load availability")
-      } finally {
-        setLoading(false)
+      if (error) {
+        toast.error("Failed to fetch availability")
+        return
       }
+
+      setAvailability(availability || [])
     }
 
     fetchAvailability()
-  }, [supabase, freelancerId, categoryId, toast])
+  }, [supabase, freelancerId, serviceId, toast])
 
   // Calculate dates with availability for the calendar
   const datesWithAvailability = useMemo(() => {
@@ -185,7 +182,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
   // Delete availability entry
   const handleDeleteAvailability = async (entryId: string) => {
     try {
-      const { error } = await supabase.from("freelancer_availability").delete().eq("id", entryId)
+      const { error } = await supabase.from("availability").delete().eq("id", entryId)
 
       if (error) throw error
 
@@ -200,6 +197,8 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
 
   // Save availability entry
   const handleSaveAvailability = async () => {
+    if (!freelancerId || !serviceId) return
+
     try {
       // Validate form
       if (!startDate || !endDate || !startTime || !endTime) {
@@ -224,7 +223,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
 
       const availabilityData: Omit<AvailabilityEntry, "id"> = {
         freelancer_id: freelancerId,
-        category_id: categoryId,
+        service_id: serviceId,
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
         is_recurring: isRecurring,
@@ -236,7 +235,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
       if (selectedEntry?.id) {
         // Update existing entry
         const { data, error } = await supabase
-          .from("freelancer_availability")
+          .from("availability")
           .update(availabilityData)
           .eq("id", selectedEntry.id)
           .select()
@@ -248,7 +247,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
         toast.success("Availability updated")
       } else {
         // Create new entry
-        const { data, error } = await supabase.from("freelancer_availability").insert(availabilityData).select()
+        const { data, error } = await supabase.from("availability").insert(availabilityData).select()
 
         if (error) throw error
 

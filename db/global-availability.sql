@@ -1,6 +1,7 @@
 -- Create a table for global availability settings
 CREATE TABLE IF NOT EXISTS public.freelancer_global_availability (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  availability_group_id UUID NOT NULL DEFAULT uuid_generate_v4(), -- New column to group related entries
   freelancer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   start_time TIMESTAMPTZ NOT NULL,
   end_time TIMESTAMPTZ NOT NULL,
@@ -8,6 +9,8 @@ CREATE TABLE IF NOT EXISTS public.freelancer_global_availability (
   recurrence_pattern TEXT CHECK (recurrence_pattern IN ('weekly', 'biweekly', 'monthly')),
   recurrence_end_date TIMESTAMPTZ,
   certainty_level TEXT DEFAULT 'guaranteed' CHECK (certainty_level IN ('guaranteed', 'tentative', 'unavailable')),
+  service_id UUID NOT NULL REFERENCES public.freelancer_job_offerings(id) ON DELETE CASCADE, -- Changed from UUID[] to UUID
+  category_id UUID NOT NULL REFERENCES public.job_categories(id) ON DELETE CASCADE, -- Added category_id column
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -38,4 +41,5 @@ CREATE POLICY "Freelancers can manage their own job offering settings"
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_global_availability_freelancer_id ON public.freelancer_global_availability(freelancer_id);
+CREATE INDEX IF NOT EXISTS idx_global_availability_category_id ON public.freelancer_global_availability(category_id); -- Added index for category_id
 CREATE INDEX IF NOT EXISTS idx_job_offering_settings_freelancer_id ON public.job_offering_availability_settings(freelancer_id);

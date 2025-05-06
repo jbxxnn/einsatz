@@ -1,3 +1,19 @@
+/**
+ * GlobalAvailabilityCalendar Component
+ * 
+ * This component provides a calendar interface for freelancers to manage their global availability.
+ * It allows setting both one-time and recurring availability slots with different certainty levels.
+ * The component includes:
+ * - A calendar view showing availability status
+ * - A form to add new availability entries
+ * - Support for recurring patterns (weekly, biweekly, monthly)
+ * - Different certainty levels (guaranteed, tentative)
+ * 
+ * @component
+ * @param {string} freelancerId - The ID of the freelancer whose availability is being managed
+ * @param {boolean} readOnly - Whether the calendar is in read-only mode (default: false)
+ */
+
 "use client"
 
 import type React from "react"
@@ -16,6 +32,7 @@ import { CalendarIcon, Clock, Loader2, Plus, Repeat, Trash2, Check } from "lucid
 import { cn } from "@/lib/utils"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { toast } from "@/lib/toast"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface GlobalAvailabilityCalendarProps {
   freelancerId: string
@@ -26,22 +43,44 @@ export default function GlobalAvailabilityCalendar({
   freelancerId,
   readOnly = false,
 }: GlobalAvailabilityCalendarProps) {
+  // State for managing the selected date in the calendar
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  
+  // State for storing availability entries for the selected date
   const [availabilityEntries, setAvailabilityEntries] = useState<any[]>([])
+  
+  // State for controlling the visibility of the add availability form
   const [showAddForm, setShowAddForm] = useState(false)
+  
+  // State for managing the time range of new availability entries
   const [startTime, setStartTime] = useState("09:00")
   const [endTime, setEndTime] = useState("17:00")
+  
+  // State for managing recurring availability settings
   const [isRecurring, setIsRecurring] = useState(false)
   const [recurrencePattern, setRecurrencePattern] = useState("weekly")
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date | undefined>(addMonths(new Date(), 1))
+  
+  // State for managing the certainty level of availability
   const [certaintyLevel, setCertaintyLevel] = useState("guaranteed")
+  
+  // Loading states
   const [loading, setLoading] = useState(false)
   const [fetchingEntries, setFetchingEntries] = useState(false)
+  
+  // State for storing availability dates with their certainty levels
   const [availabilityDates, setAvailabilityDates] = useState<Record<string, string>>({})
+
+  const [services, setServices] = useState<any[]>([])
+  const [selectedServices, setSelectedServices] = useState<string[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
 
   const supabase = createClientComponentClient()
 
-  // Fetch availability dates for the calendar
+  /**
+   * Fetches and processes availability dates for the calendar view
+   * This effect runs when the component mounts or when freelancerId changes
+   */
   useEffect(() => {
     async function fetchAvailabilityDates() {
       try {
@@ -116,33 +155,85 @@ export default function GlobalAvailabilityCalendar({
     fetchAvailabilityDates()
   }, [freelancerId, supabase])
 
-  // Fetch availability entries for the selected date
+  /**
+   * Fetches availability entries for the selected date
+   * This effect runs when the selected date changes
+   */
   useEffect(() => {
     async function fetchAvailabilityEntries() {
       setFetchingEntries(true)
       try {
         const { data: session } = await supabase.auth.getSession()
-        if (!session.session && !freelancerId) return
+        if (!session.session && !freelancerId) {
+          console.log("No session or freelancerId found")
+          return
+        }
 
         const userId = freelancerId || session.session?.user.id
+        console.log("Fetching availability for user:", userId)
 
-        // Fetch all availability entries for this user
-        const { data, error } = await supabase
+        // Fetch availability entries
+        const { data: availabilityData, error: availabilityError } = await supabase
           .from("freelancer_global_availability")
           .select("*")
           .eq("freelancer_id", userId)
 
-        if (error) throw error
+        if (availabilityError) {
+          console.error("Supabase error details:", {
+            message: availabilityError.message,
+            details: availabilityError.details,
+            hint: availabilityError.hint,
+            code: availabilityError.code
+          })
+          throw availabilityError
+        }
+
+        console.log("Fetched availability data:", availabilityData)
 
         // Filter entries that apply to the selected date
-        const filteredEntries = filterEntriesForDate(data || [], selectedDate)
+        const filteredEntries = filterEntriesForDate(availabilityData || [], selectedDate)
+        console.log("Filtered entries:", filteredEntries)
 
         // Deduplicate entries based on start/end time and recurrence pattern
         const uniqueEntries = deduplicateEntries(filteredEntries)
+        console.log("Unique entries:", uniqueEntries)
 
-        setAvailabilityEntries(uniqueEntries)
+        // Fetch services for each entry
+        const entriesWithServices = await Promise.all(
+          uniqueEntries.map(async (entry) => {
+            if (entry.service_ids && entry.service_ids.length > 0) {
+              const { data: serviceData, error: serviceError } = await supabase
+                .from("freelancer_job_offerings")
+                .select(`
+                  id,
+                  job_categories (
+                    id,
+                    name
+                  )
+                `)
+                .in("id", entry.service_ids)
+
+              if (serviceError) {
+                console.error("Error fetching services:", serviceError)
+                return entry
+              }
+
+              return {
+                ...entry,
+                services: serviceData || []
+              }
+            }
+            return entry
+          })
+        )
+
+        setAvailabilityEntries(entriesWithServices)
       } catch (error) {
-        console.error("Error fetching availability entries:", error)
+        console.error("Error fetching availability entries:", {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        })
       } finally {
         setFetchingEntries(false)
       }
@@ -151,7 +242,12 @@ export default function GlobalAvailabilityCalendar({
     fetchAvailabilityEntries()
   }, [selectedDate, freelancerId, supabase])
 
-  // Filter entries that apply to the selected date
+  /**
+   * Filters availability entries that apply to a specific date
+   * @param entries - Array of availability entries
+   * @param date - The date to filter entries for
+   * @returns Filtered array of entries that apply to the given date
+   */
   function filterEntriesForDate(entries: any[], date: Date) {
     const dayOfWeek = date.getDay()
     const formattedDate = format(date, "yyyy-MM-dd")
@@ -194,7 +290,11 @@ export default function GlobalAvailabilityCalendar({
     })
   }
 
-  // Deduplicate entries based on start/end time and recurrence pattern
+  /**
+   * Removes duplicate availability entries based on start/end time and recurrence pattern
+   * @param entries - Array of availability entries
+   * @returns Array of unique availability entries
+   */
   function deduplicateEntries(entries: any[]) {
     const uniqueMap = new Map()
 
@@ -213,6 +313,62 @@ export default function GlobalAvailabilityCalendar({
     return Array.from(uniqueMap.values())
   }
 
+  /**
+   * Fetches freelancer's services
+   */
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        const { data: session } = await supabase.auth.getSession()
+        if (!session.session && !freelancerId) {
+          console.log("No session or freelancerId found for services fetch")
+          return
+        }
+
+        const userId = freelancerId || session.session?.user.id
+        console.log("Fetching services for user:", userId)
+
+        const { data, error } = await supabase
+          .from("freelancer_job_offerings")
+          .select(`
+            *,
+            job_categories (
+              id,
+              name
+            )
+          `)
+          .eq("freelancer_id", userId)
+
+        if (error) {
+          console.error("Supabase services error details:", {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          })
+          throw error
+        }
+
+        console.log("Fetched services data:", data)
+        setServices(data || [])
+        setSelectedServices(data?.map(service => service.id) || [])
+        setSelectedCategories(data?.map(service => service.job_categories.id) || [])
+      } catch (error) {
+        console.error("Error fetching services:", {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        })
+      }
+    }
+
+    fetchServices()
+  }, [freelancerId, supabase])
+
+  /**
+   * Handles the submission of a new availability entry
+   * @param e - Form submission event
+   */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -227,6 +383,13 @@ export default function GlobalAvailabilityCalendar({
       // Validate that the selected date is not in the past
       if (selectedDate < new Date()) {
         toast.error("Cannot set availability for past dates")
+        setLoading(false)
+        return
+      }
+
+      // Validate that at least one service is selected
+      if (selectedServices.length === 0) {
+        toast.error("Please select at least one service")
         setLoading(false)
         return
       }
@@ -249,17 +412,27 @@ export default function GlobalAvailabilityCalendar({
         return
       }
 
-      const availabilityData = {
+      // Generate a single availability_group_id for all related entries
+      const availabilityGroupId = crypto.randomUUID()
+
+      // Create an array of availability entries, one for each selected service
+      const availabilityEntries = selectedServices.map((serviceId, index) => ({
         freelancer_id: userId,
+        availability_group_id: availabilityGroupId,
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
         is_recurring: isRecurring,
         recurrence_pattern: isRecurring ? recurrencePattern : null,
         recurrence_end_date: isRecurring && recurrenceEndDate ? recurrenceEndDate.toISOString() : null,
         certainty_level: certaintyLevel,
-      }
+        service_id: serviceId,
+        category_id: selectedCategories[index]
+      }))
 
-      const { error } = await supabase.from("freelancer_global_availability").insert(availabilityData)
+      // Insert all availability entries
+      const { error } = await supabase
+        .from("freelancer_global_availability")
+        .insert(availabilityEntries)
 
       if (error) throw error
 
@@ -273,6 +446,7 @@ export default function GlobalAvailabilityCalendar({
       setRecurrencePattern("weekly")
       setRecurrenceEndDate(addMonths(new Date(), 1))
       setCertaintyLevel("guaranteed")
+      setSelectedServices([])
 
       // Refresh the availability entries
       const { data: session2 } = await supabase.auth.getSession()
@@ -292,6 +466,41 @@ export default function GlobalAvailabilityCalendar({
       const uniqueEntries = deduplicateEntries(filteredEntries)
 
       setAvailabilityEntries(uniqueEntries)
+
+      // Update availabilityDates state with the new entries
+      const newAvailabilityDates = { ...availabilityDates }
+      
+      // Add the selected date with the highest certainty level
+      const dateKey = format(selectedDate, "yyyy-MM-dd")
+      if (!newAvailabilityDates[dateKey] || certaintyLevel === "guaranteed") {
+        newAvailabilityDates[dateKey] = certaintyLevel
+      }
+
+      // If recurring, add future dates
+      if (isRecurring && recurrenceEndDate) {
+        let currentDate = new Date(selectedDate)
+        const endDate = new Date(recurrenceEndDate)
+
+        while (currentDate <= endDate) {
+          const currentDateKey = format(currentDate, "yyyy-MM-dd")
+          
+          // Only update if there's no guaranteed entry or if this is guaranteed
+          if (!newAvailabilityDates[currentDateKey] || certaintyLevel === "guaranteed") {
+            newAvailabilityDates[currentDateKey] = certaintyLevel
+          }
+
+          // Move to next occurrence based on pattern
+          if (recurrencePattern === "weekly") {
+            currentDate = addDays(currentDate, 7)
+          } else if (recurrencePattern === "biweekly") {
+            currentDate = addDays(currentDate, 14)
+          } else if (recurrencePattern === "monthly") {
+            currentDate = addMonths(currentDate, 1)
+          }
+        }
+      }
+
+      setAvailabilityDates(newAvailabilityDates)
     } catch (error) {
       console.error("Error setting availability:", error)
       toast.error("Failed to set availability")
@@ -300,26 +509,109 @@ export default function GlobalAvailabilityCalendar({
     }
   }
 
+  /**
+   * Deletes an availability entry and all related entries in the same group
+   * @param id - The ID of the availability entry to delete
+   */
   async function handleDelete(id: string) {
     try {
-      const { error } = await supabase.from("freelancer_global_availability").delete().eq("id", id)
+      // First, get the availability_group_id and other details of the entry being deleted
+      const { data: entryToDelete, error: fetchError } = await supabase
+        .from("freelancer_global_availability")
+        .select("availability_group_id, start_time, end_time, is_recurring, recurrence_pattern, recurrence_end_date, certainty_level")
+        .eq("id", id)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      if (!entryToDelete) {
+        toast.error("Entry not found")
+        return
+      }
+
+      // Delete all entries with the same availability_group_id
+      const { error } = await supabase
+        .from("freelancer_global_availability")
+        .delete()
+        .eq("availability_group_id", entryToDelete.availability_group_id)
 
       if (error) throw error
 
-      toast.success("Availability entry deleted")
+      toast.success("Availability entries deleted")
 
-      // Remove the deleted entry from the state
-      setAvailabilityEntries(availabilityEntries.filter((entry) => entry.id !== id))
+      // Remove all entries with the same availability_group_id from the state
+      setAvailabilityEntries(availabilityEntries.filter(
+        (entry) => entry.availability_group_id !== entryToDelete.availability_group_id
+      ))
+
+      // Update availabilityDates state
+      const newAvailabilityDates = { ...availabilityDates }
+      const startDate = new Date(entryToDelete.start_time)
+      const dateKey = format(startDate, "yyyy-MM-dd")
+
+      // Remove the date from availabilityDates if it was the only entry for that date
+      const hasOtherEntries = availabilityEntries.some(
+        entry => 
+          entry.availability_group_id !== entryToDelete.availability_group_id && 
+          format(new Date(entry.start_time), "yyyy-MM-dd") === dateKey
+      )
+
+      if (!hasOtherEntries) {
+        delete newAvailabilityDates[dateKey]
+      }
+
+      // If recurring, remove all future dates
+      if (entryToDelete.is_recurring && entryToDelete.recurrence_end_date) {
+        let currentDate = new Date(startDate)
+        const endDate = new Date(entryToDelete.recurrence_end_date)
+
+        while (currentDate <= endDate) {
+          const currentDateKey = format(currentDate, "yyyy-MM-dd")
+          
+          // Only remove if there are no other entries for this date
+          const hasOtherEntriesForDate = availabilityEntries.some(
+            entry => 
+              entry.availability_group_id !== entryToDelete.availability_group_id && 
+              format(new Date(entry.start_time), "yyyy-MM-dd") === currentDateKey
+          )
+
+          if (!hasOtherEntriesForDate) {
+            delete newAvailabilityDates[currentDateKey]
+          }
+
+          // Move to next occurrence based on pattern
+          if (entryToDelete.recurrence_pattern === "weekly") {
+            currentDate = addDays(currentDate, 7)
+          } else if (entryToDelete.recurrence_pattern === "biweekly") {
+            currentDate = addDays(currentDate, 14)
+          } else if (entryToDelete.recurrence_pattern === "monthly") {
+            currentDate = addMonths(currentDate, 1)
+          }
+        }
+      }
+
+      setAvailabilityDates(newAvailabilityDates)
     } catch (error) {
       console.error("Error deleting availability:", error)
-      toast.error("Failed to delete availability entry")
+      toast.error("Failed to delete availability entries")
     }
   }
 
+  /**
+   * Formats a time range into a human-readable string
+   * @param startTime - Start time string
+   * @param endTime - End time string
+   * @returns Formatted time range string
+   */
   function formatTimeRange(startTime: string, endTime: string) {
     return `${format(new Date(startTime), "h:mm a")} - ${format(new Date(endTime), "h:mm a")}`
   }
 
+  /**
+   * Formats recurrence information into a human-readable string
+   * @param entry - The availability entry
+   * @returns Formatted recurrence string or null if not recurring
+   */
   function formatRecurrence(entry: any) {
     if (!entry.is_recurring) return null
 
@@ -330,6 +622,17 @@ export default function GlobalAvailabilityCalendar({
     }
 
     return recurrenceText
+  }
+
+  // Update the formatServiceNames function to handle the new data structure
+  function formatServiceNames(entry: any) {
+    if (!entry.services || entry.services.length === 0) return ""
+    
+    const serviceNames = entry.services.map((service: any) => 
+      service.job_categories?.name
+    ).filter(Boolean)
+    
+    return serviceNames.join(", ")
   }
 
   return (
@@ -480,6 +783,30 @@ export default function GlobalAvailabilityCalendar({
                 </RadioGroup>
               </div>
 
+              <div className="space-y-2">
+                <Label>Available for Services</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {services.map((service) => (
+                    <div key={service.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`service-${service.id}`}
+                        checked={selectedServices.includes(service.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedServices([...selectedServices, service.id])
+                          } else {
+                            setSelectedServices(selectedServices.filter(id => id !== service.id))
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`service-${service.id}`} className="text-sm">
+                        {service.job_categories?.name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex justify-end space-x-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
                   Cancel
@@ -525,6 +852,13 @@ export default function GlobalAvailabilityCalendar({
                       />
                       <span className="text-sm capitalize">{entry.certainty_level}</span>
                     </div>
+
+                    {entry.service_ids && entry.service_ids.length > 0 && (
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        <span className="font-medium">Services: </span>
+                        {formatServiceNames(entry)}
+                      </div>
+                    )}
                   </div>
 
                   {!readOnly && (

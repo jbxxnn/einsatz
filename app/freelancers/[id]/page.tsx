@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { FreelancerAvailabilityCalendar } from "@/components/freelancer-availability-calendar"
+import FreelancerAvailabilityCalendar from "@/components/freelancer-availability-calendar"
 import { toast } from "@/lib/toast"
 import { MapPin, Star, Clock, CheckCircle } from "lucide-react"
 import Image from "next/image"
@@ -32,7 +32,7 @@ export default function FreelancerProfile() {
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [showBookingForm, setShowBookingForm] = useState(false)
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
   const [reviews, setReviews] = useState<any[]>([])
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function FreelancerProfile() {
         
         // If there are job offerings, select the first one by default
         if (formattedOfferings.length > 0) {
-          setSelectedCategoryId(formattedOfferings[0].category_id)
+          setSelectedServiceId(formattedOfferings[0].category_id)
         }
 
         // Fetch reviews
@@ -116,8 +116,8 @@ export default function FreelancerProfile() {
   }, [supabase, params.id, router])
   
   const getSelectedOffering = () => {
-    if (!freelancer || !selectedCategoryId) return null
-    return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId)
+    if (!freelancer || !selectedServiceId) return null
+    return freelancer.job_offerings.find((offering) => offering.category_id === selectedServiceId)
   }
 
   if (loading) {
@@ -192,9 +192,9 @@ export default function FreelancerProfile() {
               {freelancer.job_offerings.map((offering) => (
                   <Badge
                     key={offering.category_id}
-                    variant={selectedCategoryId === offering.category_id ? "default" : "outline"}
+                    variant={selectedServiceId === offering.category_id ? "default" : "outline"}
                     className="cursor-pointer"
-                    onClick={() => setSelectedCategoryId(offering.category_id)}
+                    onClick={() => setSelectedServiceId(offering.category_id)}
                   >
                     {offering.category_name}
                   </Badge>
@@ -277,11 +277,11 @@ export default function FreelancerProfile() {
                           </p>
                         )}
                         <Button
-                          variant={selectedCategoryId === offering.category_id ? "default" : "outline"}
+                          variant={selectedServiceId === offering.category_id ? "default" : "outline"}
                           className="mt-4 w-full"
-                          onClick={() => setSelectedCategoryId(offering.category_id)}
+                          onClick={() => setSelectedServiceId(offering.category_id)}
                         >
-                          {selectedCategoryId === offering.category_id ? "Selected" : "Select"}
+                          {selectedServiceId === offering.category_id ? "Selected" : "Select"}
                         </Button>
                       </CardContent>
                     </Card>
@@ -356,7 +356,7 @@ export default function FreelancerProfile() {
 
               {!showBookingForm ? (
                 <div className="space-y-4">
-                    {freelancer.job_offerings.length > 0 && selectedOffering && (
+                  {freelancer.job_offerings.length > 0 && selectedOffering && (
                     <div>
                       <p className="text-sm text-muted-foreground mb-2">Selected service:</p>
                       <div className="p-4">
@@ -367,21 +367,19 @@ export default function FreelancerProfile() {
 
                   <div>
                     <p className="text-sm text-muted-foreground mb-2">Select a date:</p>
-                    {selectedCategoryId && (
-                      <FreelancerAvailabilityCalendar
-                        freelancerId={freelancer.id}
-                        categoryId={selectedCategoryId}
-                        onDateSelect={setSelectedDate}
-                      />
-                    )}
+                    <FreelancerAvailabilityCalendar
+                      freelancerId={freelancer.id}
+                      serviceId={selectedServiceId}
+                      onSelectDate={setSelectedDate}
+                    />
                   </div>
 
                   <Button
                     className="w-full"
-                    disabled={!selectedDate || !selectedCategoryId}
+                    disabled={!selectedDate || !selectedServiceId}
                     onClick={() => setShowBookingForm(true)}
                   >
-                     Continue to Booking
+                    Continue to Booking
                   </Button>
                 </div>
               ) : (
@@ -389,7 +387,7 @@ export default function FreelancerProfile() {
                   freelancer={freelancer}
                   selectedDate={selectedDate}
                   onBack={() => setShowBookingForm(false)}
-                  selectedCategoryId={selectedCategoryId}
+                  selectedServiceId={selectedServiceId}
                 />
               )}
             </CardContent>

@@ -1,170 +1,154 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent } from "@/components/ui/card"
-import { format } from "date-fns"
-import LoadingSpinner from "@/components/loading-spinner"
-import { parseISO } from "date-fns"
 import { toast } from "@/lib/toast"
+import { Loader2 } from "lucide-react"
+import { format, isSameMonth, startOfMonth, endOfMonth, addMonths } from "date-fns"
 
 interface FreelancerAvailabilityCalendarProps {
   freelancerId: string
-  categoryId: string
-  onDateSelect: (date: Date | undefined) => void
+  serviceId: string | null
+  onSelectDate: (date: Date | undefined) => void
 }
 
-export function FreelancerAvailabilityCalendar({
+export default function FreelancerAvailabilityCalendar({
   freelancerId,
-  categoryId,
-  onDateSelect,
+  serviceId,
+  onSelectDate,
 }: FreelancerAvailabilityCalendarProps) {
-  const [date, setDate] = useState<Date | undefined>(undefined)
-  const [availableDates, setAvailableDates] = useState<Record<string, string>>({})
-  const [partiallyBookedDates, setPartiallyBookedDates] = useState<string[]>([])
-  const [fullyBookedDates, setFullyBookedDates] = useState<string[]>([])
-  const [isLoading, setLoading] = useState(false)
+  // const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+  const [availableDates, setAvailableDates] = useState<Date[]>([])
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [cachedMonths, setCachedMonths] = useState<Map<string, Date[]>>(new Map())
+  const [initialLoad, setInitialLoad] = useState(true)
 
-  useEffect(() => {
-    async function fetchAvailableDates() {
-      if (!freelancerId || !categoryId) return
+  // Memoized function to fetch available dates
+  const fetchAvailableDates = useCallback(
+    async (month: Date) => {
+      if (!serviceId) return []
+
+      // Check if we have cached data for this month
+      const cacheKey = `${freelancerId}-${serviceId}-${format(month, "yyyy-MM")}`
+      if (cachedMonths.has(cacheKey)) {
+        return cachedMonths.get(cacheKey) || []
+      }
 
       setLoading(true)
       try {
-        const currentDate = new Date()
-        const month = currentDate.getMonth() + 1
-        const year = currentDate.getFullYear()
+        const startDate = format(startOfMonth(month), "yyyy-MM-dd")
+        const endDate = format(endOfMonth(month), "yyyy-MM-dd")
 
-        // First, try to get the job offering ID for this category
-        let jobOfferingId
-        try {
-          const { data: jobOffering } = await fetch(
-            `/api/job-offering?freelancerId=${freelancerId}&categoryId=${categoryId}`,
-          ).then((res) => res.json())
-
-          jobOfferingId = jobOffering?.id
-        } catch (error) {
-          console.error("Error fetching job offering:", error)
-        }
-
-        const queryParams = new URLSearchParams({
-          freelancerId,
-          categoryId,
-          month: month.toString(),
-          year: year.toString(),
-        })
-
-        if (jobOfferingId) {
-          queryParams.append("jobOfferingId", jobOfferingId)
-        }
-
-        const response = await fetch(`/api/available-dates?${queryParams.toString()}`)
+        const response = await fetch(
+          `/api/available-dates?freelancerId=${freelancerId}&serviceId=${serviceId}&startDate=${startDate}&endDate=${endDate}`,
+          { cache: "no-store" },
+        )
 
         if (!response.ok) {
-          throw new Error("Failed to fetch available dates")
+          throw new Error("Failed to fetch availability")
         }
 
         const data = await response.json()
+        const dates = data.availableDates.map((dateStr: string) => new Date(dateStr))
 
-        // Process available dates
-        const availableDatesMap: Record<string, string> = {}
-        const partiallyBooked: string[] = []
-        const fullyBooked: string[] = []
+        // Cache the results
+        setCachedMonths((prev) => new Map(prev).set(cacheKey, dates))
 
-        // Process each date in the response
-        Object.entries(data.dates || {}).forEach(([dateStr, info]: [string, any]) => {
-          const { availability, bookings } = info
-
-          if (availability) {
-            // Calculate total available hours
-            const totalAvailableHours = availability.reduce((total: number, slot: any) => {
-              const start = parseISO(slot.start_time)
-              const end = parseISO(slot.end_time)
-              const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
-              return total + hours
-            }, 0)
-
-            // Calculate total booked hours
-            const totalBookedHours = bookings.reduce((total: number, booking: any) => {
-              const start = parseISO(booking.start_time)
-              const end = parseISO(booking.end_time)
-              const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
-              return total + hours
-            }, 0)
-
-            // Determine if date is fully booked, partially booked, or fully available
-            if (totalBookedHours >= totalAvailableHours) {
-              fullyBooked.push(dateStr)
-            } else if (totalBookedHours > 0) {
-              partiallyBooked.push(dateStr)
-              availableDatesMap[dateStr] = "partial"
-            } else {
-              availableDatesMap[dateStr] = "full"
-            }
-          }
-        })
-
-        setAvailableDates(availableDatesMap)
-        setPartiallyBookedDates(partiallyBooked)
-        setFullyBookedDates(fullyBooked)
+        return dates
       } catch (error) {
         console.error("Error fetching available dates:", error)
-        toast.error("Failed to load freelancer's availability")
+        toast.error("Failed to fetch freelancer availability")
+        return []
       } finally {
         setLoading(false)
       }
+    },
+    [freelancerId, serviceId, cachedMonths, toast],
+  )
+
+  // Effect to load data when month or service changes
+  useEffect(() => {
+    if (freelancerId && serviceId) {
+      fetchAvailableDates(currentMonth).then((dates) => {
+        setAvailableDates(dates)
+        setInitialLoad(false)
+      })
+    }
+  }, [freelancerId, serviceId, currentMonth, fetchAvailableDates])
+
+  // Preload next month data for faster navigation
+  useEffect(() => {
+    if (freelancerId && serviceId && !initialLoad) {
+      const nextMonth = addMonths(currentMonth, 1)
+      fetchAvailableDates(nextMonth)
+    }
+  }, [freelancerId, serviceId, currentMonth, fetchAvailableDates, initialLoad])
+
+  // Custom function to determine if a date is disabled
+  const isDateDisabled = (date: Date) => {
+    // Disable dates in the past
+    if (date < new Date()) return true
+
+    // If we're still loading and it's the initial load, don't disable anything yet
+    if (loading && initialLoad) return false
+
+    // Disable dates that are not in the available dates list
+    if (availableDates.length > 0) {
+      return !availableDates.some(
+        (availableDate) =>
+          availableDate.getFullYear() === date.getFullYear() &&
+          availableDate.getMonth() === date.getMonth() &&
+          availableDate.getDate() === date.getDate(),
+      )
     }
 
-    fetchAvailableDates()
-  }, [freelancerId, categoryId])
-
-  const handleDateSelect = (selectedDate: Date | undefined) => {
-    setDate(selectedDate)
-    onDateSelect(selectedDate)
+    return false
   }
 
-  const isDateAvailable = (date: Date) => {
-    const formattedDate = format(date, "yyyy-MM-dd")
-    return availableDates[formattedDate] === "full" || availableDates[formattedDate] === "partial"
+  const handleSelectDate = (date: Date | undefined) => {
+    setSelectedDate(date)
+    onSelectDate(date)
   }
 
-  const handleMonthChange = (month: Date) => {
-    // setCurrentMonth(month) // No longer needed
+  // Handle month change
+  const handleMonthChange = async (month: Date) => {
+    if (!isSameMonth(month, currentMonth)) {
+      setCurrentMonth(month)
+    }
   }
 
   return (
     <Card>
-      <CardContent className="p-4">
-        <h3 className="text-lg font-medium mb-4">Select a Date</h3>
-        {isLoading ? (
+      <CardContent className="p-3">
+        {loading && initialLoad ? (
           <div className="flex justify-center items-center h-[240px]">
-            <LoadingSpinner />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={handleDateSelect}
-            onMonthChange={handleMonthChange}
-            disabled={(date) => {
-              // Disable dates in the past
-              const today = new Date()
-              today.setHours(0, 0, 0, 0)
-
-              // Disable dates that are not available
-              return date < today || !isDateAvailable(date)
-            }}
-            classNames={{
-              day: "rounded-full",
-              day_selected:
-                "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-              day_today: "bg-secondary text-secondary-foreground",
-              day_disabled: "text-muted-foreground opacity-50",
-            }}
-            className="rounded-md border"
-          />
+          <>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleSelectDate}
+              onMonthChange={handleMonthChange}
+              disabled={isDateDisabled}
+              className="rounded-md"
+            />
+            {loading && !initialLoad && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            )}
+          </>
+        )}
+        {!loading && availableDates.length === 0 && serviceId && (
+          <div className="text-center mt-2 text-sm text-muted-foreground">No available dates in this month</div>
         )}
       </CardContent>
     </Card>
   )
 }
+

@@ -29,7 +29,8 @@ interface DaySchedule {
 
 interface AvailabilityScheduleProps {
   freelancerId: string
-  categoryId: string
+  serviceId: string
+  categoryName?: string
 }
 
 const DEFAULT_SLOTS: TimeSlot[] = [{ start: "09:00", end: "17:00" }]
@@ -43,7 +44,7 @@ const DAYS_OF_WEEK = [
   { name: "Saturday", index: 6 },
 ]
 
-export default function AvailabilityScheduleComponent({ freelancerId, categoryId }: AvailabilityScheduleProps) {
+export default function AvailabilitySchedule({ freelancerId, serviceId, categoryName }: AvailabilityScheduleProps) {
   const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -57,7 +58,7 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
 
       try {
         // Fetch the category
-        const { data: categoryData } = await supabase.from("job_categories").select("*").eq("id", categoryId).single()
+        const { data: categoryData } = await supabase.from("job_categories").select("*").eq("id", serviceId).single()
 
         setCategory(categoryData)
 
@@ -66,14 +67,14 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
           .from("availability_schedules")
           .select("*")
           .eq("freelancer_id", freelancerId)
-          .eq("category_id", categoryId)
+          .eq("service_id", serviceId)
 
         // Fetch real-time availability
         const { data: realTimeData } = await supabase
           .from("real_time_availability")
           .select("*")
           .eq("freelancer_id", freelancerId)
-          .eq("category_id", categoryId)
+          .eq("service_id", serviceId)
           .single()
 
         if (realTimeData) {
@@ -108,10 +109,10 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
       }
     }
 
-    if (freelancerId && categoryId) {
+    if (freelancerId && serviceId) {
       fetchData()
     }
-  }, [supabase, freelancerId, categoryId, toast])
+  }, [supabase, freelancerId, serviceId, toast])
 
   const handleToggleDay = (dayIndex: number) => {
     setSchedule((prev) =>
@@ -126,7 +127,7 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
 
       const { error } = await supabase.from("real_time_availability").upsert({
         freelancer_id: freelancerId,
-        category_id: categoryId,
+        service_id: serviceId,
         is_available_now: newStatus,
         last_updated: new Date().toISOString(),
       })
@@ -204,18 +205,20 @@ export default function AvailabilityScheduleComponent({ freelancerId, categoryId
 
     try {
       // Delete existing schedules for this freelancer and category
-      await supabase
+      const { error: deleteError } = await supabase
         .from("availability_schedules")
         .delete()
         .eq("freelancer_id", freelancerId)
-        .eq("category_id", categoryId)
+        .eq("service_id", serviceId)
+
+      if (deleteError) throw deleteError
 
       // Create array of new schedules to insert
       const newSchedules = schedule.flatMap((day) =>
         day.isAvailable
           ? day.slots.map((slot) => ({
               freelancer_id: freelancerId,
-              category_id: categoryId,
+              service_id: serviceId,
               day_of_week: day.dayIndex,
               start_time: slot.start,
               end_time: slot.end,
