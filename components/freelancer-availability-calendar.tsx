@@ -9,7 +9,6 @@ import { toast } from "@/lib/toast"
 
 interface FreelancerAvailabilityCalendarProps {
   freelancerId: string
-  categoryId: string | null
   onSelectDate: (date: Date | undefined) => void
 }
 
@@ -22,7 +21,6 @@ interface DateAvailability {
 
 export default function FreelancerAvailabilityCalendar({
   freelancerId,
-  categoryId,
   onSelectDate,
 }: FreelancerAvailabilityCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
@@ -35,10 +33,8 @@ export default function FreelancerAvailabilityCalendar({
   // Memoized function to fetch available dates
   const fetchAvailableDates = useCallback(
     async (month: Date) => {
-      if (!categoryId) return new Map<string, DateAvailability>()
-
       // Check if we have cached data for this month
-      const cacheKey = `${freelancerId}-${categoryId}-${format(month, "yyyy-MM")}`
+      const cacheKey = `${freelancerId}-${format(month, "yyyy-MM")}`
       if (cachedMonths.has(cacheKey)) {
         return cachedMonths.get(cacheKey) || new Map<string, DateAvailability>()
       }
@@ -49,7 +45,7 @@ export default function FreelancerAvailabilityCalendar({
         const endDate = format(endOfMonth(month), "yyyy-MM-dd")
 
         const response = await fetch(
-          `/api/available-dates?freelancerId=${freelancerId}&categoryId=${categoryId}&startDate=${startDate}&endDate=${endDate}`,
+          `/api/available-dates?freelancerId=${freelancerId}&startDate=${startDate}&endDate=${endDate}`,
           { cache: "no-store" },
         )
 
@@ -83,26 +79,26 @@ export default function FreelancerAvailabilityCalendar({
         setLoading(false)
       }
     },
-    [freelancerId, categoryId, cachedMonths, toast],
+    [freelancerId, cachedMonths, toast],
   )
 
-  // Effect to load data when month or category changes
+  // Effect to load data when month changes
   useEffect(() => {
-    if (freelancerId && categoryId) {
+    if (freelancerId) {
       fetchAvailableDates(currentMonth).then((dates) => {
         setAvailability(Array.from(dates.values()))
         setInitialLoad(false)
       })
     }
-  }, [freelancerId, categoryId, currentMonth, fetchAvailableDates])
+  }, [freelancerId, currentMonth, fetchAvailableDates])
 
   // Preload next month data for faster navigation
   useEffect(() => {
-    if (freelancerId && categoryId && !initialLoad) {
+    if (freelancerId && !initialLoad) {
       const nextMonth = addMonths(currentMonth, 1)
       fetchAvailableDates(nextMonth)
     }
-  }, [freelancerId, categoryId, currentMonth, fetchAvailableDates, initialLoad])
+  }, [freelancerId, currentMonth, fetchAvailableDates, initialLoad])
 
   // Custom function to determine if a date is disabled
   const isDateDisabled = (date: Date) => {
@@ -192,7 +188,7 @@ export default function FreelancerAvailabilityCalendar({
             </div>
           </>
         )}
-        {!loading && availability.length === 0 && categoryId && (
+        {!loading && availability.length === 0 && (
           <div className="text-center mt-2 text-sm text-muted-foreground">No available dates in this month</div>
         )}
       </CardContent>

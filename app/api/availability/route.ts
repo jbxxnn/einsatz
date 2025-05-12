@@ -6,10 +6,10 @@ import { format, parseISO, isSameDay, addHours, isWithinInterval } from "date-fn
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const freelancerId = url.searchParams.get("freelancerId")
-  const categoryId = url.searchParams.get("categoryId")
   const date = url.searchParams.get("date")
+  const categoryId = url.searchParams.get("categoryId") // Optional, only for bookings
 
-  if (!freelancerId || !categoryId || !date) {
+  if (!freelancerId || !date) {
     return NextResponse.json({ error: "Missing required parameters" }, { status: 400 })
   }
 
@@ -20,12 +20,11 @@ export async function GET(request: Request) {
     const selectedDate = parseISO(date)
     const dayOfWeek = selectedDate.getDay() // 0 = Sunday, 1 = Monday, etc.
 
-    // Fetch all availability entries for this freelancer and category
+    // Fetch all availability entries for this freelancer (global, not category-specific)
     const { data: availabilityEntries, error: availabilityError } = await supabase
       .from("freelancer_availability")
       .select("*")
       .eq("freelancer_id", freelancerId)
-      .eq("category_id", categoryId)
 
     if (availabilityError) {
       throw availabilityError
@@ -79,13 +78,18 @@ export async function GET(request: Request) {
       })
     }
 
-    // Fetch all bookings for this freelancer on this date
-    const { data: bookings, error: bookingsError } = await supabase
+    // Fetch all bookings for this freelancer on this date (category-specific if categoryId is provided)
+    let bookingsQuery = supabase
       .from("bookings")
       .select("start_time, end_time")
       .eq("freelancer_id", freelancerId)
-      .eq("category_id", categoryId)
       .not("status", "in", '("cancelled")')
+
+    if (categoryId) {
+      bookingsQuery = bookingsQuery.eq("category_id", categoryId)
+    }
+
+    const { data: bookings, error: bookingsError } = await bookingsQuery
 
     if (bookingsError) {
       throw bookingsError

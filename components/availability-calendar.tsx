@@ -19,7 +19,6 @@ import { toast } from "@/lib/toast"
 type AvailabilityEntry = {
   id?: string
   freelancer_id: string
-  category_id: string
   start_time: string
   end_time: string
   is_recurring: boolean
@@ -30,11 +29,9 @@ type AvailabilityEntry = {
 
 type AvailabilityCalendarProps = {
   freelancerId: string
-  categoryId: string
-  categoryName: string
 }
 
-export default function AvailabilityCalendar({ freelancerId, categoryId, categoryName }: AvailabilityCalendarProps) {
+export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalendarProps) {
   const { supabase } = useOptimizedSupabase()
   const [date, setDate] = useState<Date>(new Date())
   const [availability, setAvailability] = useState<AvailabilityEntry[]>([])
@@ -62,7 +59,6 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
           .from("freelancer_availability")
           .select("*")
           .eq("freelancer_id", freelancerId)
-          .eq("category_id", categoryId)
 
         if (error) throw error
 
@@ -76,7 +72,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
     }
 
     fetchAvailability()
-  }, [supabase, freelancerId, categoryId, toast])
+  }, [supabase, freelancerId, toast])
 
   // Calculate dates with availability for the calendar
   const datesWithAvailability = useMemo(() => {
@@ -224,7 +220,6 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
 
       const availabilityData: Omit<AvailabilityEntry, "id"> = {
         freelancer_id: freelancerId,
-        category_id: categoryId,
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
         is_recurring: isRecurring,
@@ -244,7 +239,6 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
         if (error) throw error
 
         setAvailability((prev) => prev.map((entry) => (entry.id === selectedEntry.id ? { ...data[0] } : entry)))
-
         toast.success("Availability updated")
       } else {
         // Create new entry
@@ -253,15 +247,13 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
         if (error) throw error
 
         setAvailability((prev) => [...prev, ...data])
-
         toast.success("Availability added")
       }
 
       setIsDialogOpen(false)
       resetForm()
-    } catch (error) {
-      console.error("Error saving availability:", error)
-      toast.error("Failed to save availability")
+    } catch (error: any) {
+      toast.error(`Failed to save availability: ${error?.message || 'Unknown error'}`)
     }
   }
 
@@ -290,7 +282,7 @@ export default function AvailabilityCalendar({ freelancerId, categoryId, categor
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Availability Calendar for {categoryName}</CardTitle>
+          <CardTitle>Availability Calendar</CardTitle>
           <CardDescription>Select dates to view and manage your availability</CardDescription>
         </CardHeader>
         <CardContent>

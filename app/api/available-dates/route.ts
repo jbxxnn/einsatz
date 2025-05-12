@@ -6,11 +6,11 @@ import { format, eachDayOfInterval, startOfMonth, endOfMonth, parseISO, isSameDa
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const freelancerId = url.searchParams.get("freelancerId")
-  const categoryId = url.searchParams.get("categoryId")
   const startDate = url.searchParams.get("startDate")
   const endDate = url.searchParams.get("endDate")
+  const categoryId = url.searchParams.get("categoryId") // Optional, only for bookings
 
-  if (!freelancerId || !categoryId || !startDate || !endDate) {
+  if (!freelancerId || !startDate || !endDate) {
     return NextResponse.json({ error: "Missing required parameters" }, { status: 400 })
   }
 
@@ -27,25 +27,30 @@ export async function GET(request: Request) {
       end: endOfMonth(endDateObj),
     })
 
-    // Fetch all availability entries for this freelancer and category
+    // Fetch all availability entries for this freelancer (global, not category-specific)
     const { data: availabilityEntries, error: availabilityError } = await supabase
       .from("freelancer_availability")
       .select("*")
       .eq("freelancer_id", freelancerId)
-      .eq("category_id", categoryId)
 
     if (availabilityError) {
       throw availabilityError
     }
 
-    // Fetch all bookings for this freelancer in the date range
-    const { data: bookings, error: bookingsError } = await supabase
+    // Fetch all bookings for this freelancer in the date range (category-specific if categoryId is provided)
+    let bookingsQuery = supabase
       .from("bookings")
       .select("start_time, end_time, status")
       .eq("freelancer_id", freelancerId)
       .gte("start_time", startOfMonth(startDateObj).toISOString())
       .lte("end_time", endOfMonth(endDateObj).toISOString())
       .not("status", "in", '("cancelled")')
+
+    if (categoryId) {
+      bookingsQuery = bookingsQuery.eq("category_id", categoryId)
+    }
+
+    const { data: bookings, error: bookingsError } = await bookingsQuery
 
     if (bookingsError) {
       throw bookingsError
