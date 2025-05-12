@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/lib/toast"
-import { Loader2, Plus, Trash2, AlertCircle, Calendar } from "lucide-react"
+import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import JobCategorySelector from "@/components/job-category-selector"
@@ -16,6 +16,7 @@ import JobSubcategorySelector from "@/components/job-subcategory-selector"
 import AvailabilityCalendar from "@/components/availability-calendar"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
+import LoadingSpinner from "@/components/loading-spinner"
 
 type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"]
 type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"]
@@ -202,7 +203,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         <CardContent>
           {loading ? (
             <div className="flex justify-center py-4">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <LoadingSpinner />
             </div>
           ) : offerings.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
@@ -220,33 +221,43 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                         <p className="text-sm text-muted-foreground">{offering.subcategory_name}</p>
                       )}
                       <p className="text-sm text-muted-foreground">€{offering.hourly_rate}/hour</p>
-                      {offering.experience_years && (
+                      {/* {offering.experience_years && (
                         <p className="text-sm text-muted-foreground">
                           {offering.experience_years} {offering.experience_years === 1 ? "year" : "years"} of experience
                         </p>
-                      )}
+                      )} */}
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openAvailabilityDialog(offering.category_id)}>
+                      {/* <Button variant="outline" size="sm" onClick={() => openAvailabilityDialog(offering.category_id)}>
                         <Calendar className="h-4 w-4 mr-2" />
                         Set Availability
-                      </Button>
+                      </Button> */}
                       <Button variant="ghost" size="icon" onClick={() => handleDeleteOffering(offering.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </div>
 
-                  {offering.description && (
+                  {/* {offering.description && (
                     <div className="mt-2 text-sm text-muted-foreground">
                       <p>{offering.description}</p>
                     </div>
-                  )}
+                  )} */}
                 </div>
               ))}
+              <div className="mt-[20px]">
+              <Link href="/profile/availability">
+                        <Button>
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          Setup Availability
+                        </Button>
+                      </Link>
+                      </div>
             </div>
+            
           )}
         </CardContent>
+        
       </Card>
 
       {hasReachedMaxOfferings ? (

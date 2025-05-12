@@ -6,15 +6,14 @@ import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { toast } from "@/lib/toast"
-import { Loader2, Calendar } from "lucide-react"
+import LoadingSpinner from "@/components/loading-spinner"
 import type { Database } from "@/lib/database.types"
 import SidebarNav from "@/components/sidebar-nav"
-import AvailabilityCalendar from "@/components/availability-calendar"
-import LoadingSpinner from "@/components/loading-spinner"
+import JobOfferingsManager from "@/components/job-offerings-manager"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
-export default function AvailabilityPage() {
+export default function JobOfferingsPage() {
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
@@ -92,22 +91,22 @@ export default function AvailabilityPage() {
           <div className="lg:col-span-3 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold">Manage Availability</h1>
+                <h1 className="text-3xl font-bold">Job Offerings</h1>
                 <p className="text-muted-foreground mt-1">
-                  Set your availability for all your services
+                  Manage your services and expertise
                 </p>
               </div>
             </div>
 
             <Card>
               <CardHeader>
-                <CardTitle>Your Availability Calendar</CardTitle>
-                <CardDescription>
-                  Set your available times and dates. This will be used across all your services.
-                </CardDescription>
+                {/* <CardTitle>Your Services</CardTitle> */}
+                {/* <CardDescription>
+                  Add and manage the services you offer to clients
+                </CardDescription> */}
               </CardHeader>
               <CardContent>
-                <AvailabilityCalendar freelancerId={profile.id} />
+                <JobOfferingsManager freelancerId={profile.id} />
               </CardContent>
             </Card>
           </div>
@@ -115,5 +114,4 @@ export default function AvailabilityPage() {
       </div>
     </div>
   )
-}
-
+} 

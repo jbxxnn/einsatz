@@ -55,11 +55,12 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import JobOfferingsManager from "@/components/job-offerings-manager"
 import type { Database } from "@/lib/database.types"
 import { LocationInput } from "@/components/location-input"
 import { AvatarUpload } from "@/components/avatar-upload"
 import { toast } from "@/lib/toast"
+import LoadingSpinner from "@/components/loading-spinner"
+import SidebarNav from "@/components/sidebar-nav"
 // import { LocationSearch } from "@/components/location-search"
 // import { JobCategorySelector } from "@/components/job-category-selector"
 // import { JobSubcategorySelector } from "@/components/job-subcategory-selector"
@@ -273,7 +274,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="container py-10 flex justify-center items-center min-h-[50vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <LoadingSpinner />
       </div>
     )
   }
@@ -293,81 +294,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-background rounded-lg shadow-sm border p-6 sticky top-20">
-              <div className="flex flex-col items-center mb-6">
-                <div className="relative h-20 w-20 rounded-full overflow-hidden mb-3">
-                  <Image
-                    src={avatarUrl || `/placeholder.svg?height=80&width=80&text=${firstName.charAt(0) || "U"}`}
-                    alt={firstName || "User"}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <h3 className="font-medium text-lg">
-                  {firstName} {lastName}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {profile.user_type === "freelancer" ? "Freelancer" : "Client"}
-                </p>
-              </div>
-
-              <nav className="space-y-1">
-                <Link
-                  href="/dashboard"
-                  className="flex items-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-                >
-                  <Briefcase className="h-4 w-4 mr-3" />
-                  <span>Dashboard</span>
-                </Link>
-                <Link
-                  href="/profile"
-                  className="flex items-center p-2 rounded-md bg-primary/10 text-primary font-medium"
-                >
-                  <User className="h-4 w-4 mr-3" />
-                  <span>My Profile</span>
-                </Link>
-                {profile.user_type === "freelancer" && (
-                  <Link
-                    href="/profile/availability"
-                    className="flex items-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-                  >
-                    <Calendar className="h-4 w-4 mr-3" />
-                    <span>Availability</span>
-                  </Link>
-                )}
-                <Link
-                  href="/bookings"
-                  className="flex items-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-                >
-                  <Clock className="h-4 w-4 mr-3" />
-                  <span>Bookings</span>
-                </Link>
-                <Link
-                  href="/payments"
-                  className="flex items-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-                >
-                  <CreditCard className="h-4 w-4 mr-3" />
-                  <span>Payments</span>
-                </Link>
-                <Link
-                  href="/settings"
-                  className="flex items-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-                >
-                  <Settings className="h-4 w-4 mr-3" />
-                  <span>Settings</span>
-                </Link>
-                <button
-                  onClick={async () => {
-                    await supabase.auth.signOut()
-                    router.push("/")
-                  }}
-                  className="flex items-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground w-full text-left"
-                >
-                  <LogOut className="h-4 w-4 mr-3" />
-                  <span>Logout</span>
-                </button>
-              </nav>
-            </div>
+            <SidebarNav profile={profile} />
           </div>
 
           {/* Main Content */}
@@ -548,10 +475,14 @@ export default function ProfilePage() {
                     <div className="bg-background rounded-lg shadow-sm border p-8">
                       <h2 className="text-xl font-semibold mb-6">Job Offerings</h2>
                       <p className="text-muted-foreground mb-6">
-                        Add job categories you offer and set your availability for each one.
+                        Manage your services and expertise in the dedicated job offerings page.
                       </p>
-
-                      <JobOfferingsManager freelancerId={profile.id} />
+                      <Link href="/job-offerings">
+                        <Button>
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          Manage Job Offerings
+                        </Button>
+                      </Link>
                     </div>
                   </>
                 )}

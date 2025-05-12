@@ -22,6 +22,12 @@ import { Suspense } from "react"
 // Non-authenticated navigation links - always visible
 function PublicNavLinks() {
   const pathname = usePathname()
+  const { userType } = useOptimizedUser()
+
+  // Don't show Find Freelancers link for freelancers
+  if (userType === "freelancer") {
+    return null
+  }
 
   return (
     <nav className="hidden gap-6 md:flex">
