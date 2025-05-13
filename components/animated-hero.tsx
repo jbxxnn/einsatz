@@ -4,7 +4,21 @@ import Link from "next/link"
 import { MoveRight, PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-function Hero() {
+interface HeroProps {
+  title: string
+  subtitle: string
+  description: string
+  findFreelancersText: string
+  becomeFreelancerText: string
+}
+
+export function Hero({
+  title,
+  subtitle,
+  description,
+  findFreelancersText,
+  becomeFreelancerText,
+}: HeroProps) {
   const [titleNumber, setTitleNumber] = useState(0);
   const titles = useMemo(
     () => ["amazing", "new", "wonderful", "beautiful", "smart"],
@@ -33,8 +47,8 @@ function Hero() {
           </div>
           <div className="flex gap-4 flex-col">
             <h1 className="text-5xl md:text-7xl max-w-2xl tracking-tighter text-center font-regular">
-              <span className="text-spektr-cyan-50">This is something</span>
-              <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1">
+              <span className="text-spektr-cyan-50">{title}</span>
+              {/* <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1">
                 &nbsp;
                 {titles.map((title, index) => (
                   <motion.span
@@ -57,23 +71,22 @@ function Hero() {
                     {title}
                   </motion.span>
                 ))}
-              </span>
+              </span> */}
             </h1>
 
             <p className="text-lg md:text-xl leading-relaxed tracking-tight text-muted-foreground max-w-2xl text-center">
-            Einsatz connects you with skilled professionals for urgent, in-person jobs. No job postings, just
-            direct booking.
+            {description}
             </p>
           </div>
           <div className="flex flex-row gap-3">
           <Link href="/freelancers">
             <Button size="lg" className="gap-4" variant="outline">
-            Find Freelancers <PhoneCall className="w-4 h-4" />
+            {findFreelancersText} <PhoneCall className="w-4 h-4" />
             </Button>
             </Link>
             <Link href="/register?type=freelancer">
             <Button size="lg" className="gap-4">
-            Join as Freelancer <MoveRight className="w-4 h-4" />
+            {becomeFreelancerText} <MoveRight className="w-4 h-4" />
             </Button>
             </Link>
           </div>
@@ -82,5 +95,3 @@ function Hero() {
     </div>
   );
 }
-
-export { Hero };

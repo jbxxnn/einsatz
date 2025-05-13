@@ -1,0 +1,58 @@
+{
+  "common": {
+    "findFreelancers": "Vind Freelancers",
+    "browseAndConnect": "Blader en maak contact met ervaren freelancers in uw omgeving",
+    "searchPlaceholder": "Zoek freelancers op naam, vaardigheden of locatie...",
+    "loading": "Laden...",
+    "error": "Fout",
+    "retry": "Opnieuw proberen",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "view": "Bekijken",
+    "back": "Terug"
+  },
+  "home": {
+    "hero": {
+      "title": "Vind de Perfecte Freelancer",
+      "subtitle": "Maak contact met ervaren professionals voor uw projecten",
+      "description": "Word lid van ons platform om getalenteerde freelancers te vinden of toon uw vaardigheden aan potentiële klanten",
+      "findFreelancers": "Vind Freelancers",
+      "becomeFreelancer": "Word Freelancer"
+    }
+  },
+  "freelancer": {
+    "profile": "Profiel",
+    "availability": "Beschikbaarheid",
+    "jobOfferings": "Diensten",
+    "reviews": "Beoordelingen",
+    "hourlyRate": "Uurtarief",
+    "skills": "Vaardigheden",
+    "location": "Locatie",
+    "bio": "Biografie",
+    "contact": "Contact",
+    "bookNow": "Nu Boeken",
+    "availableNow": "Nu Beschikbaar",
+    "notAvailable": "Niet Beschikbaar"
+  },
+  "filters": {
+    "title": "Filters",
+    "priceRange": "Prijsbereik",
+    "categories": "Categorieën",
+    "skills": "Vaardigheden",
+    "location": "Locatie",
+    "availability": "Beschikbaarheid",
+    "apply": "Filters Toepassen",
+    "clear": "Filters Wissen"
+  },
+  "auth": {
+    "login": "Inloggen",
+    "signup": "Registreren",
+    "logout": "Uitloggen",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "forgotPassword": "Wachtwoord vergeten?",
+    "rememberMe": "Onthoud mij"
+  }
+} 

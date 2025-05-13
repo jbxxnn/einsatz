@@ -10,6 +10,7 @@ import { Search } from "lucide-react"
 import { useOptimizedUser } from "@/components/optimized-user-provider"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { useTranslation } from "@/lib/i18n"
 
 // Skeleton loader for freelancers list
 function FreelancersListSkeleton() {
@@ -32,16 +33,21 @@ function FreelancersListSkeleton() {
   )
 }
 
-export default function FreelancersPage() {
+export default function FreelancersPage({
+  params: { lang },
+}: {
+  params: { lang: string }
+}) {
   const { userType } = useOptimizedUser()
   const router = useRouter()
+  const { t } = useTranslation()
 
   // Redirect freelancers away from this page
   useEffect(() => {
     if (userType === "freelancer") {
-      router.push("/dashboard")
+      router.push(`/${lang}/dashboard`)
     }
-  }, [userType, router])
+  }, [userType, router, lang])
 
   return (
     <div className="bg-muted/30 min-h-screen">
@@ -49,19 +55,19 @@ export default function FreelancersPage() {
         <div className="space-y-6">
           {/* Header Section */}
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold">Find Freelancers</h1>
+            <h1 className="text-3xl font-bold">{t("common.findFreelancers")}</h1>
             <p className="text-muted-foreground">
-              Browse and connect with skilled freelancers in your area
+              {t("common.browseAndConnect")}
             </p>
           </div>
 
-          {/* Search Bar
-          <Card>
+          {/* Search Bar */}
+          {/* <Card>
             <CardContent className="p-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search freelancers by name, skills, or location..."
+                  placeholder={t("common.searchPlaceholder")}
                   className="pl-9"
                 />
               </div>

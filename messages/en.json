@@ -1,0 +1,58 @@
+{
+  "common": {
+    "findFreelancers": "Find Freelancers",
+    "browseAndConnect": "Browse and connect with skilled freelancers in your area",
+    "searchPlaceholder": "Search freelancers by name, skills, or location...",
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "back": "Back"
+  },
+  "home": {
+    "hero": {
+      "title": "Find the Perfect Freelancer",
+      "subtitle": "Connect with skilled professionals for your projects",
+      "description": "Join our platform to find talented freelancers or showcase your skills to potential clients",
+      "findFreelancers": "Find Freelancers",
+      "becomeFreelancer": "Become a Freelancer"
+    }
+  },
+  "freelancer": {
+    "profile": "Profile",
+    "availability": "Availability",
+    "jobOfferings": "Job Offerings",
+    "reviews": "Reviews",
+    "hourlyRate": "Hourly Rate",
+    "skills": "Skills",
+    "location": "Location",
+    "bio": "Bio",
+    "contact": "Contact",
+    "bookNow": "Book Now",
+    "availableNow": "Available Now",
+    "notAvailable": "Not Available"
+  },
+  "filters": {
+    "title": "Filters",
+    "priceRange": "Price Range",
+    "categories": "Categories",
+    "skills": "Skills",
+    "location": "Location",
+    "availability": "Availability",
+    "apply": "Apply Filters",
+    "clear": "Clear Filters"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember Me"
+  }
+} 

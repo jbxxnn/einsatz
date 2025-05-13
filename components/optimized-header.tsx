@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "@/lib/toast"
 import LoadingSpinner from "./loading-spinner"
 import { Suspense } from "react"
+import LanguageSwitcher from "@/components/language-switcher"
 
 // Non-authenticated navigation links - always visible
 function PublicNavLinks() {
@@ -181,6 +182,7 @@ export default function OptimizedHeader() {
           </Suspense>
         </div>
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           <Suspense fallback={<LoginButtons />}>
             <AuthSection />
           </Suspense>
