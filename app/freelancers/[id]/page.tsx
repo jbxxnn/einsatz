@@ -368,8 +368,7 @@ export default function FreelancerProfile() {
                   <div>
                     <p className="text-sm text-muted-foreground mb-2">Select a date:</p>
                     <FreelancerAvailabilityCalendar
-                      freelancerId={freelancer.id}
-                      categoryId={selectedCategoryId}
+                      freelancerId={params.id as string}
                       onSelectDate={setSelectedDate}
                     />
                   </div>
