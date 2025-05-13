@@ -33,11 +33,7 @@ function FreelancersListSkeleton() {
   )
 }
 
-export default function FreelancersPage({
-  params: { lang },
-}: {
-  params: { lang: string }
-}) {
+export default function FreelancersPage() {
   const { userType } = useOptimizedUser()
   const router = useRouter()
   const { t } = useTranslation()
@@ -45,9 +41,9 @@ export default function FreelancersPage({
   // Redirect freelancers away from this page
   useEffect(() => {
     if (userType === "freelancer") {
-      router.push(`/${lang}/dashboard`)
+      router.push("/dashboard")
     }
-  }, [userType, router, lang])
+  }, [userType, router])
 
   return (
     <div className="bg-muted/30 min-h-screen">
@@ -62,7 +58,7 @@ export default function FreelancersPage({
           </div>
 
           {/* Search Bar */}
-          {/* <Card>
+          <Card>
             <CardContent className="p-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -72,7 +68,7 @@ export default function FreelancersPage({
                 />
               </div>
             </CardContent>
-          </Card> */}
+          </Card>
 
           {/* Main Content */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
