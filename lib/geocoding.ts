@@ -181,7 +181,7 @@ export function formatDistance(distance: number | null): string {
   if (distance < 0.1) {
     return "Less than 0.1 miles away"
   } else if (distance < 1) {
-    return `${(distance * 10).toFixed(0) / 10} miles away`
+    return `${(Math.round(distance * 10) / 10).toFixed(1)} miles away`
   } else {
     return `${distance.toFixed(1)} miles away`
   }
