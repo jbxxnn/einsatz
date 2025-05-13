@@ -6,6 +6,7 @@ import { User, Briefcase, Calendar, Clock, CreditCard, Settings, LogOut } from "
 import Link from "next/link"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
+import { useTranslation } from "@/lib/i18n"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
@@ -17,7 +18,7 @@ export default function SidebarNav({ profile }: SidebarNavProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { supabase } = useOptimizedSupabase()
-
+  const { t } = useTranslation()
   const isActive = (path: string) => {
     return pathname === path || pathname?.startsWith(`${path}/`)
   }
@@ -47,14 +48,14 @@ export default function SidebarNav({ profile }: SidebarNavProps) {
           className={`flex items-center p-2 rounded-md ${isActive("/dashboard") ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground hover:text-foreground"}`}
         >
           <Briefcase className="h-4 w-4 mr-3" />
-          <span>Dashboard</span>
+          <span>{t("sidebar.dashboard")}</span>
         </Link>
         <Link
           href="/profile"
           className={`flex items-center p-2 rounded-md ${isActive("/profile") ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground hover:text-foreground"}`}
         >
           <User className="h-4 w-4 mr-3" />
-          <span>My Profile</span>
+          <span>{t("sidebar.profile")}</span>
         </Link>
         {profile.user_type === "freelancer" && (
           <Link
@@ -62,7 +63,7 @@ export default function SidebarNav({ profile }: SidebarNavProps) {
             className={`flex items-center p-2 rounded-md ${isActive("/job-offerings") ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground hover:text-foreground"}`}
           >
             <Calendar className="h-4 w-4 mr-3" />
-            <span>Job Offerings</span>
+            <span>{t("sidebar.jobOfferings")}</span>
           </Link>
         )}
         <Link
@@ -70,21 +71,21 @@ export default function SidebarNav({ profile }: SidebarNavProps) {
           className={`flex items-center p-2 rounded-md ${isActive("/bookings") ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground hover:text-foreground"}`}
         >
           <Clock className="h-4 w-4 mr-3" />
-          <span>Bookings</span>
+          <span>{t("sidebar.bookings")}</span>
         </Link>
         <Link
           href="/payments"
           className={`flex items-center p-2 rounded-md ${isActive("/payments") ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground hover:text-foreground"}`}
         >
           <CreditCard className="h-4 w-4 mr-3" />
-          <span>Payments</span>
+          <span>{t("sidebar.payments")}</span>
         </Link>
         <Link
           href="/settings"
           className={`flex items-center p-2 rounded-md ${isActive("/settings") ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground hover:text-foreground"}`}
         >
           <Settings className="h-4 w-4 mr-3" />
-          <span>Settings</span>
+          <span>{t("sidebar.settings")}</span>
         </Link>
         <button
           onClick={async () => {
@@ -94,7 +95,7 @@ export default function SidebarNav({ profile }: SidebarNavProps) {
           className="flex items-center p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground w-full text-left"
         >
           <LogOut className="h-4 w-4 mr-3" />
-          <span>Logout</span>
+          <span>{t("sidebar.logout")}</span>
         </button>
       </nav>
     </div>

@@ -17,6 +17,7 @@ import AvailabilityCalendar from "@/components/availability-calendar"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 import LoadingSpinner from "@/components/loading-spinner"
+import { useTranslation } from "@/lib/i18n"
 
 type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"]
 type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"]
@@ -29,7 +30,8 @@ interface JobOfferingsManagerProps {
 // Maximum number of job offerings allowed
 const MAX_JOB_OFFERINGS = 3
 
-export default function JobOfferingsManager({ freelancerId }: JobOfferingsManagerProps) {
+export default function JobOfferingsManager({ freelancerId }: JobOfferingsManagerProps) { 
+  const { t } = useTranslation()
   const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
   const [offerings, setOfferings] = useState<(JobOffering & { category_name: string; subcategory_name?: string })[]>([])
@@ -72,7 +74,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         setOfferings(formattedOfferings)
       } catch (error) {
         console.error("Error fetching job offerings:", error)
-        toast.error("Failed to load job offerings")
+        toast.error(t("jobOfferings.cardLoadOfferingsError"))
       } finally {
         setLoading(false)
       }
@@ -85,12 +87,12 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
 
   const handleAddOffering = async () => {
     if (!selectedCategoryId || !hourlyRate) {
-      toast.error("Please select a category and enter an hourly rate")
+      toast.error(t("jobOfferings.cardAddOfferingError"))
       return
     }
 
     if (offerings.length >= MAX_JOB_OFFERINGS) {
-      toast.error(`You can only add up to ${MAX_JOB_OFFERINGS} job offerings at this time.`)
+      toast.error(t("jobOfferings.cardMaxOfferings"))
       return
     }
 
@@ -105,7 +107,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       )
 
       if (existingOffering) {
-        toast.error("You already have an offering for this job category and subcategory")
+        toast.error(t("jobOfferings.cardAddOfferingError"))
         setSaving(false)
         return
       }
@@ -156,7 +158,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       } jobs`)
     } catch (error) {
       console.error("Error adding job offering:", error)
-      toast.error("Failed to add job offering")
+      toast.error(t("jobOfferings.cardAddOfferingError"))
     } finally {
       setSaving(false)
     }
@@ -171,10 +173,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       // Update local state
       setOfferings(offerings.filter((o) => o.id !== offeringId))
 
-      toast.success("The job category has been removed from your profile")
+      toast.success(t("jobOfferings.cardRemoveOfferingSuccess"))
     } catch (error) {
       console.error("Error removing job offering:", error)
-      toast.error("Failed to remove job offering")
+      toast.error(t("jobOfferings.cardRemoveOfferingError"))
     }
   }
 
@@ -194,10 +196,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Your Job Offerings</CardTitle>
+          <CardTitle>{t("jobOfferings.cardTitle")}</CardTitle>
           <CardDescription>
-            You can add up to {MAX_JOB_OFFERINGS} job offerings. You have added {offerings.length} of{" "}
-            {MAX_JOB_OFFERINGS}.
+            {t("jobOfferings.cardDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -207,8 +208,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
             </div>
           ) : offerings.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
-              <p>You haven't added any job offerings yet.</p>
-              <p>Add job categories below to start receiving bookings.</p>
+              <p>{t("jobOfferings.cardNoOfferings")}</p>
+              <p>{t("jobOfferings.cardAddOfferings")}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -228,10 +229,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                       )} */}
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openAvailabilityDialog(offering.category_id)}>
+                      {/* <Button variant="outline" size="sm" onClick={() => openAvailabilityDialog(offering.category_id)}>
                         <Calendar className="h-4 w-4 mr-2" />
                         Set Availability
-                      </Button>
+                      </Button> */}
                       <Button variant="ghost" size="icon" onClick={() => handleDeleteOffering(offering.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -249,7 +250,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               <Link href="/profile/availability">
                         <Button>
                           <Briefcase className="h-4 w-4 mr-2" />
-                          Setup Availability
+                          {t("jobOfferings.cardSetupAvailability")}
                         </Button>
                       </Link>
                       </div>
@@ -263,21 +264,20 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       {hasReachedMaxOfferings ? (
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Maximum offerings reached</AlertTitle>
+          <AlertTitle>{t("jobOfferings.cardMaxOfferings")}</AlertTitle>
           <AlertDescription>
-            You have reached the maximum of {MAX_JOB_OFFERINGS} job offerings. To add a new offering, please remove an
-            existing one first.
+            {t("jobOfferings.cardMaxOfferingsDescription")}
           </AlertDescription>
         </Alert>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Add New Job Offering</CardTitle>
+            <CardTitle>{t("jobOfferings.cardAddNewOffering")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Job Category</Label>
+                <Label htmlFor="category">{t("jobOfferings.cardCategory")}</Label>
                 <JobCategorySelector
                   selectedCategories={selectedCategoryId ? [selectedCategoryId] : []}
                   onChange={(categories) => setSelectedCategoryId(categories[0] || null)}
@@ -286,7 +286,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="subcategory">Job Subcategory</Label>
+                <Label htmlFor="subcategory">{t("jobOfferings.cardSubcategory")}</Label>
                 <JobSubcategorySelector
                   categoryId={selectedCategoryId}
                   selectedSubcategory={selectedSubcategoryId}
@@ -295,7 +295,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="hourlyRate">Hourly Rate (€)</Label>
+                <Label htmlFor="hourlyRate">{t("jobOfferings.cardHourlyRate")}</Label>
                 <Input
                   id="hourlyRate"
                   type="number"
@@ -308,7 +308,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="experienceYears">Years of Experience</Label>
+                <Label htmlFor="experienceYears">{t("jobOfferings.cardExperienceYears")}</Label>
                 <Input
                   id="experienceYears"
                   type="number"
@@ -321,7 +321,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t("jobOfferings.cardDescription")}</Label>
                 <Textarea
                   id="description"
                   placeholder="Describe your experience and services for this job category"
@@ -335,12 +335,12 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adding...
+                    {t("jobOfferings.cardAdding")}
                   </>
                 ) : (
                   <>
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Job Offering
+                    {t("jobOfferings.cardAddJobOffering")}
                   </>
                 )}
               </Button>
@@ -353,7 +353,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       <Dialog open={availabilityDialogOpen} onOpenChange={setAvailabilityDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Set Availability</DialogTitle>
+            <DialogTitle>{t("jobOfferings.cardSetAvailability")}</DialogTitle>
           </DialogHeader>
           <AvailabilityCalendar freelancerId={freelancerId} />
         </DialogContent>

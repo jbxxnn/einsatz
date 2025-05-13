@@ -61,6 +61,7 @@ import { AvatarUpload } from "@/components/avatar-upload"
 import { toast } from "@/lib/toast"
 import LoadingSpinner from "@/components/loading-spinner"
 import SidebarNav from "@/components/sidebar-nav"
+import { useTranslation } from "@/lib/i18n"
 // import { LocationSearch } from "@/components/location-search"
 // import { JobCategorySelector } from "@/components/job-category-selector"
 // import { JobSubcategorySelector } from "@/components/job-subcategory-selector"
@@ -72,6 +73,7 @@ import SidebarNav from "@/components/sidebar-nav"
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
 export default function ProfilePage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
@@ -120,7 +122,7 @@ export default function ProfilePage() {
 
       if (error) {
         console.error("Error fetching profile:", error)
-        toast.error("Failed to load profile")
+        toast.error(t("profile.error"))
       } else if (data) {
         setProfile(data)
         setFirstName(data.first_name || "")
@@ -255,7 +257,7 @@ export default function ProfilePage() {
 
       if (error) throw error
 
-      toast.success("Profile updated successfully")
+      toast.success(t("profile.updateSuccess"))
 
       // Update local state
       setProfile({
@@ -264,7 +266,7 @@ export default function ProfilePage() {
       } as Profile)
     } catch (error: any) {
       console.error('Error updating profile:', error)
-      toast.error(error.message || 'Something went wrong. Please try again.')
+      toast.error(error.message || t("profile.updateError"))
     } finally {
       setUpdating(false)
       console.log('Update finished')
@@ -282,8 +284,8 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Profile not found</h1>
-        <Button onClick={() => router.push("/")}>Go to Home</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("profile.profileNotFound")}</h1>
+        <Button onClick={() => router.push("/")}>{t("dashboard.goToHome")}</Button>
       </div>
     )
   }
@@ -300,10 +302,10 @@ export default function ProfilePage() {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">Edit Profile</h1>
+              <h1 className="text-3xl font-bold">{t("profile.title")}</h1>
               {profile.user_type === "freelancer" && (
                 <Link href={`/freelancers/${profile.id}`}>
-                  <Button variant="outline">Preview Profile</Button>
+                  <Button variant="outline">{t("profile.previewProfile")}</Button>
                 </Link>
               )}
             </div>
@@ -343,12 +345,12 @@ export default function ProfilePage() {
               </div>
 
               <div className="pt-16 px-8 pb-8">
-                <h2 className="text-xl font-semibold mb-6">Your Photo</h2>
-                <p className="text-sm text-muted-foreground mb-4">This will be displayed on your profile</p>
+                <h2 className="text-xl font-semibold mb-6">{t("profile.yourPhoto")}</h2>
+                <p className="text-sm text-muted-foreground mb-4">{t("profile.yourPhotoDescription")}</p>
                 <div className="flex gap-3">
                   <Button type="button" variant="outline" size="sm" onClick={handleAvatarClick}>
                     <Upload className="h-4 w-4 mr-2" />
-                    Upload New
+                    {t("profile.uploadNew")}
                   </Button>
                 </div>
               </div>
@@ -358,12 +360,12 @@ export default function ProfilePage() {
               <div className="space-y-6">
                 {/* Personal Information */}
                 <div className="bg-background rounded-lg shadow-sm border p-8">
-                  <h2 className="text-xl font-semibold mb-6">Personal Information</h2>
+                  <h2 className="text-xl font-semibold mb-6">{t("profile.personalInformation")}</h2>
 
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
+                        <Label htmlFor="firstName">{t("profile.firstName")}</Label>
                         <Input
                           id="firstName"
                           value={firstName}
@@ -372,18 +374,18 @@ export default function ProfilePage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
+                        <Label htmlFor="lastName">{t("profile.lastName")}</Label>
                         <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
+                      <Label htmlFor="email">{t("profile.email")}</Label>
                       <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">{t("profile.phone")}</Label>
                       <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
                     </div>
 
@@ -391,8 +393,8 @@ export default function ProfilePage() {
                     <LocationInput
                       value={location}
                       onChange={handleLocationChange}
-                      label="Location"
-                      placeholder="Enter your location"
+                      label={t("profile.location")}
+                      placeholder={t("profile.locationPlaceholder")}
                       required={false}
                       showRadius={profile.user_type === "freelancer"}
                       radiusValue={serviceRadius}
@@ -403,18 +405,17 @@ export default function ProfilePage() {
                     {profile.user_type === "freelancer" && locationCoords && locationCoords.lat && locationCoords.lng && (
                       <div className="text-sm text-muted-foreground">
                         <p>
-                          Your location has been verified. Clients will be able to find you based on your location and
-                          service radius.
+                          {t("profile.locationVerified")}
                         </p>
                       </div>
                     )}
 
                     {profile.user_type === "freelancer" && (
                       <div className="space-y-2">
-                        <Label htmlFor="role">Professional Title</Label>
+                        <Label htmlFor="role">{t("profile.professionalTitle")}</Label>
                         <Input
                           id="role"
-                          placeholder="e.g. Senior Product Designer"
+                          placeholder={t("profile.professionalTitlePlaceholder")}
                           value={(profile.metadata as { role?: string })?.role || ""}
                           onChange={(e) => {
                             const updatedMetadata = { ...(profile.metadata as object), role: e.target.value }
@@ -428,17 +429,17 @@ export default function ProfilePage() {
 
                 {/* Bio */}
                 <div className="bg-background rounded-lg shadow-sm border p-8">
-                  <h2 className="text-xl font-semibold mb-6">Bio</h2>
+                  <h2 className="text-xl font-semibold mb-6">{t("profile.bio")}</h2>
                   <div className="space-y-2">
                     <Textarea
                       id="bio"
-                      placeholder="Tell clients about yourself, your experience, and expertise..."
+                      placeholder={t("profile.bioPlaceholder")}
                       rows={6}
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      A good bio helps clients understand your background and skills.
+                      {t("profile.bioDescription")}
                     </p>
                   </div>
                 </div>
@@ -447,11 +448,11 @@ export default function ProfilePage() {
                 {profile.user_type === "freelancer" && (
                   <>
                     <div className="bg-background rounded-lg shadow-sm border p-8">
-                      <h2 className="text-xl font-semibold mb-6">Professional Information</h2>
+                      <h2 className="text-xl font-semibold mb-6">{t("profile.professionalInformation")}</h2>
 
                       <div className="space-y-6">
                         <div className="space-y-2">
-                          <Label htmlFor="hourlyRate">Default Hourly Rate (€)</Label>
+                          <Label htmlFor="hourlyRate">{t("profile.defaultHourlyRate")}</Label>
                           <div className="relative">
                             <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
@@ -459,28 +460,28 @@ export default function ProfilePage() {
                               type="number"
                               min="0"
                               step="0.01"
-                              placeholder="45.00"
+                              placeholder={t("profile.defaultHourlyRatePlaceholder")}
                               value={hourlyRate}
                               onChange={(e) => setHourlyRate(e.target.value)}
                               className="pl-10"
                             />
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            This is your default rate. You can set specific rates for each job category.
+                            {t("profile.defaultHourlyRateDescription")}
                           </p>
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-background rounded-lg shadow-sm border p-8">
-                      <h2 className="text-xl font-semibold mb-6">Job Offerings</h2>
+                      <h2 className="text-xl font-semibold mb-6">{t("profile.jobOfferings")}</h2>
                       <p className="text-muted-foreground mb-6">
-                        Manage your services and expertise in the dedicated job offerings page.
+                        {t("profile.jobOfferingsDescription")}
                       </p>
                       <Link href="/job-offerings">
                         <Button>
                           <Briefcase className="h-4 w-4 mr-2" />
-                          Manage Job Offerings
+                          {t("profile.manageJobOfferings")}
                         </Button>
                       </Link>
                     </div>
@@ -492,10 +493,10 @@ export default function ProfilePage() {
                     {updating ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
+                        {t("profile.saving")}
                       </>
                     ) : (
-                      "Save Changes"
+                      t("profile.saveChanges")
                     )}
                   </Button>
                 </div>

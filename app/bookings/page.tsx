@@ -15,6 +15,7 @@ import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import LoadingSpinner from "@/components/loading-spinner"
 import SidebarNav from "@/components/sidebar-nav"
+import { useTranslation } from "@/lib/i18n"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -22,6 +23,7 @@ type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
 }
 
 export default function BookingsPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
@@ -88,7 +90,7 @@ export default function BookingsPage() {
         setBookings(bookingsData as Booking[])
       } catch (error) {
         console.error("Error fetching data:", error)
-        toast.error("Failed to load bookings data. Please try again.")
+        toast.error(t("bookings.error"))
       } finally {
         setLoading(false)
       }
@@ -118,9 +120,9 @@ export default function BookingsPage() {
       // Update local state
       setBookings(bookings.map((booking) => (booking.id === bookingId ? { ...booking, ...updateData } : booking)))
 
-      toast.success(`Booking ${action}ed successfully`)
+      toast.success(t("bookings.success"))
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong. Please try again.")
+      toast.error(error.message || t("bookings.error"))
     }
   }
 
@@ -130,11 +132,11 @@ export default function BookingsPage() {
         return (
           <div className="flex gap-1 flex-wrap">
           <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-            Pending
+            {t("bookings.pending")}
           </Badge>
           {paymentMethod === "offline" && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
-                Offline
+                {t("bookings.offline")}
               </Badge>
             )}
           </div>
@@ -143,11 +145,11 @@ export default function BookingsPage() {
         return (
           <div className="flex gap-1 flex-wrap">
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            Confirmed
+            {t("bookings.confirmed")}
           </Badge>
           {paymentMethod === "offline" && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
-                Offline
+                {t("bookings.offline")}
               </Badge>
             )}
           </div>
@@ -156,11 +158,11 @@ export default function BookingsPage() {
         return (
           <div className="flex gap-1 flex-wrap">
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            Completed
+            {t("bookings.completed")}
           </Badge>
           {paymentMethod === "offline" && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
-                Offline
+                {t("bookings.offline")}
               </Badge>
             )}
           </div>
@@ -168,13 +170,13 @@ export default function BookingsPage() {
       case "cancelled":
         return (
           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-            Cancelled
+            {t("bookings.cancelled")}
           </Badge>
         )
       case "disputed":
         return (
           <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-            Disputed
+            {t("bookings.disputed")}
           </Badge>
         )
       default:
@@ -193,8 +195,8 @@ export default function BookingsPage() {
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Profile not found</h1>
-        <Button onClick={() => router.push("/")}>Go to Home</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("bookings.profileNotFound")}</h1>
+        <Button onClick={() => router.push("/")}>{t("bookings.goToHome")}</Button>
       </div>
     )
   }
@@ -211,10 +213,10 @@ export default function BookingsPage() {
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">Bookings</h1>
+              <h1 className="text-3xl font-bold">{t("bookings.title")}</h1>
               {profile.user_type === "client" && (
                 <Link href="/freelancers">
-                  <Button>Book a Freelancer</Button>
+                  <Button>{t("bookings.bookFreelancer")}</Button>
                 </Link>
               )}
             </div>
@@ -222,8 +224,8 @@ export default function BookingsPage() {
             <Tabs defaultValue="upcoming">
               <div className="flex justify-between items-center mb-4">
                 <TabsList>
-                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                  <TabsTrigger value="past">Past</TabsTrigger>
+                  <TabsTrigger value="upcoming">{t("bookings.upcoming")}</TabsTrigger>
+                  <TabsTrigger value="past">{t("bookings.past")}</TabsTrigger>
                 </TabsList>
               </div>
 
@@ -234,19 +236,19 @@ export default function BookingsPage() {
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center py-10">
                       <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-xl font-medium mb-2">No upcoming bookings</h3>
+                      <h3 className="text-xl font-medium mb-2">{t("bookings.noUpcomingBookings")}</h3>
                       <p className="text-muted-foreground text-center max-w-md mb-4">
                         {profile.user_type === "client"
-                          ? "You don't have any upcoming bookings. Book a freelancer to get started."
-                          : "You don't have any upcoming jobs. Update your profile to attract more clients."}
+                          ? t("bookings.noUpcomingBookingsClient")
+                          : t("bookings.noUpcomingBookingsFreelancer")}
                       </p>
                       {profile.user_type === "client" ? (
                         <Link href="/freelancers">
-                          <Button>Find Freelancers</Button>
+                          <Button>{t("bookings.findFreelancers")}</Button>
                         </Link>
                       ) : (
                         <Link href="/profile">
-                          <Button>Update Profile</Button>
+                          <Button>{t("bookings.updateProfile")}</Button>
                         </Link>
                       )}
                     </CardContent>
@@ -319,7 +321,7 @@ export default function BookingsPage() {
                               <div className="mt-4 flex flex-wrap gap-2">
                                 <Link href={`/bookings/${booking.id}`}>
                                   <Button size="sm" variant="outline">
-                                    View Details
+                                    {t("bookings.viewDetails")}
                                   </Button>
                                 </Link>
 
@@ -331,7 +333,7 @@ export default function BookingsPage() {
                                     onClick={() => handleBookingAction(booking.id, "cancel")}
                                   >
                                     <XCircle className="h-4 w-4 mr-1" />
-                                    Cancel
+                                    {t("bookings.cancel")}
                                   </Button>
                                 )}
 
@@ -339,7 +341,7 @@ export default function BookingsPage() {
                                   <>
                                     <Button size="sm" onClick={() => handleBookingAction(booking.id, "confirm")}>
                                       <CheckCircle className="h-4 w-4 mr-1" />
-                                      Accept
+                                      {t("bookings.accept")}
                                     </Button>
                                     <Button
                                       variant="outline"
@@ -348,7 +350,7 @@ export default function BookingsPage() {
                                       onClick={() => handleBookingAction(booking.id, "cancel")}
                                     >
                                       <XCircle className="h-4 w-4 mr-1" />
-                                      Decline
+                                      {t("bookings.decline")}
                                     </Button>
                                   </>
                                 )}
@@ -369,8 +371,8 @@ export default function BookingsPage() {
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center py-10">
                       <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-xl font-medium mb-2">No past bookings</h3>
-                      <p className="text-muted-foreground text-center max-w-md">Your past bookings will appear here.</p>
+                      <h3 className="text-xl font-medium mb-2">{t("bookings.noPastBookings")}</h3>
+                      <p className="text-muted-foreground text-center max-w-md">{t("bookings.pastBookingsWillAppear")}</p>
                     </CardContent>
                   </Card>
                 ) : (
@@ -404,8 +406,8 @@ export default function BookingsPage() {
                                 <div>
                                   <h3 className="text-lg font-semibold">
                                     {profile.user_type === "client"
-                                      ? `Booking with ${booking.freelancer?.first_name} ${booking.freelancer?.last_name}`
-                                      : `Booking from ${booking.client?.first_name} ${booking.client?.last_name}`}
+                                      ? `${t("bookings.bookingWith")} ${booking.freelancer?.first_name} ${booking.freelancer?.last_name}`
+                                      : `${t("bookings.bookingFrom")} ${booking.client?.first_name} ${booking.client?.last_name}`}
                                   </h3>
 
                                   <div className="flex items-center mt-1">
@@ -438,14 +440,14 @@ export default function BookingsPage() {
                               <div className="mt-4 flex flex-wrap gap-2">
                                 <Link href={`/bookings/${booking.id}`}>
                                   <Button size="sm" variant="outline">
-                                    View Details
+                                    {t("bookings.viewDetails")}
                                   </Button>
                                 </Link>
 
                                 {profile.user_type === "client" && booking.status === "confirmed" && (
                                   <Button size="sm" onClick={() => handleBookingAction(booking.id, "complete")}>
                                     <CheckCircle className="h-4 w-4 mr-1" />
-                                    Mark as Completed
+                                    {t("bookings.markAsCompleted")}
                                   </Button>
                                 )}
                               </div>

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "@/lib/toast"
 import { useRouter } from "next/navigation"
 import LoadingSpinner from "@/components/loading-spinner"
+import { useTranslation } from "@/lib/i18n"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -53,6 +54,7 @@ function MessagesSkeleton() {
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
@@ -105,7 +107,7 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error("Error fetching profile:", error)
-        toast.error("Failed to load settings")
+        toast.error(t("dashboard.settings.error"))
       } finally {
         setLoading(false)
       }
@@ -118,7 +120,7 @@ export default function DashboardPage() {
     e.preventDefault()
 
     if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match")
+      toast.error(t("dashboard.settings.newPasswordsDoNotMatch"))
       return
     }
 
@@ -131,14 +133,14 @@ export default function DashboardPage() {
 
       if (error) throw error
 
-      toast.success("Your password has been updated")
+      toast.success(t("dashboard.settings.passwordUpdated"))
 
       // Clear form
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
     } catch (error: any) {
-      toast.error(error.message || "Failed to update password")
+      toast.error(error.message || t("dashboard.settings.failedToUpdatePassword"))
     } finally {
       setSaving(false)
     }
@@ -160,7 +162,7 @@ export default function DashboardPage() {
 
       if (error) throw error
 
-      toast.success("Notification settings updated")
+      toast.success(t("dashboard.settings.notificationSettingsUpdated"))
 
       // Update local state
       setProfile({
@@ -168,7 +170,7 @@ export default function DashboardPage() {
         metadata,
       })
     } catch (error: any) {
-      toast.error(error.message || "Failed to update notification settings")
+      toast.error(error.message || t("dashboard.settings.failedToUpdateNotificationSettings"))
     } finally {
       setSaving(false)
     }
@@ -185,8 +187,8 @@ export default function DashboardPage() {
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Profile not found</h1>
-        <Button onClick={() => router.push("/")}>Go to Home</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("dashboard.profileNotFound")}</h1>
+        <Button onClick={() => router.push("/")}>{t("dashboard.goToHome")}</Button>
       </div>
     )
   }
@@ -204,7 +206,7 @@ export default function DashboardPage() {
 
 
           <div className="lg:col-span-3 space-y-6">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("dashboard.title")}</h1>
 
       <div className="space-y-8">
         {/* Stats section - loads first */}

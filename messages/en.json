@@ -54,5 +54,148 @@
     "password": "Password",
     "forgotPassword": "Forgot Password?",
     "rememberMe": "Remember Me"
+  },
+  "freelancers": {
+    "title": "Find Freelancers",
+    "search": {
+      "placeholder": "Search by name, skills, or location",
+      "button": "Search"
+    },
+    "filters": {
+      "title": "Filter Results",
+      "categories": "Categories",
+      "skills": "Skills",
+      "availability": "Availability",
+      "priceRange": "Price Range"
+    },
+    "results": {
+      "found": "Found {count} freelancers",
+      "none": "No freelancers found"
+    }
+  },
+  "header": {
+    "findFreelancers": "Find Freelancers",
+    "dashboard": "Dashboard",
+    "bookings": "Bookings",
+    "messages": "Messages",
+    "profile": "Profile",
+    "settings": "Settings",
+    "signOut": "Sign Out",
+    "signedOutSuccessfully": "Signed out successfully"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "jobOfferings": "Job Offerings",
+    "bookings": "Bookings",
+    "payments": "Payments",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "profileNotFound": "Profile not found",
+    "goToHome": "Go to Home",
+    "stats": {
+      "bookings": "Bookings",
+      "upcoming": "Upcoming",
+      "completed": "Completed"
+    },
+    "bookings": {
+      "title": "Upcoming Bookings",
+      "error": "Error loading bookings",
+      "tryAgain": "Try Again",
+      "noBookings": "No upcoming bookings",
+      "bookingsWillAppear": "Bookings will appear here when clients book your services",
+      "viewAllBookings": "View All Bookings",
+      "viewDetails": "View Details",
+      "findFreelancers": "Find Freelancers"
+    },
+    "settings": {
+      "title": "Settings",
+      "error": "Error loading settings",
+      "newPasswordsDoNotMatch": "New passwords do not match",
+      "passwordUpdated": "Your password has been updated",
+      "failedToUpdatePassword": "Failed to update password",
+      "notificationSettingsUpdated": "Notification settings updated",
+      "failedToUpdateNotificationSettings": "Failed to update notification settings"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "error": "Error loading profile",
+    "updateSuccess": "Profile updated successfully",
+    "updateError": "Failed to update profile",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "previewProfile": "Preview Profile",
+    "yourPhoto": "Your Photo",
+    "yourPhotoDescription": "This will be displayed on your profile",
+    "uploadNew": "Upload New",
+    "personalInformation": "Personal Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "location": "Location",
+    "locationPlaceholder": "Enter your location",
+    "locationVerified": "Your location has been verified. Clients will be able to find you based on your location and service radius.",
+    "professionalTitle": "Professional Title",
+    "professionalTitlePlaceholder": "e.g. Senior Product Designer",
+    "bio": "Bio",
+    "bioPlaceholder": "Tell clients about yourself, your experience, and expertise...",
+    "bioDescription": "A good bio helps clients understand your background and skills.",
+    "professionalInformation": "Professional Information",
+    "defaultHourlyRate": "Default Hourly Rate (€)",
+    "defaultHourlyRatePlaceholder": "45.00",
+    "defaultHourlyRateDescription": "This is your default rate. You can set specific rates for each job category.",
+    "jobOfferings": "Job Offerings",
+    "jobOfferingsDescription": "Manage your services and expertise in the dedicated job offerings page.",
+    "manageJobOfferings": "Manage Job Offerings"
+  },
+  "jobOfferings": {
+    "title": "Job Offerings",
+    "description": "Manage your services and expertise in the dedicated job offerings page.",
+    "manageJobOfferings": "Manage Job Offerings",
+    "cardTitle": "Your Job Offerings",
+    "cardDescription": "Add and manage the services you offer to clients",
+    "cardNoOfferings": "You haven't added any job offerings yet.",
+    "cardAddOfferings": "Add job categories below to start receiving bookings.",
+    "cardSetupAvailability": "Setup Availability",
+    "cardMaxOfferings": "Maximum offerings reached",
+    "cardMaxOfferingsDescription": "You have reached the maximum of {MAX_JOB_OFFERINGS} job offerings. To add a new offering, please remove an existing one first.",
+    "cardAddNewOffering": "Add New Job Offering",
+    "cardCategory": "Job Category",
+    "cardSubcategory": "Job Subcategory",
+    "cardHourlyRate": "Hourly Rate (€)",
+    "cardExperienceYears": "Years of Experience"
+  },
+  "bookings": {
+    "title": "Bookings",
+    "error": "Error loading bookings",
+    "tryAgain": "Try Again",
+    "noBookings": "No bookings found",
+    "bookingsWillAppear": "Bookings will appear here when clients book your services",
+    "viewDetails": "View Details",
+    "findFreelancers": "Find Freelancers",
+    "updateProfile": "Update Profile",
+    "bookingWith": "Booking with",
+    "bookingFrom": "Booking from",
+    "bookingStatus": "Booking Status",
+    "bookingDate": "Booking Date",
+    "bookingTime": "Booking Time",
+    "bookingDuration": "Booking Duration",
+    "bookingTotal": "Booking Total",
+    "bookingActions": "Booking Actions",
+    "cancel": "Cancel",
+    "accept": "Accept",
+    "decline": "Decline",
+    "markAsCompleted": "Mark as Completed",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "noUpcomingBookings": "You don't have any upcoming bookings. Book a freelancer to get started.",
+    "noUpcomingBookingsFreelancer": "You don't have any upcoming jobs. Update your profile to attract more clients.",
+    "noPastBookings": "No past bookings",
+    "pastBookingsWillAppear": "Your past bookings will appear here."
   }
-} 
+}

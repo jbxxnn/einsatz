@@ -5,10 +5,12 @@ import { useOptimizedUser } from "@/components/optimized-user-provider"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import useSWR from "swr"
 import { Calendar, Clock, DollarSign } from "lucide-react"
+import { useTranslation } from "@/lib/i18n"
 
 export default function DashboardStats() {
   const { user } = useOptimizedUser()
   const { supabase } = useOptimizedSupabase()
+  const { t } = useTranslation()
 
   // Fetch stats with SWR for caching and revalidation
   const { data: stats, isLoading } = useSWR(
@@ -73,7 +75,7 @@ export default function DashboardStats() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             <Calendar className="h-4 w-4 mr-2" />
-            Total Bookings
+            {t("dashboard.stats.bookings")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -85,7 +87,7 @@ export default function DashboardStats() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             <Clock className="h-4 w-4 mr-2" />
-            Upcoming
+            {t("dashboard.stats.upcoming")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -97,7 +99,7 @@ export default function DashboardStats() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
             <DollarSign className="h-4 w-4 mr-2" />
-            Completed
+            {t("dashboard.stats.completed")}
           </CardTitle>
         </CardHeader>
         <CardContent>

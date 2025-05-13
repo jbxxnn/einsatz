@@ -1,9 +1,9 @@
 {
   "common": {
-    "findFreelancers": "Vind Freelancers",
-    "browseAndConnect": "Blader en maak contact met ervaren freelancers in uw omgeving",
+    "findFreelancers": "Vind freelancers",
+    "browseAndConnect": "Blader en maak verbinding met bekwame freelancers in jouw regio",
     "searchPlaceholder": "Zoek freelancers op naam, vaardigheden of locatie...",
-    "loading": "Laden...",
+    "loading": "Bezig met laden...",
     "error": "Fout",
     "retry": "Opnieuw proberen",
     "save": "Opslaan",
@@ -15,26 +15,26 @@
   },
   "home": {
     "hero": {
-      "title": "Vind de Perfecte Freelancer",
-      "subtitle": "Maak contact met ervaren professionals voor uw projecten",
-      "description": "Word lid van ons platform om getalenteerde freelancers te vinden of toon uw vaardigheden aan potentiële klanten",
-      "findFreelancers": "Vind Freelancers",
-      "becomeFreelancer": "Word Freelancer"
+      "title": "Vind de perfecte freelancer",
+      "subtitle": "Leg contact met bekwame professionals voor jouw projecten",
+      "description": "Sluit je aan bij ons platform om getalenteerde freelancers te vinden of je vaardigheden te tonen aan potentiële klanten",
+      "findFreelancers": "Vind freelancers",
+      "becomeFreelancer": "Word freelancer"
     }
   },
   "freelancer": {
     "profile": "Profiel",
     "availability": "Beschikbaarheid",
-    "jobOfferings": "Diensten",
+    "jobOfferings": "Dienstenaanbod",
     "reviews": "Beoordelingen",
     "hourlyRate": "Uurtarief",
     "skills": "Vaardigheden",
     "location": "Locatie",
-    "bio": "Biografie",
+    "bio": "Bio",
     "contact": "Contact",
-    "bookNow": "Nu Boeken",
-    "availableNow": "Nu Beschikbaar",
-    "notAvailable": "Niet Beschikbaar"
+    "bookNow": "Boek nu",
+    "availableNow": "Nu beschikbaar",
+    "notAvailable": "Niet beschikbaar"
   },
   "filters": {
     "title": "Filters",
@@ -43,16 +43,159 @@
     "skills": "Vaardigheden",
     "location": "Locatie",
     "availability": "Beschikbaarheid",
-    "apply": "Filters Toepassen",
-    "clear": "Filters Wissen"
+    "apply": "Filters toepassen",
+    "clear": "Filters wissen"
   },
   "auth": {
     "login": "Inloggen",
-    "signup": "Registreren",
+    "signup": "Aanmelden",
     "logout": "Uitloggen",
     "email": "E-mail",
     "password": "Wachtwoord",
     "forgotPassword": "Wachtwoord vergeten?",
     "rememberMe": "Onthoud mij"
+  },
+  "freelancers": {
+    "title": "Freelancers vinden",
+    "search": {
+      "placeholder": "Zoek op naam, vaardigheden of locatie",
+      "button": "Zoeken"
+    },
+    "filters": {
+      "title": "Resultaten filteren",
+      "categories": "Categorieën",
+      "skills": "Vaardigheden",
+      "availability": "Beschikbaarheid",
+      "priceRange": "Prijsbereik"
+    },
+    "results": {
+      "found": "{count} freelancers gevonden",
+      "none": "Geen freelancers gevonden"
+    }
+  },
+  "header": {
+    "findFreelancers": "Vind freelancers",
+    "dashboard": "Dashboard",
+    "bookings": "Boekingen",
+    "messages": "Berichten",
+    "profile": "Profiel",
+    "settings": "Instellingen",
+    "signOut": "Afmelden",
+    "signedOutSuccessfully": "Succesvol afgemeld"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "profile": "Profiel",
+    "jobOfferings": "Dienstenaanbod",
+    "bookings": "Boekingen",
+    "payments": "Betalingen",
+    "settings": "Instellingen",
+    "logout": "Uitloggen"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "profileNotFound": "Profiel niet gevonden",
+    "goToHome": "Ga naar startpagina",
+    "stats": {
+      "bookings": "Boekingen",
+      "upcoming": "Aankomend",
+      "completed": "Voltooid"
+    },
+    "bookings": {
+      "title": "Aankomende boekingen",
+      "error": "Fout bij het laden van boekingen",
+      "tryAgain": "Opnieuw proberen",
+      "noBookings": "Geen aankomende boekingen",
+      "bookingsWillAppear": "Boekingen verschijnen hier wanneer klanten je diensten boeken",
+      "viewAllBookings": "Bekijk alle boekingen",
+      "viewDetails": "Bekijk details",
+      "findFreelancers": "Vind freelancers"
+    },
+    "settings": {
+      "title": "Instellingen",
+      "error": "Fout bij het laden van instellingen",
+      "newPasswordsDoNotMatch": "Nieuwe wachtwoorden komen niet overeen",
+      "passwordUpdated": "Je wachtwoord is bijgewerkt",
+      "failedToUpdatePassword": "Kon wachtwoord niet bijwerken",
+      "notificationSettingsUpdated": "Instellingen voor meldingen bijgewerkt",
+      "failedToUpdateNotificationSettings": "Kon instellingen voor meldingen niet bijwerken"
+    }
+  },
+  "profile": {
+    "title": "Profiel",
+    "error": "Fout bij het laden van profiel",
+    "updateSuccess": "Profiel succesvol bijgewerkt",
+    "updateError": "Kon profiel niet bijwerken",
+    "saveChanges": "Wijzigingen opslaan",
+    "saving": "Bezig met opslaan...",
+    "previewProfile": "Bekijk profiel",
+    "yourPhoto": "Je foto",
+    "yourPhotoDescription": "Dit wordt weergegeven op je profiel",
+    "uploadNew": "Nieuw uploaden",
+    "personalInformation": "Persoonlijke informatie",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "location": "Locatie",
+    "locationPlaceholder": "Voer je locatie in",
+    "locationVerified": "Je locatie is geverifieerd. Klanten kunnen je vinden op basis van je locatie en servicegebied.",
+    "professionalTitle": "Professionele titel",
+    "professionalTitlePlaceholder": "bijv. Senior productontwerper",
+    "bio": "Bio",
+    "bioPlaceholder": "Vertel klanten over jezelf, je ervaring en expertise...",
+    "bioDescription": "Een goede bio helpt klanten je achtergrond en vaardigheden te begrijpen.",
+    "professionalInformation": "Professionele informatie",
+    "defaultHourlyRate": "Standaard uurtarief (€)",
+    "defaultHourlyRatePlaceholder": "45,00",
+    "defaultHourlyRateDescription": "Dit is je standaardtarief. Je kunt specifieke tarieven instellen voor elke dienstcategorie.",
+    "jobOfferings": "Dienstenaanbod",
+    "jobOfferingsDescription": "Beheer je diensten en expertise op de pagina voor dienstenaanbod.",
+    "manageJobOfferings": "Beheer dienstenaanbod"
+  },
+  "jobOfferings": {
+    "title": "Dienstenaanbod",
+    "description": "Beheer je diensten en expertise op de pagina voor dienstenaanbod.",
+    "manageJobOfferings": "Beheer dienstenaanbod",
+    "cardTitle": "Jouw dienstenaanbod",
+    "cardDescription": "Voeg diensten toe en beheer de services die je aan klanten aanbiedt",
+    "cardNoOfferings": "Je hebt nog geen diensten toegevoegd.",
+    "cardAddOfferings": "Voeg hieronder dienstcategorieën toe om boekingen te ontvangen.",
+    "cardSetupAvailability": "Beschikbaarheid instellen",
+    "cardMaxOfferings": "Maximaal aantal diensten bereikt",
+    "cardMaxOfferingsDescription": "Je hebt het maximum van {MAX_JOB_OFFERINGS} diensten bereikt. Om een nieuwe dienst toe te voegen, verwijder eerst een bestaande.",
+    "cardAddNewOffering": "Nieuwe dienst toevoegen",
+    "cardCategory": "Dienstcategorie",
+    "cardSubcategory": "Subcategorie",
+    "cardHourlyRate": "Uurtarief (€)",
+    "cardExperienceYears": "Jaren ervaring"
+  },
+  "bookings": {
+    "title": "Boekingen",
+    "error": "Fout bij het laden van boekingen",
+    "tryAgain": "Opnieuw proberen",
+    "noBookings": "Geen boekingen gevonden",
+    "bookingsWillAppear": "Boekingen verschijnen hier wanneer klanten je diensten boeken",
+    "viewDetails": "Bekijk details",
+    "findFreelancers": "Vind freelancers",
+    "updateProfile": "Profiel bijwerken",
+    "bookingWith": "Boeking met",
+    "bookingFrom": "Boeking van",
+    "bookingStatus": "Boekingsstatus",
+    "bookingDate": "Boekingsdatum",
+    "bookingTime": "Boekingstijd",
+    "bookingDuration": "Boekingstijdduur",
+    "bookingTotal": "Boekingstotaal",
+    "bookingActions": "Boekingsacties",
+    "cancel": "Annuleren",
+    "accept": "Accepteren",
+    "decline": "Afwijzen",
+    "markAsCompleted": "Markeren als voltooid",
+    "upcoming": "Aankomend",
+    "past": "Verleden",
+    "noUpcomingBookings": "Je hebt geen aankomende boekingen. Boek een freelancer om te beginnen.",
+    "noUpcomingBookingsFreelancer": "Je hebt geen aankomende opdrachten. Werk je profiel bij om meer klanten te trekken.",
+    "noPastBookings": "Geen vorige boekingen",
+    "pastBookingsWillAppear": "Je vorige boekingen verschijnen hier."
   }
-} 
+}

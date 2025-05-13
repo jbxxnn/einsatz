@@ -10,10 +10,12 @@ import LoadingSpinner from "@/components/loading-spinner"
 import type { Database } from "@/lib/database.types"
 import SidebarNav from "@/components/sidebar-nav"
 import JobOfferingsManager from "@/components/job-offerings-manager"
+import { useTranslation } from "@/lib/i18n"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
-export default function JobOfferingsPage() {
+export default function JobOfferingsPage() { 
+  const { t } = useTranslation()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
@@ -72,8 +74,8 @@ export default function JobOfferingsPage() {
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Profile not found</h1>
-        <Button onClick={() => router.push("/")}>Go to Home</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("jobOfferings.profileNotFound")}</h1>  
+        <Button onClick={() => router.push("/")}>{t("jobOfferings.goToHome")}</Button>
       </div>
     )
   }
@@ -91,9 +93,9 @@ export default function JobOfferingsPage() {
           <div className="lg:col-span-3 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold">Job Offerings</h1>
+                <h1 className="text-3xl font-bold">{t("jobOfferings.title")}</h1>
                 <p className="text-muted-foreground mt-1">
-                  Manage your services and expertise
+                  {t("jobOfferings.description")}
                 </p>
               </div>
             </div>

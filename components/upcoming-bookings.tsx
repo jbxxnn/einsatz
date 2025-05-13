@@ -10,6 +10,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useOptimizedUser } from "@/components/optimized-user-provider"
 import type { Database } from "@/lib/database.types"
+import { useTranslation } from "@/lib/i18n"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer?: Database["public"]["Tables"]["profiles"]["Row"]
@@ -19,6 +20,7 @@ type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
 export default function UpcomingBookings() {
   const { profile } = useOptimizedUser()
   const { data: bookings, error, isLoading } = useBookings()
+  const { t } = useTranslation()
 
   // Filter for upcoming bookings
   const upcomingBookings = bookings
@@ -28,7 +30,7 @@ export default function UpcomingBookings() {
   if (isLoading) {
     return (
       <div>
-        <h2 className="text-xl font-semibold mb-4">Upcoming Bookings</h2>
+        <h2 className="text-xl font-semibold mb-4">{t("dashboard.bookings.title")}</h2>
         <div className="space-y-4 animate-pulse">
           {[...Array(3)].map((_, i) => (
             <Card key={i}>
@@ -45,12 +47,12 @@ export default function UpcomingBookings() {
   if (error) {
     return (
       <div>
-        <h2 className="text-xl font-semibold mb-4">Upcoming Bookings</h2>
+        <h2 className="text-xl font-semibold mb-4">{t("dashboard.bookings.title")}</h2>
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-red-500">Error loading bookings</p>
+            <p className="text-red-500">{t("dashboard.bookings.error")}</p>
             <Button variant="outline" className="mt-2" onClick={() => window.location.reload()}>
-              Try Again
+              {t("dashboard.bookings.tryAgain")}
             </Button>
           </CardContent>
         </Card>
@@ -61,16 +63,16 @@ export default function UpcomingBookings() {
   if (!upcomingBookings || upcomingBookings.length === 0) {
     return (
       <div>
-        <h2 className="text-xl font-semibold mb-4">Upcoming Bookings</h2>
+        <h2 className="text-xl font-semibold mb-4">{t("dashboard.bookings.title")}</h2>
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">No upcoming bookings</p>
+            <p className="text-muted-foreground">{t("dashboard.bookings.noBookings")}</p>
             {profile?.user_type === "client" ? (
               <Link href="/freelancers">
-                <Button className="mt-4">Find Freelancers</Button>
+                <Button className="mt-4">{t("dashboard.bookings.findFreelancers")}</Button>
               </Link>
             ) : (
-              <p className="mt-2 text-sm">Bookings will appear here when clients book your services</p>
+              <p className="mt-2 text-sm">{t("dashboard.bookings.bookingsWillAppear")}</p>
             )}
           </CardContent>
         </Card>
@@ -80,7 +82,7 @@ export default function UpcomingBookings() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Upcoming Bookings</h2>
+      <h2 className="text-xl font-semibold mb-4">{t("dashboard.bookings.title")}</h2>
       <div className="space-y-4">
         {upcomingBookings.map((booking: Booking) => (
           <Card key={booking.id}>
@@ -150,7 +152,7 @@ export default function UpcomingBookings() {
                   <div className="mt-4">
                     <Link href={`/bookings/${booking.id}`}>
                       <Button size="sm" variant="outline">
-                        View Details
+                        {t("dashboard.bookings.viewDetails")}
                       </Button>
                     </Link>
                   </div>
@@ -162,7 +164,7 @@ export default function UpcomingBookings() {
 
         <div className="text-center">
           <Link href="/bookings">
-            <Button variant="outline">View All Bookings</Button>
+            <Button variant="outline">{t("dashboard.bookings.viewAllBookings")}</Button>
           </Link>
         </div>
       </div>
