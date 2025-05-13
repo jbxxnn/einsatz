@@ -228,10 +228,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                       )} */}
                     </div>
                     <div className="flex gap-2">
-                      {/* <Button variant="outline" size="sm" onClick={() => openAvailabilityDialog(offering.category_id)}>
+                      <Button variant="outline" size="sm" onClick={() => openAvailabilityDialog(offering.category_id)}>
                         <Calendar className="h-4 w-4 mr-2" />
                         Set Availability
-                      </Button> */}
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleDeleteOffering(offering.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -351,30 +351,11 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
 
       {/* Availability Dialog */}
       <Dialog open={availabilityDialogOpen} onOpenChange={setAvailabilityDialogOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Set Availability</DialogTitle>
           </DialogHeader>
-          {selectedOfferingCategoryId && (
-            <div className="mt-4">
-              <p className="text-sm text-muted-foreground mb-4">
-                Set your availability for this service. Clients will only be able to book you during these times.
-              </p>
-              <AvailabilityCalendar 
-                freelancerId={freelancerId} 
-                categoryId={selectedOfferingCategoryId} 
-                categoryName={offerings.find(o => o.category_id === selectedOfferingCategoryId)?.category_name || ''} 
-              />
-              <div className="mt-4 text-center">
-                <p className="text-sm text-muted-foreground mb-2">Need more detailed availability management?</p>
-                <Link href="/profile/availability">
-                  <Button variant="outline" size="sm">
-                    Go to Availability Manager
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
+          <AvailabilityCalendar freelancerId={freelancerId} />
         </DialogContent>
       </Dialog>
     </div>
