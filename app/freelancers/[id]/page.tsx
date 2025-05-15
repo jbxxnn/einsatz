@@ -13,6 +13,7 @@ import { MapPin, Star, Clock, CheckCircle } from "lucide-react"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
 import BookingForm from "@/components/booking-form"
+import { useTranslation } from "@/lib/i18n"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"] & {
@@ -25,6 +26,7 @@ interface FreelancerWithOfferings extends Profile {
 }
 
 export default function FreelancerProfile() {
+  const { t } = useTranslation()
   const params = useParams()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
@@ -105,7 +107,7 @@ export default function FreelancerProfile() {
         setReviews(reviewsData || [])
       } catch (error) {
         console.error("Error fetching freelancer:", error)
-        toast.error("Failed to load freelancer profile")
+        toast.error(t("freelancer.id.error.failedToLoadProfile"))
         router.push("/freelancers")
       } finally {
         setLoading(false)
@@ -131,8 +133,8 @@ export default function FreelancerProfile() {
   if (!freelancer) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Freelancer not found</h1>
-        <Button onClick={() => router.push("/freelancers")}>Back to Freelancers</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("freelancer.id.error.freelancerNotFound")}</h1>
+        <Button onClick={() => router.push("/freelancers")}>{t("freelancer.id.error.backToFreelancers")}</Button>
       </div>
     )
   }
@@ -159,7 +161,7 @@ export default function FreelancerProfile() {
                 <div className="absolute top-2 right-2">
                   <Badge className="bg-green-500 hover:bg-green-600">
                     <Clock className="h-3 w-3 mr-1" />
-                    Available Now
+                    {t("freelancer.availableNow")}
                   </Badge>
                 </div>
               )}
@@ -174,14 +176,14 @@ export default function FreelancerProfile() {
                 <div className="flex items-center">
                   <Star className="h-5 w-5 fill-primary text-primary" />
                   <span className="ml-1 font-medium">4.9</span>
-                  <span className="text-muted-foreground ml-1">({reviews.length} reviews)</span>
+                  <span className="text-muted-foreground ml-1">({reviews.length} {t("freelancer.reviews")})</span>
                 </div>
                 <div>
                 {freelancer.location && (
                   <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-2 text-primary" />
                   <span>
-                    Serves clients within {freelancer.service_radius} miles of {freelancer.location}
+                    {t("freelancer.serviceRadius")} {freelancer.service_radius} {t("freelancer.filters.milesAway")} {t("freelancer.filters.of")} {freelancer.location}
                   </span>
                 </div>
                 )}
@@ -205,23 +207,23 @@ export default function FreelancerProfile() {
 
           <Tabs defaultValue="about">
             <TabsList>
-              <TabsTrigger value="about">About</TabsTrigger>
-              <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
+              <TabsTrigger value="about">{t("freelancer.about")}</TabsTrigger>
+              <TabsTrigger value="reviews">{t("freelancer.reviews")} ({reviews.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="about" className="space-y-4 mt-4">
               <div>
-                <h2 className="text-xl font-semibold mb-2">About</h2>
-                <p className="text-muted-foreground whitespace-pre-line">{freelancer.bio || "No bio provided."}</p>
+                <h2 className="text-xl font-semibold mb-2">{t("freelancer.about")}</h2>
+                <p className="text-muted-foreground whitespace-pre-line">{freelancer.bio || t("freelancer.noBioProvided")}</p>
               </div>
 
               {/* {freelancer.latitude && freelancer.longitude && freelancer.service_radius && (
                 <div className="mt-4">
-                  <h2 className="text-xl font-semibold mb-2">Service Area</h2>
+                  <h2 className="text-xl font-semibold mb-2">{t("freelancer.serviceArea")}</h2>
                   <div className="flex items-center">
                     <MapPin className="h-4 w-4 mr-2 text-primary" />
                     <span>
-                      Serves clients within {freelancer.service_radius} miles of {freelancer.location}
+                      {t("freelancer.serviceArea")} {freelancer.service_radius} {t("freelancer.filters.milesAway")} {t("freelancer.filters.of")} {freelancer.location}
                     </span>
                   </div>
                 </div>
@@ -231,7 +233,7 @@ export default function FreelancerProfile() {
 {/*               
               {selectedOffering && (
                 <div>
-                  <h2 className="text-xl font-semibold mb-2">{selectedOffering.category_name} Services</h2>
+                  <h2 className="text-xl font-semibold mb-2">{selectedOffering.category_name} {t("freelancer.services")}</h2>
                   <div className="flex items-center mb-2">
                     <p className="text-xl font-bold text-primary">€{selectedOffering.hourly_rate}/hour</p>
                   </div>
@@ -240,7 +242,7 @@ export default function FreelancerProfile() {
                   )}
                   {selectedOffering.experience_years && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      {selectedOffering.experience_years} years of experience
+                      {selectedOffering.experience_years} {t("freelancer.filters.yearsOfExperience")}
                     </p>
                   )}
                 </div>
@@ -261,19 +263,19 @@ export default function FreelancerProfile() {
               </div> */}
 
               <div>
-              <h2 className="text-xl font-semibold mb-2">Select a service</h2>
+              <h2 className="text-xl font-semibold mb-2">{t("freelancer.selectService")}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   {freelancer.job_offerings.map((offering) => (
                     <Card key={offering.category_id} className="p-4">
                       <CardContent>
                         <h3 className="text-lg font-semibold">{offering.category_name}</h3>
-                        <p className="text-primary font-bold">€{offering.hourly_rate}/hour</p>
+                        <p className="text-primary font-bold">€{offering.hourly_rate}/{t("freelancer.filters.hour")}</p>
                         {offering.description && (
                           <p className="text-muted-foreground mt-2">{offering.description}</p>
                         )}
                         {offering.experience_years && (
                           <p className="text-sm text-muted-foreground mt-1">
-                            {offering.experience_years} years of experience
+                            {offering.experience_years} {t("freelancer.filters.yearsOfExperience")}
                           </p>
                         )}
                         <Button
@@ -281,7 +283,7 @@ export default function FreelancerProfile() {
                           className="mt-4 w-full"
                           onClick={() => setSelectedCategoryId(offering.category_id)}
                         >
-                          {selectedCategoryId === offering.category_id ? "Selected" : "Select"}
+                          {selectedCategoryId === offering.category_id ? t("freelancer.selected") : t("freelancer.select")}
                         </Button>
                       </CardContent>
                     </Card>
@@ -296,7 +298,7 @@ export default function FreelancerProfile() {
             <TabsContent value="reviews" className="space-y-4 mt-4">
               {reviews.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">No reviews yet</p>
+                  <p className="text-muted-foreground">{t("freelancer.noReviewsYet")}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -352,13 +354,13 @@ export default function FreelancerProfile() {
         <div className="md:col-span-1">
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Book {freelancer.first_name}</h2>
+              <h2 className="text-xl font-semibold mb-4">{t("freelancer.book")} {freelancer.first_name}</h2>
 
               {!showBookingForm ? (
                 <div className="space-y-4">
                     {freelancer.job_offerings.length > 0 && selectedOffering && (
                     <div>
-                      <p className="text-sm text-muted-foreground mb-2">Selected service:</p>
+                      <p className="text-sm text-muted-foreground mb-2">{t("freelancer.selectedService")}:</p>
                       <div className="p-4">
                         <h3 className="text-lg font-semibold">{selectedOffering.category_name}</h3>
                       </div>
@@ -366,7 +368,7 @@ export default function FreelancerProfile() {
                   )}
 
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">Select a date:</p>
+                    <p className="text-sm text-muted-foreground mb-2">{t("freelancer.selectDate")}:</p>
                     <FreelancerAvailabilityCalendar
                       freelancerId={params.id as string}
                       onSelectDate={setSelectedDate}
@@ -378,7 +380,7 @@ export default function FreelancerProfile() {
                     disabled={!selectedDate || !selectedCategoryId}
                     onClick={() => setShowBookingForm(true)}
                   >
-                     Continue to Booking
+                    {t("freelancer.continueToBooking")}
                   </Button>
                 </div>
               ) : (
@@ -394,19 +396,19 @@ export default function FreelancerProfile() {
 
           <Card className="mt-4">
             <CardContent className="p-6">
-              <h3 className="font-semibold mb-3">Why book with Einsatz</h3>
+              <h3 className="font-semibold mb-3">{t("freelancer.whyBookWithEinsatz")}</h3>
               <ul className="space-y-2">
                 <li className="flex items-start">
                   <CheckCircle className="h-5 w-5 text-primary mr-2 shrink-0" />
-                  <span className="text-sm">Secure payments, released only when you approve</span>
+                  <span className="text-sm">{t("freelancer.securePayments")}</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="h-5 w-5 text-primary mr-2 shrink-0" />
-                  <span className="text-sm">Verified professionals with reviews</span>
+                  <span className="text-sm">{t("freelancer.verifiedProfessionalsWithReviews")}</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="h-5 w-5 text-primary mr-2 shrink-0" />
-                  <span className="text-sm">24/7 customer support</span>
+                  <span className="text-sm">{t("freelancer.customerSupport")}</span>
                 </li>
               </ul>
             </CardContent>

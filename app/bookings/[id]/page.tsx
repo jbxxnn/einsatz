@@ -13,6 +13,7 @@ import Image from "next/image"
 import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import { toast } from "@/lib/toast"
+import { useTranslation } from "@/lib/i18n"
 // import MessageButton from "@/components/message-button"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
@@ -21,6 +22,7 @@ type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
 }
 
 export default function BookingDetailsPage() {
+  const { t } = useTranslation()
   const params = useParams()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
@@ -58,7 +60,7 @@ export default function BookingDetailsPage() {
 
       if (error) {
         console.error("Error fetching booking:", error)
-        toast.error("Failed to load booking")
+        toast.error(t("booking.id.error"))
         router.push("/dashboard")
         return
       }
@@ -72,7 +74,7 @@ export default function BookingDetailsPage() {
         setUserType("freelancer")
       } else {
         // User is not authorized to view this booking
-        toast.error("Unauthorized")
+        toast.error(t("booking.id.unauthorized"))
         router.push("/dashboard")
         return
       }
@@ -121,7 +123,7 @@ export default function BookingDetailsPage() {
 
       toast.success(`Booking ${action}ed successfully`)
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong. Please try again.")
+      toast.error(error.message || t("booking.id.error"))
     }
   }
 
@@ -151,9 +153,9 @@ export default function BookingDetailsPage() {
 
       setHasReviewed(true)
 
-      toast.success("Review submitted")
+      toast.success(t("booking.id.reviewSubmitted"))
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong. Please try again.")
+      toast.error(error.message || t("booking.id.error"))
     } finally {
       setSubmittingReview(false)
     }
@@ -165,11 +167,11 @@ export default function BookingDetailsPage() {
         return (
           <div className="flex gap-2">
           <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-            Pending
+            {t("booking.id.pending")}
           </Badge>
           {paymentMethod === "offline" && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                Offline Payment
+                {t("booking.id.offlinePayment")}
               </Badge>
             )}
           </div>
@@ -178,11 +180,11 @@ export default function BookingDetailsPage() {
         return (
           <div className="flex gap-2">
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            Confirmed
+            {t("booking.id.confirmed")}
           </Badge>
           {paymentMethod === "offline" && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                Offline Payment
+                {t("booking.id.offlinePayment")}
               </Badge>
             )}
           </div>
@@ -191,11 +193,11 @@ export default function BookingDetailsPage() {
         return (
           <div className="flex gap-2">
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            Completed
+            {t("booking.id.completed")}
           </Badge>
           {paymentMethod === "offline" && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                Offline Payment
+                {t("booking.id.offlinePayment")}
               </Badge>
             )}
           </div>
@@ -203,13 +205,13 @@ export default function BookingDetailsPage() {
       case "cancelled":
         return (
           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-            Cancelled
+            {t("booking.id.cancelled")}
           </Badge>
         )
       case "disputed":
         return (
           <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-            Disputed
+            {t("booking.id.disputed")}
           </Badge>
         )
       default:
@@ -228,8 +230,8 @@ export default function BookingDetailsPage() {
   if (!booking) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Booking not found</h1>
-        <Button onClick={() => router.push("/dashboard")}>Go to Dashboard</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("booking.id.notFound")}</h1>
+        <Button onClick={() => router.push("/dashboard")}>{t("booking.id.goToDashboard")}</Button>
       </div>
     )
   }
@@ -238,7 +240,7 @@ export default function BookingDetailsPage() {
     <div className="container py-10">
       <Link href="/dashboard" className="flex items-center text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Dashboard
+        {t("booking.id.backToDashboard")}
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -247,8 +249,8 @@ export default function BookingDetailsPage() {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle>Booking Details</CardTitle>
-                  <CardDescription>Booking ID: {booking.id.substring(0, 8)}</CardDescription>
+                  <CardTitle>{t("booking.id.bookingDetails")}</CardTitle>
+                  <CardDescription>{t("booking.id.bookingId")}: {booking.id.substring(0, 8)}</CardDescription>
                 </div>
                 <div>{getStatusBadge(booking.status, booking.payment_method || 'online')}</div>
               </div>
@@ -257,7 +259,7 @@ export default function BookingDetailsPage() {
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="md:w-1/3">
                   <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                    {userType === "client" ? "Freelancer" : "Client"}
+                    {userType === "client" ? t("booking.id.freelancer") : t("booking.id.client")}
                   </h3>
                   <div className="flex items-center gap-3">
                     <div className="relative h-12 w-12 rounded-full overflow-hidden">
@@ -285,7 +287,7 @@ export default function BookingDetailsPage() {
 
                 <div className="md:w-2/3 space-y-4">
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Schedule</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("booking.id.schedule")}</h3>
                     <div className="space-y-2">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -308,42 +310,42 @@ export default function BookingDetailsPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
-                    <p className="text-sm">{booking.description || "No description provided."}</p>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("booking.id.description")}</h3>
+                    <p className="text-sm">{booking.description || t("booking.id.noDescription")}</p>
                   </div>
                 </div>
               </div>
 
               <div className="border-t pt-4">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Payment Details</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("booking.id.paymentDetails")}</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Hourly Rate</span>
+                    <span className="text-sm text-muted-foreground">{t("booking.id.hourlyRate")}</span>
                     <span className="text-sm">€{booking.hourly_rate.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Duration</span>
+                    <span className="text-sm text-muted-foreground">{t("booking.id.duration")}</span>
                     <span className="text-sm">
                       {(
                         (new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) /
                         3600000
                       ).toFixed(1)}{" "}
-                      hours
+                      {t("booking.id.hours")}
                     </span>
                   </div>
                   <div className="flex justify-between font-medium">
-                    <span>Total</span>
+                    <span>{t("booking.id.total")}</span>
                     <span>€{booking.total_amount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Payment Status</span>
+                    <span className="text-muted-foreground">{t("booking.id.paymentStatus")}</span>
                     <span className={booking.payment_status === "paid" ? "text-green-600" : "text-yellow-600"}>
-                      {booking.payment_status === "paid" ? "Paid" : "Unpaid"}
+                      {booking.payment_status === "paid" ? t("booking.id.paid") : t("booking.id.unpaid")}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Payment Method</span>
-                    <span>{booking.payment_method === "offline" ? "Offline Payment" : "Online Payment"}</span>
+                    <span className="text-muted-foreground">{t("booking.id.paymentMethod")}</span>
+                    <span>{booking.payment_method === "offline" ? t("booking.id.offlinePayment") : t("booking.id.onlinePayment")}</span>
                   </div>
                 </div>
               </div>
@@ -352,11 +354,10 @@ export default function BookingDetailsPage() {
                 userType === "freelancer" &&
                 booking.payment_status !== "paid" && (
                   <div className="mt-4 border-t pt-4">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Offline Payment Management</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("booking.id.offlinePaymentManagement")}</h3>
                     <div className="bg-muted/30 p-4 rounded-md">
                       <p className="text-sm mb-3">
-                        This booking uses offline payment. Once you've received payment from the client, please mark it
-                        as paid.
+                        {t("booking.id.offlinePaymentManagementDescription")}
                       </p>
                       <Button
                         size="sm"
@@ -381,11 +382,11 @@ export default function BookingDetailsPage() {
 
                             toast.success("Payment marked as received")
                           } catch (error: any) {
-                            toast.error(error.message || "Something went wrong. Please try again.")
+                            toast.error(error.message || t("booking.id.error"))
                           }
                         }}
                       >
-                        Mark Payment as Received
+                        {t("booking.id.markPaymentAsReceived")}
                       </Button>
                     </div>
                   </div>
@@ -395,7 +396,7 @@ export default function BookingDetailsPage() {
               {userType === "client" && booking.status === "pending" && (
                 <Button variant="outline" className="text-red-500" onClick={() => handleBookingAction("cancel")}>
                   <XCircle className="h-4 w-4 mr-1" />
-                  Cancel Booking
+                  {t("booking.id.cancelBooking")}
                 </Button>
               )}
 
@@ -403,11 +404,11 @@ export default function BookingDetailsPage() {
                 <>
                   <Button onClick={() => handleBookingAction("confirm")}>
                     <CheckCircle className="h-4 w-4 mr-1" />
-                    Accept Booking
+                    {t("booking.id.acceptBooking")}
                   </Button>
                   <Button variant="outline" className="text-red-500" onClick={() => handleBookingAction("cancel")}>
                     <XCircle className="h-4 w-4 mr-1" />
-                    Decline Booking
+                    {t("booking.id.declineBooking")}
                   </Button>
                 </>
               )}
@@ -415,7 +416,7 @@ export default function BookingDetailsPage() {
               {userType === "client" && booking.status === "confirmed" && (
                 <Button onClick={() => handleBookingAction("complete")}>
                   <CheckCircle className="h-4 w-4 mr-1" />
-                  Mark as Completed
+                  {t("booking.id.markAsCompleted")}
                 </Button>
               )}
 
@@ -424,7 +425,7 @@ export default function BookingDetailsPage() {
                 booking.payment_status !== "paid" &&
                 booking.status !== "cancelled" && (
                   <Link href={`/bookings/${booking.id}/payment`}>
-                    <Button variant="outline">View Payment Instructions</Button>
+                    <Button variant="outline">{t("booking.id.viewPaymentInstructions")}</Button>
                   </Link>
                 )}
 
@@ -435,14 +436,14 @@ export default function BookingDetailsPage() {
           {booking.status === "completed" && !hasReviewed && (
             <Card>
               <CardHeader>
-                <CardTitle>Leave a Review</CardTitle>
+                <CardTitle>{t("booking.id.leaveAReview")}</CardTitle>
                 <CardDescription>
-                  Share your experience with {userType === "client" ? "the freelancer" : "the client"}
+                  {t("booking.id.shareYourExperience", { freelancer: userType === "client" ? "the freelancer" : "the client" })}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Rating</h3>
+                  <h3 className="text-sm font-medium mb-2">{t("booking.id.rating")}</h3>
                   <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -450,7 +451,7 @@ export default function BookingDetailsPage() {
                         type="button"
                         onClick={() => setRating(star)}
                         className="focus:outline-none"
-                        title={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                        title={`${t("booking.id.rate", { count: star })} ${star > 1 ? t("booking.id.stars") : t("booking.id.star")}`}
                       >
                         <Star
                           className={`h-6 w-6 ${
@@ -463,9 +464,9 @@ export default function BookingDetailsPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Comments</h3>
+                  <h3 className="text-sm font-medium mb-2">{t("booking.id.comments")}</h3>
                   <Textarea
-                    placeholder="Share your experience..."
+                    placeholder={t("booking.id.shareYourExperience")}
                     rows={4}
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
@@ -477,10 +478,10 @@ export default function BookingDetailsPage() {
                   {submittingReview ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
+                      {t("booking.id.submitting")}
                     </>
                   ) : (
-                    "Submit Review"
+                    t("booking.id.submitReview")
                   )}
                 </Button>
               </CardFooter>
@@ -490,8 +491,8 @@ export default function BookingDetailsPage() {
           {hasReviewed && (
             <Card>
               <CardHeader>
-                <CardTitle>Review Submitted</CardTitle>
-                <CardDescription>Thank you for sharing your feedback</CardDescription>
+                <CardTitle>{t("booking.id.reviewSubmitted")}</CardTitle>
+                <CardDescription>{t("booking.id.thankYouForSharingYourFeedback")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2 mb-2">
@@ -502,7 +503,7 @@ export default function BookingDetailsPage() {
                     />
                   ))}
                 </div>
-                <p className="text-muted-foreground">Your review helps others make informed decisions.</p>
+                <p className="text-muted-foreground">{t("booking.id.yourReviewHelpsOthersMakeInformedDecisions")}</p>
               </CardContent>
             </Card>
           )}
@@ -511,12 +512,12 @@ export default function BookingDetailsPage() {
         <div className="md:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Actions</CardTitle>
+              <CardTitle>{t("booking.id.actions")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button variant="outline" className="w-full justify-start">
                 {/* <MessageSquare className="h-4 w-4 mr-2" /> */}
-                Send Message
+                {t("booking.id.sendMessage")}
               </Button>
 
               {booking.status === "completed" && (
@@ -529,14 +530,14 @@ export default function BookingDetailsPage() {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  View Invoice
+                  {t("booking.id.viewInvoice")}
                 </Button>
               )}
 
               {booking.status === "confirmed" && userType === "client" && (
                 <Button variant="outline" className="w-full justify-start text-red-500">
                   <XCircle className="h-4 w-4 mr-2" />
-                  Request Cancellation
+                  {t("booking.id.requestCancellation")}
                 </Button>
               )}
 
@@ -550,7 +551,7 @@ export default function BookingDetailsPage() {
                       d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  Report an Issue
+                  {t("booking.id.reportAnIssue")}
                 </Button>
               )}
             </CardContent>
@@ -558,14 +559,14 @@ export default function BookingDetailsPage() {
 
           <Card className="mt-4">
             <CardHeader>
-              <CardTitle>Need Help?</CardTitle>
+              <CardTitle>{t("booking.id.needHelp")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                If you have any questions or need assistance with this booking, our support team is here to help.
+                {t("booking.id.needHelpDescription")}
               </p>
               <Button variant="outline" className="w-full">
-                Contact Support
+                {t("booking.id.contactSupport")}
               </Button>
             </CardContent>
           </Card>

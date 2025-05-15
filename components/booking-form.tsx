@@ -14,6 +14,7 @@ import { toast } from "@/lib/toast"
 import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2 } from "lucide-react"
 import { format, addDays } from "date-fns"
 import type { Database } from "@/lib/database.types"
+import { useTranslation } from "@/lib/i18n"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
   job_offerings?: any[]
@@ -53,7 +54,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null)
   const [debugInfo, setDebugInfo] = useState<string>("")
   const [paymentMethod, setPaymentMethod] = useState<"online" | "offline">("online")
-
+  const { t } = useTranslation()
   // Calculate valid end times based on selected start time
   const validEndTimes = useMemo(() => {
     if (!selectedStartTime || availabilityBlocks.length === 0) return []
@@ -147,7 +148,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         clearTimeout(timeoutId)
 
         if (!response.ok) {
-          throw new Error("Failed to fetch availability")
+          throw new Error(t("bookingform.failedToFetchAvailability"))
         }
 
         const data = await response.json()
@@ -173,9 +174,9 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       } catch (error: any) {
         console.error("Error fetching availability:", error)
         if (error.name === "AbortError") {
-          toast.error("Taking too long to load availability. Please try again.")
+          toast.error(t("bookingform.takingTooLongToLoadAvailability"))
         } else {
-          toast.error("Failed to fetch freelancer availability")
+          toast.error(t("bookingform.failedToFetchFreelancerAvailability"))
         }
         setAvailabilityBlocks([])
       } finally {
@@ -268,12 +269,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     e.preventDefault()
 
     if (!selectedDate) {
-      toast.error("Please select a date")
+      toast.error(t("bookingform.pleaseSelectADate"))
       return
     }
 
     if (!selectedStartTime || !selectedEndTime) {
-      toast.error("Please select both start and end times")
+      toast.error(t("bookingform.pleaseSelectBothStartAndEndTimes"))
       return
     }
 
@@ -286,7 +287,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       } = await supabase.auth.getUser()
 
       if (!user) {
-        toast.error("Authentication required")
+        toast.error(t("bookingform.authenticationRequired"))
         router.push("/login")
         return
       }
@@ -303,8 +304,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           client_id: user.id,
           freelancer_id: freelancer.id,
           title: categoryName
-            ? `${categoryName} Service with ${freelancer.first_name} ${freelancer.last_name}`
-            : `Booking with ${freelancer.first_name} ${freelancer.last_name}`,
+            ? `${categoryName} ${t("bookingform.service")} with ${freelancer.first_name} ${freelancer.last_name}`
+            : `${t("bookingform.booking")} with ${freelancer.first_name} ${freelancer.last_name}`,
           description,
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
@@ -322,12 +323,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         throw error
       }
 
-      toast.success("Booking created")
+      toast.success(t("bookingform.bookingCreated"))
 
       // Redirect to payment page
       router.push(`/bookings/${data[0].id}/payment`)
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong. Please try again.")
+      toast.error(error.message || t("bookingform.somethingWentWrong"))
     } finally {
       setLoading(false)
     }
@@ -336,7 +337,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const handleSelectSuggestedDate = () => {
     if (suggestedDate) {
       onBack() // Go back to date selection
-      toast.success("Try this date instead")
+      toast.success(t("bookingform.tryDateInstead"))
     }
   }
 
@@ -344,20 +345,20 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     <form onSubmit={handleSubmit} className="space-y-4">
       <Button type="button" variant="ghost" size="sm" className="mb-2 -ml-2 text-muted-foreground" onClick={onBack}>
         <ArrowLeft className="h-4 w-4 mr-1" />
-        Back
+        {t("bookingform.back")}
       </Button>
 
       {categoryName && (
         <div className="mb-2">
-          <p className="font-medium">{categoryName} Service</p>
-          <p className="text-sm text-muted-foreground">€{hourlyRate}/hour</p>
+          <p className="font-medium">{categoryName} {t("bookingform.service")}</p>
+          <p className="text-sm text-muted-foreground">€{hourlyRate}/{t("bookingform.hour")}</p>
         </div>
       )}
 
       <div className="space-y-2">
         <div className="flex items-center text-sm">
           <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span>{selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "Select a date"}</span>
+          <span>{selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : t("bookingform.selectDate")}</span>
         </div>
 
         {fetchingAvailability ? (
@@ -368,21 +369,21 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           <div className="flex flex-col items-center justify-center p-4 border rounded-md bg-muted/50">
             <div className="flex items-center mb-2">
               <AlertCircle className="h-4 w-4 mr-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">No availability for this date.</p>
+              <p className="text-sm text-muted-foreground">{t("bookingform.noAvailability")}</p>
             </div>
 
             {suggestedDate ? (
               <div className="mt-2 text-center">
                 <p className="text-sm mb-2">
                   <Info className="h-4 w-4 inline mr-1 text-primary" />
-                  The freelancer has availability on {format(suggestedDate, "MMMM d, yyyy")}
+                  {t("bookingform.suggestedDate", { date: format(suggestedDate, "MMMM d, yyyy") })}
                 </p>
                 <Button type="button" variant="outline" size="sm" onClick={handleSelectSuggestedDate}>
-                  Try this date instead
+                  {t("bookingform.tryDate")}
                 </Button>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground mt-1">Please select another date.</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("bookingform.selectAnotherDate")}</p>
             )}
           </div>
         ) : (
@@ -393,17 +394,17 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                 {getCertaintyLevel === "guaranteed" ? (
                   <>
                     <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                    <span>The freelancer has confirmed availability on this date</span>
+                    <span>{t("bookingform.confirmedAvailability")}</span>
                   </>
                 ) : getCertaintyLevel === "tentative" ? (
                   <>
                     <HelpCircle className="h-4 w-4 mr-2 text-amber-500" />
-                    <span>The freelancer's availability is tentative on this date</span>
+                    <span>{t("bookingform.tentativeAvailability")}</span>
                   </>
                 ) : (
                   <>
                     <AlertCircle className="h-4 w-4 mr-2 text-gray-400" />
-                    <span>The freelancer has marked this date as unavailable</span>
+                    <span>{t("bookingform.unavailableAvailability")}</span>
                   </>
                 )}
               </div>
@@ -411,10 +412,10 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
             {/* Start Time Selector */}
             <div className="space-y-2">
-              <Label htmlFor="start-time">Start Time</Label>
+              <Label htmlFor="start-time">{t("bookingform.startTime")}</Label>
               <Select value={selectedStartTime || ""} onValueChange={setSelectedStartTime}>
                 <SelectTrigger id="start-time">
-                  <SelectValue placeholder="Select start time" />
+                  <SelectValue placeholder={t("bookingform.selectStartTime")} />
                 </SelectTrigger>
                 <SelectContent>
                   {allAvailableStartTimes.length > 0 ? (
@@ -425,7 +426,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                     ))
                   ) : (
                     <SelectItem value="none" disabled>
-                      No available times
+                      {t("bookingform.noAvailableTimes")}
                     </SelectItem>
                   )}
                 </SelectContent>
@@ -434,14 +435,14 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
             {/* End Time Selector - only enabled if start time is selected */}
             <div className="space-y-2">
-              <Label htmlFor="end-time">End Time</Label>
+              <Label htmlFor="end-time">{t("bookingform.endTime")}</Label>
               <Select
                 value={selectedEndTime || ""}
                 onValueChange={setSelectedEndTime}
                 disabled={!selectedStartTime || validEndTimes.length === 0}
               >
                 <SelectTrigger id="end-time">
-                  <SelectValue placeholder={selectedStartTime ? "Select end time" : "Select start time first"} />
+                  <SelectValue placeholder={selectedStartTime ? t("bookingform.selectEndTime") : t("bookingform.selectStartTimeFirst")} />
                 </SelectTrigger>
                 <SelectContent>
                   {validEndTimes.length > 0 ? (
@@ -452,7 +453,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                     ))
                   ) : (
                     <SelectItem value="none" disabled>
-                      {selectedStartTime ? "No available end times" : "Select start time first"}
+                      {selectedStartTime ? t("bookingform.noAvailableEndTimes") : t("bookingform.selectStartTimeFirst")}
                     </SelectItem>
                   )}
                 </SelectContent>
@@ -462,7 +463,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             {/* Duration Display */}
             {selectedStartTime && selectedEndTime && (
               <div className="text-sm text-muted-foreground">
-                Duration: {calculateHours()} {calculateHours() === 1 ? "hour" : "hours"}
+                {t("bookingform.duration")}: {calculateHours()} {calculateHours() === 1 ? t("bookingform.hour") : t("bookingform.hours")}
               </div>
             )}
           </div>
@@ -470,12 +471,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="location">Location</Label>
+        <Label htmlFor="location">{t("bookingform.location")}</Label>
         <div className="relative">
           <MapPin className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             id="location"
-            placeholder="Enter address"
+            placeholder={t("bookingform.enterAddress")}
             className="pl-8"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
@@ -485,10 +486,10 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Job Description</Label>
+        <Label htmlFor="description">{t("bookingform.jobDescription")}</Label>
         <Textarea
           id="description"
-          placeholder="Describe what you need help with..."
+          placeholder={t("bookingform.describeJob")}
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -498,21 +499,21 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       <div className="border-t pt-4 mt-4">
         <div className="flex justify-between mb-2">
-          <span>Duration</span>
-          <span>{calculateHours()} hours</span>
+          <span>{t("bookingform.duration")}</span>
+          <span>{calculateHours()} {t("bookingform.hours")}</span>
         </div>
         <div className="flex justify-between mb-2">
-          <span>Hourly Rate</span>
+          <span>{t("bookingform.hourlyRate")}</span>
           <span>€{hourlyRate || freelancer.hourly_rate || 0}</span>
         </div>
         <div className="flex justify-between font-bold">
-          <span>Total</span>
+          <span>{t("bookingform.total")}</span>
           <span>€{calculateTotal().toFixed(2)}</span>
         </div>
       </div>
 
       <div className="space-y-2 border-t pt-4">
-        <Label>Payment Method</Label>
+        <Label>{t("bookingform.paymentMethod")}</Label>
         <div className="grid grid-cols-2 gap-4">
           <div
             className={`border rounded-md p-3 cursor-pointer flex items-center ${
@@ -526,8 +527,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
               }`}
             ></div>
             <div>
-              <p className="font-medium">Online Payment</p>
-              <p className="text-xs text-muted-foreground">Pay securely through our platform</p>
+              <p className="font-medium">{t("bookingform.onlinePayment")}</p>
+              <p className="text-xs text-muted-foreground">{t("bookingform.paySecurely")}</p>
             </div>
           </div>
           <div
@@ -542,8 +543,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
               }`}
             ></div>
             <div>
-              <p className="font-medium">Offline Payment</p>
-              <p className="text-xs text-muted-foreground">Pay directly to the freelancer</p>
+              <p className="font-medium">{t("bookingform.offlinePayment")}</p>
+              <p className="text-xs text-muted-foreground">{t("bookingform.payDirectly")}</p>
             </div>
           </div>
         </div>
@@ -554,11 +555,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         className="w-full"
         disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || paymentMethod === "online"}
       >
-        {loading ? "Processing..." : paymentMethod === "online" ? "Online Payment Coming soon..." : "Book with Offline Payment"}
+        {loading ? t("bookingform.processing") : paymentMethod === "online" ? t("bookingform.onlinePaymentComingSoon") : t("bookingform.bookWithOfflinePayment")}
       </Button>
 
       <p className="text-xs text-center text-muted-foreground">
-        By booking, you agree to our Terms of Service and Privacy Policy
+        {t("bookingform.byBooking")}
       </p>
     </form>
   )

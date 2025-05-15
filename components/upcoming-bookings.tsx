@@ -108,8 +108,8 @@ export default function UpcomingBookings() {
                     <div>
                       <h3 className="text-lg font-semibold">
                         {profile?.user_type === "client"
-                          ? `Booking with ${booking.freelancer?.first_name} ${booking.freelancer?.last_name}`
-                          : `Booking from ${booking.client?.first_name} ${booking.client?.last_name}`}
+                          ? ` ${t("dashboard.bookings.bookingWith")} ${booking.freelancer?.first_name} ${booking.freelancer?.last_name}`
+                          : ` ${t("dashboard.bookings.bookingFrom")} ${booking.client?.first_name} ${booking.client?.last_name}`}
                       </h3>
 
                       <div className="flex items-center mt-1">
@@ -121,7 +121,7 @@ export default function UpcomingBookings() {
                               : "bg-blue-50 text-blue-700 border-blue-200"
                           }
                         >
-                          {booking.status === "pending" ? "Pending" : "Confirmed"}
+                          {booking.status === "pending" ? t("dashboard.bookings.pending") : t("dashboard.bookings.confirmed")}
                         </Badge>
                       </div>
                     </div>

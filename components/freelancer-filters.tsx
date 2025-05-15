@@ -17,13 +17,14 @@ import { Separator } from "@/components/ui/separator"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ChevronDown, ChevronUp, Search, MapPin, Euro, Clock, Tag } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
+import { useTranslation } from "@/lib/i18n"
 
 type Category = Database["public"]["Tables"]["job_categories"]["Row"]
 
 export default function FreelancerFilters() {
   const router = useRouter()
   const searchParams = useSearchParams()
-
+  const { t } = useTranslation()
   // Get current filter values from URL
   const currentSearch = searchParams.get("search") || ""
   const currentMinPrice = searchParams.get("minPrice") || "0"
@@ -202,15 +203,15 @@ export default function FreelancerFilters() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Filters</CardTitle>
+        <CardTitle>{t("freelancer.filters.title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Wildcard Only Switch */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label>Wildcard Search</Label>
+            <Label>{t("freelancer.filters.wildcardSearch")}</Label>
             <p className="text-sm text-muted-foreground">
-            Find freelancers based on broader skill categories rather than specific skills.
+            {t("freelancer.filters.wildcardSearchDescription")}
             </p>
           </div>
           <Switch
@@ -223,7 +224,7 @@ export default function FreelancerFilters() {
         {showWildcardOnly && (
           <div className="pl-4 border-l-2 border-muted">
             <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Select wildcard categories to match with</Label>
+              <Label className="text-sm text-muted-foreground">{t("freelancer.filters.selectWildcardCategories")}</Label>
               <WildcardFilter selectedWildcards={selectedWildcards} onChange={handleWildcardChange} />
             </div>
           </div>
@@ -236,13 +237,13 @@ export default function FreelancerFilters() {
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <Search className="h-4 w-4" />
-              <Label>Search</Label>
+              <Label>{t("freelancer.filters.search")}</Label>
             </div>
             {openSections.search ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-4">
             <Input
-              placeholder="Search freelancers..."
+              placeholder={t("freelancer.filters.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -256,7 +257,7 @@ export default function FreelancerFilters() {
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <MapPin className="h-4 w-4" />
-              <Label>Location</Label>
+              <Label>{t("freelancer.filters.location")}</Label>
             </div>
             {openSections.location ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
@@ -267,7 +268,7 @@ export default function FreelancerFilters() {
               showRadius={true}
               radiusValue={radius}
               onRadiusChange={handleRadiusChange}
-              placeholder="Enter a location"
+              placeholder={t("freelancer.filters.locationPlaceholder")}
             />
           </CollapsibleContent>
         </Collapsible>
@@ -279,7 +280,7 @@ export default function FreelancerFilters() {
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <Euro className="h-4 w-4" />
-              <Label>Price Range (€/hr)</Label>
+              <Label>{t("freelancer.filters.priceRange")}</Label>
             </div>
             {openSections.price ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
@@ -309,7 +310,7 @@ export default function FreelancerFilters() {
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <Tag className="h-4 w-4" />
-              <Label>Categories</Label>
+              <Label>{t("freelancer.filters.categories")}</Label>
             </div>
             {openSections.categories ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
@@ -337,7 +338,7 @@ export default function FreelancerFilters() {
                     </Label>
                   </div>
                 ))}
-                {categories?.length === 0 && <p className="text-sm text-muted-foreground">No categories available</p>}
+                {categories?.length === 0 && <p className="text-sm text-muted-foreground">{t("freelancer.filters.noCategoriesAvailable")}</p>}
               </div>
             )}
           </CollapsibleContent>
@@ -353,13 +354,13 @@ export default function FreelancerFilters() {
             onCheckedChange={(checked) => setAvailableNow(checked === true)}
           />
           <Label htmlFor="available-now" className="text-sm font-normal cursor-pointer">
-            Available now
+            {t("freelancer.filters.availableNow")}
           </Label>
         </div> */}
 
         {/* Reset Button */}
         <Button className="w-full" onClick={resetFilters}>
-          Reset Filters
+          {t("freelancer.filters.resetFilters")}
         </Button>
       </CardContent>
     </Card>

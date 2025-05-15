@@ -9,6 +9,7 @@ import { MapPin, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { searchLocations, geocodeAddress } from "@/lib/geocoding"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useTranslation } from "@/lib/i18n"
 
 interface LocationInputProps {
   value: string
@@ -38,7 +39,7 @@ export function LocationInput({
   const [loading, setLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
-
+  const { t } = useTranslation()
   // Update input value when prop value changes
   useEffect(() => {
     if (value !== inputValue) {
@@ -126,7 +127,7 @@ export function LocationInput({
           <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg">
             <Command>
               <CommandList>
-                <CommandEmpty>No locations found.</CommandEmpty>
+                <CommandEmpty>{t("freelancer.filters.noLocationsFound")}</CommandEmpty>
                 <CommandGroup>
                   {suggestions.map((suggestion) => (
                     <CommandItem
@@ -155,11 +156,11 @@ export function LocationInput({
       {showRadius && onRadiusChange && (
         <div className="flex items-center space-x-2 mt-2">
           <Label htmlFor="radius" className="whitespace-nowrap">
-            Service radius:
+            {t("freelancer.filters.serviceRadius")}
           </Label>
           <Select value={radiusValue.toString()} onValueChange={(value) => onRadiusChange(Number.parseInt(value))}>
             <SelectTrigger id="radius" className="w-[180px]">
-              <SelectValue placeholder="Select radius" />
+              <SelectValue placeholder={t("freelancer.filters.selectRadius")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="5">5 km</SelectItem>

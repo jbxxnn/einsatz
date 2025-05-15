@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { MapPin, Star } from "lucide-react"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
+import { useTranslation } from "@/lib/i18n"
 
 type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
   job_offerings?: Array<{
@@ -23,7 +24,7 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
 
 export default function FreelancersList() {
   const searchParams = useSearchParams()
-
+  const { t } = useTranslation()
   // Get all filter parameters from URL
   const filters = {
     search: searchParams.get("search") || undefined,
@@ -90,6 +91,7 @@ export default function FreelancersList() {
 }
 
 function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
+  const { t } = useTranslation()
   const initials = `${freelancer.first_name?.[0] || ""}${freelancer.last_name?.[0] || ""}`.toUpperCase()
 
   return (
@@ -132,7 +134,7 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                 <MapPin className="h-3 w-3" />
                 <span>{freelancer.location}</span>
                 {typeof freelancer.distance === 'number' && (
-                  <span className="ml-1 text-green-500">({Math.round(freelancer.distance * 10) / 10} miles away)</span>
+                  <span className="ml-1 text-green-500">({Math.round(freelancer.distance * 10) / 10} {t("freelancer.filters.milesAway")})</span>
                 )}
               </div>
             )}

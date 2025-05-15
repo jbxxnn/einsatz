@@ -11,12 +11,14 @@ import Link from "next/link"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
 import { toast } from "sonner"
+import { useTranslation } from "@/lib/i18n"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
 }
 
 export default function PaymentPage() {
+  const { t } = useTranslation()
   const params = useParams()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
@@ -87,9 +89,9 @@ export default function PaymentPage() {
 
       setPaymentSuccess(true)
 
-      toast.success("Your booking has been confirmed")
+      toast.success(t("payments.paymentSuccessful"))
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong. Please try again.")
+      toast.error(error.message || t("payments.error"))
     } finally {
       setProcessing(false)
     }
@@ -106,8 +108,8 @@ export default function PaymentPage() {
   if (!booking) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Booking not found</h1>
-        <Button onClick={() => router.push("/dashboard")}>Go to Dashboard</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("payments.bookingNotFound")}</h1>
+        <Button onClick={() => router.push("/dashboard")}>{t("payments.goToDashboard")}</Button>
       </div>
     )
   }
@@ -116,7 +118,7 @@ export default function PaymentPage() {
     <div className="container py-10">
       <Link href="/dashboard" className="flex items-center text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Dashboard
+        {t("payments.goToDashboard")}
       </Link>
 
       <div className="max-w-2xl mx-auto">
@@ -126,36 +128,36 @@ export default function PaymentPage() {
               <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Payment Successful!</h2>
+              <h2 className="text-2xl font-bold mb-2">{t("payments.paymentSuccessful")}</h2>
               <p className="text-muted-foreground mb-6">
-                Your booking has been confirmed. We've sent a confirmation email with all the details.
+                {t("payments.paymentSuccessfulMessage")}
               </p>
               <div className="w-full max-w-md p-4 border rounded-lg mb-6">
                 <div className="flex justify-between mb-2">
-                  <span className="text-muted-foreground">Booking ID</span>
+                  <span className="text-muted-foreground">{t("payments.bookingId")}</span>
                   <span className="font-medium">{booking.id.substring(0, 8)}</span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-muted-foreground">Date</span>
+                  <span className="text-muted-foreground">{t("payments.date")}</span>
                   <span className="font-medium">{format(new Date(booking.start_time), "MMMM d, yyyy")}</span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-muted-foreground">Time</span>
+                  <span className="text-muted-foreground">{t("payments.time")}</span>
                   <span className="font-medium">
                     {format(new Date(booking.start_time), "h:mm a")} - {format(new Date(booking.end_time), "h:mm a")}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Amount</span>
+                  <span className="text-muted-foreground">{t("payments.total")}</span>
                   <span className="font-bold">€{booking.total_amount.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex gap-4">
                 <Link href={`/bookings/${booking.id}`}>
-                  <Button>View Booking Details</Button>
+                  <Button>{t("payments.viewBookingDetails")}</Button>
                 </Link>
                 <Link href="/dashboard">
-                  <Button variant="outline">Go to Dashboard</Button>
+                  <Button variant="outline">{t("payments.goToDashboard")}</Button>
                 </Link>
               </div>
             </CardContent>
@@ -163,9 +165,9 @@ export default function PaymentPage() {
             ) : booking.payment_method === "offline" ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Offline Payment Instructions</CardTitle>
+                  <CardTitle>{t("payments.offlinePaymentInstructions")}</CardTitle>
                   <CardDescription>
-                    Your booking has been created. Please follow these instructions to complete payment.
+                    {t("payments.offlinePaymentInstructionsMessage")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -183,66 +185,66 @@ export default function PaymentPage() {
                         <h3 className="font-semibold">
                           {booking.freelancer?.first_name} {booking.freelancer?.last_name}
                         </h3>
-                        <p className="text-sm text-muted-foreground">Freelancer</p>
+                        <p className="text-sm text-muted-foreground">{t("payments.freelancer")}</p>
                       </div>
                     </div>
     
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Date</span>
+                        <span className="text-muted-foreground">{t("payments.date")}</span>
                         <span>{format(new Date(booking.start_time), "MMMM d, yyyy")}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Time</span>
+                        <span className="text-muted-foreground">{t("payments.time")}</span>
                         <span>
                           {format(new Date(booking.start_time), "h:mm a")} - {format(new Date(booking.end_time), "h:mm a")}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Location</span>
-                        <span>{booking.location || "Not specified"}</span>
+                        <span className="text-muted-foreground">{t("payments.location")}</span>
+                        <span>{booking.location || t("payments.notSpecified")}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Amount</span>
+                        <span className="text-muted-foreground">{t("payments.total")}</span>
                         <span className="font-bold">€{booking.total_amount.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
     
                   <div className="space-y-4">
-                    <h3 className="font-semibold">Payment Instructions</h3>
+                    <h3 className="font-semibold">{t("payments.paymentInstructions")}</h3>
                     <div className="bg-muted/30 p-4 rounded-md space-y-4">
                       <div>
-                        <h4 className="font-medium mb-1">1. Contact the Freelancer</h4>
+                        <h4 className="font-medium mb-1">{t("payments.contactFreelancer")}</h4>
                         <p className="text-sm text-muted-foreground">
-                          Use our messaging system to coordinate payment details with the freelancer.
+                          {t("payments.useOurMessagingSystemToCoordinatePaymentDetailsWithTheFreelancer")}
                         </p>
                         <Button variant="outline" className="mt-2" asChild>
-                          <Link href={`/messages?freelancerId=${booking.freelancer_id}`}>Message Freelancer</Link>
+                          <Link href={`/messages?freelancerId=${booking.freelancer_id}`}>{t("payments.messageFreelancer")}</Link>
                         </Button>
                       </div>
     
                       <div>
-                        <h4 className="font-medium mb-1">2. Agree on Payment Method</h4>
+                        <h4 className="font-medium mb-1">{t("payments.agreeOnPaymentMethod")}</h4>
                         <p className="text-sm text-muted-foreground">
-                          Discuss and agree on a payment method that works for both of you (cash, bank transfer, etc.).
+                          {t("payments.discussAndAgreeOnPaymentMethod")}
                         </p>
                       </div>
     
                       <div>
-                        <h4 className="font-medium mb-1">3. Complete the Payment</h4>
+                        <h4 className="font-medium mb-1">{t("payments.completePayment")}</h4>
                         <p className="text-sm text-muted-foreground">
-                          Make the payment as agreed and ask the freelancer to mark the booking as paid on the platform.
+                          {t("payments.makePaymentAsAgreedAndAskFreelancerToMarkBookingAsPaidOnThePlatform")}
                         </p>
                       </div>
     
                       <div className="pt-2 border-t">
-                        <p className="text-sm font-medium">Important Notes:</p>
+                        <p className="text-sm font-medium">{t("payments.importantNotes")}</p>
                         <ul className="text-xs text-muted-foreground list-disc pl-4 mt-1 space-y-1">
-                          <li>The platform does not handle or guarantee offline payments</li>
-                          <li>Always keep records of your payment transactions</li>
-                          <li>The freelancer will need to confirm receipt of payment</li>
-                          <li>For disputes, please contact our support team</li>
+                          <li>{t("payments.platformDoesNotHandleOfflinePayments")}</li>
+                          <li>{t("payments.alwaysKeepRecordsOfPayments")}</li>
+                          <li>{t("payments.freelancerNeedsToConfirmPayment")}</li>
+                          <li>{t("payments.disputesContactSupport")}</li>
                         </ul>
                       </div>
                     </div>
@@ -250,10 +252,10 @@ export default function PaymentPage() {
                 </CardContent>
                 <CardFooter className="flex justify-between">
                   <Button variant="outline" onClick={() => router.push("/dashboard")}>
-                    Go to Dashboard
+                    {t("payments.goToDashboard")}
                   </Button>
                   <Link href={`/bookings/${booking.id}`}>
-                    <Button>View Booking Details</Button>
+                    <Button>{t("payments.viewBookingDetails")}</Button>
                   </Link>
                 </CardFooter>
               </Card>
@@ -262,8 +264,8 @@ export default function PaymentPage() {
             <div className="md:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Payment Details</CardTitle>
-                  <CardDescription>Complete your payment to confirm the booking</CardDescription>
+                  <CardTitle>{t("payments.paymentDetails")}</CardTitle>
+                  <CardDescription>{t("payments.completePaymentToConfirmBooking")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="border rounded-lg p-4 mb-4">
@@ -280,41 +282,41 @@ export default function PaymentPage() {
                         <h3 className="font-semibold">
                           {booking.freelancer?.first_name} {booking.freelancer?.last_name}
                         </h3>
-                        <p className="text-sm text-muted-foreground">Freelancer</p>
+                        <p className="text-sm text-muted-foreground">{t("payments.freelancer")}</p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Date</span>
+                        <span className="text-muted-foreground">{t("payments.date")}</span>
                         <span>{format(new Date(booking.start_time), "MMMM d, yyyy")}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Time</span>
+                        <span className="text-muted-foreground">{t("payments.time")}</span>
                         <span>
                           {format(new Date(booking.start_time), "h:mm a")} -{" "}
                           {format(new Date(booking.end_time), "h:mm a")}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Location</span>
+                        <span className="text-muted-foreground">{t("payments.location")}</span>
                         <span>{booking.location || "Not specified"}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold">Payment Method</h3>
+                    <h3 className="font-semibold">{t("payments.paymentMethod")}</h3>
 
                     <div className="border rounded-lg p-4 space-y-4">
                       <div className="flex items-center gap-2">
                         <CreditCard className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-medium">Credit Card</span>
+                        <span className="font-medium">{t("payments.creditCard")}</span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
-                          <label className="text-sm text-muted-foreground mb-1 block">Card Number</label>
+                          <label className="text-sm text-muted-foreground mb-1 block">{t("payments.cardNumber")}</label>
                           <input
                             type="text"
                             className="w-full p-2 border rounded-md"
@@ -322,15 +324,15 @@ export default function PaymentPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-sm text-muted-foreground mb-1 block">Expiry Date</label>
+                          <label className="text-sm text-muted-foreground mb-1 block">{t("payments.expiryDate")}</label>
                           <input type="text" className="w-full p-2 border rounded-md" placeholder="MM/YY" />
                         </div>
                         <div>
-                          <label className="text-sm text-muted-foreground mb-1 block">CVC</label>
+                          <label className="text-sm text-muted-foreground mb-1 block">{t("payments.cvc")}</label>
                           <input type="text" className="w-full p-2 border rounded-md" placeholder="123" />
                         </div>
                         <div className="col-span-2">
-                          <label className="text-sm text-muted-foreground mb-1 block">Name on Card</label>
+                          <label className="text-sm text-muted-foreground mb-1 block">{t("payments.nameOnCard")}</label>
                           <input type="text" className="w-full p-2 border rounded-md" placeholder="John Doe" />
                         </div>
                       </div>
@@ -339,16 +341,16 @@ export default function PaymentPage() {
                 </CardContent>
                 <CardFooter className="flex justify-between">
                   <Button variant="outline" onClick={() => router.push("/dashboard")}>
-                    Cancel
+                    {t("payments.cancel")}
                   </Button>
                   <Button onClick={handlePayment} disabled={processing}>
                     {processing ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
+                        {t("payments.processing")}
                       </>
                     ) : (
-                      `Pay €${booking.total_amount.toFixed(2)}`
+                      `${t("payments.pay")} €${booking.total_amount.toFixed(2)}`
                     )}
                   </Button>
                 </CardFooter>
@@ -358,16 +360,16 @@ export default function PaymentPage() {
             <div className="md:col-span-1">
               <Card>
                 <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
+                  <CardTitle>{t("payments.orderSummary")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Hourly Rate</span>
+                    <span className="text-muted-foreground">{t("payments.hourlyRate")}</span>
                     <span>€{booking.hourly_rate.toFixed(2)}</span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Duration</span>
+                    <span className="text-muted-foreground">{t("payments.duration")}</span>
                     <span>
                       {(
                         (new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) /
@@ -379,13 +381,13 @@ export default function PaymentPage() {
 
                   <div className="border-t pt-4">
                     <div className="flex justify-between font-bold">
-                      <span>Total</span>
+                      <span>{t("payments.total")}</span>
                       <span>€{booking.total_amount.toFixed(2)}</span>
                     </div>
                   </div>
 
                   <div className="text-xs text-muted-foreground">
-                    <p>Payment is held securely until you confirm the job is complete.</p>
+                    <p>{t("payments.paymentHeldSecurelyUntilJobIsComplete")}</p>
                   </div>
                 </CardContent>
               </Card>

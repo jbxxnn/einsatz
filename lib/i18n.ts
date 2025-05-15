@@ -38,7 +38,7 @@ export function useTranslation() {
     }
   }, [])
 
-  const t = (key: string) => {
+  const t = (key: string, params?: Record<string, any>) => {
     const keys = key.split('.')
     let value: any = messages[locale]
 
@@ -50,7 +50,15 @@ export function useTranslation() {
       }
     }
 
-    return value || key
+    if (!value) return key
+
+    if (params) {
+      return Object.entries(params).reduce((str, [key, val]) => {
+        return str.replace(`{${key}}`, String(val))
+      }, value)
+    }
+
+    return value
   }
 
   const changeLocale = (newLocale: Locale) => {
