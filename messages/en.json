@@ -19,7 +19,8 @@
       "subtitle": "Connect with skilled professionals for your projects",
       "description": "Join our platform to find talented freelancers or showcase your skills to potential clients",
       "findFreelancers": "Find Freelancers",
-      "becomeFreelancer": "Become a Freelancer"
+      "becomeFreelancer": "Become a Freelancer",
+      "bookLocalFreelancers": "Book Local Freelancers Instantly"
     }
   },
   "freelancer": {
@@ -81,7 +82,9 @@
     "profile": "Profile",
     "settings": "Settings",
     "signOut": "Sign Out",
-    "signedOutSuccessfully": "Signed out successfully"
+    "signedOutSuccessfully": "Signed out successfully",
+    "login": "Login",
+    "signup": "Sign Up"
   },
   "sidebar": {
     "dashboard": "Dashboard",

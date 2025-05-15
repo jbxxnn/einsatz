@@ -35,6 +35,8 @@ export default function FreelancersList() {
     latitude: searchParams.get("latitude") || undefined,
     longitude: searchParams.get("longitude") || undefined,
     radius: searchParams.get("radius") || undefined,
+    wildcards: searchParams.get("wildcards") || undefined,
+    wildcardOnly: searchParams.get("wildcardOnly") === "true",
   }
 
   const { data, error, isLoading } = useFreelancers(filters)
@@ -92,6 +94,7 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
 
   return (
     <Card>
+      <Link href={`/freelancers/${freelancer.id}`} passHref>
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row gap-4">
           <Avatar className="h-16 w-16">
@@ -108,12 +111,13 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                 {freelancer.first_name} {freelancer.last_name}
               </h3>
               <div className="flex items-center gap-1">
+                <div className="text-sm font-bold">€{freelancer.hourly_rate}/hr</div>
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-sm font-medium">{freelancer.rating || "New"}</span>
+                <span className="text-sm font-medium">{freelancer.rating || "0"}</span>
               </div>
             </div>
 
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{freelancer.bio}</p>
+            {/* <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{freelancer.bio}</p> */}
 
             <div className="flex flex-wrap gap-2 mt-2">
               {freelancer.job_offerings?.slice(0, 3).map((offering) => (
@@ -128,13 +132,13 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                 <MapPin className="h-3 w-3" />
                 <span>{freelancer.location}</span>
                 {typeof freelancer.distance === 'number' && (
-                  <span className="ml-1">({Math.round(freelancer.distance * 10) / 10} miles away)</span>
+                  <span className="ml-1 text-green-500">({Math.round(freelancer.distance * 10) / 10} miles away)</span>
                 )}
               </div>
             )}
           </div>
 
-          <div className="flex flex-col gap-2 items-center md:items-end justify-center">
+          {/* <div className="flex flex-col gap-2 items-center md:items-end justify-center">
             <div className="text-lg font-bold">€{freelancer.hourly_rate}/hr</div>
             {freelancer.is_available_now && (
               <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-200">
@@ -144,9 +148,10 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
             <Link href={`/freelancers/${freelancer.id}`} passHref>
               <Button>View Profile</Button>
             </Link>
-          </div>
+          </div> */}
         </div>
       </CardContent>
+      </Link>
     </Card>
   )
 }

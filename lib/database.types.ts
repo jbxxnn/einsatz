@@ -24,6 +24,16 @@ export interface Database {
           longitude: number | null
           formatted_address: string | null
           service_radius: number | null
+          wildcard_categories: {
+            physical_work: boolean
+            customer_facing: boolean
+            outdoor_work: boolean
+            odd_hours: boolean
+            repetitive_work: boolean
+            analytical_work: boolean
+            creative_work: boolean
+          } | null
+          wildcard_enabled: boolean
         }
         Insert: {
           id: string
@@ -45,6 +55,16 @@ export interface Database {
           longitude?: number | null
           formatted_address?: string | null
           service_radius?: number | null
+          wildcard_categories?: {
+            physical_work: boolean
+            customer_facing: boolean
+            outdoor_work: boolean
+            odd_hours: boolean
+            repetitive_work: boolean
+            analytical_work: boolean
+            creative_work: boolean
+          } | null
+          wildcard_enabled?: boolean
         }
         Update: {
           id?: string
@@ -66,6 +86,16 @@ export interface Database {
           longitude?: number | null
           formatted_address?: string | null
           service_radius?: number | null
+          wildcard_categories?: {
+            physical_work: boolean
+            customer_facing: boolean
+            outdoor_work: boolean
+            odd_hours: boolean
+            repetitive_work: boolean
+            analytical_work: boolean
+            creative_work: boolean
+          } | null
+          wildcard_enabled?: boolean
         }
       }
       bookings: {

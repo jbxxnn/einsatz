@@ -57,6 +57,8 @@ export function useFreelancers(filters: {
   latitude?: string
   longitude?: string
   radius?: string
+  wildcards?: string
+  wildcardOnly?: boolean
 }) {
   const queryParams = new URLSearchParams()
 
@@ -65,6 +67,8 @@ export function useFreelancers(filters: {
   if (filters.minPrice) queryParams.set("minPrice", filters.minPrice)
   if (filters.maxPrice) queryParams.set("maxPrice", filters.maxPrice)
   if (filters.availableNow) queryParams.set("availableNow", "true")
+  if (filters.wildcards) queryParams.set("wildcards", filters.wildcards)
+  if (filters.wildcardOnly) queryParams.set("wildcardOnly", "true")
 
   // Add location parameters
   if (filters.location) queryParams.set("location", filters.location)

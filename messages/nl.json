@@ -19,7 +19,8 @@
       "subtitle": "Leg contact met bekwame professionals voor jouw projecten",
       "description": "Sluit je aan bij ons platform om getalenteerde freelancers te vinden of je vaardigheden te tonen aan potentiële klanten",
       "findFreelancers": "Vind freelancers",
-      "becomeFreelancer": "Word freelancer"
+      "becomeFreelancer": "Word freelancer",
+      "bookLocalFreelancers": "Boek lokale freelancers direct"
     }
   },
   "freelancer": {
@@ -81,7 +82,9 @@
     "profile": "Profiel",
     "settings": "Instellingen",
     "signOut": "Afmelden",
-    "signedOutSuccessfully": "Succesvol afgemeld"
+    "signedOutSuccessfully": "Succesvol afgemeld",
+    "login": "Inloggen",
+    "signup": "Aanmelden"
   },
   "sidebar": {
     "dashboard": "Dashboard",

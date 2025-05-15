@@ -31,6 +31,8 @@ CREATE TABLE profiles (
   longitude DOUBLE PRECISION,
   service_radius INTEGER DEFAULT 10,
   formatted_address TEXT,
+  wildcard_categories JSONB,
+  wildcard_enabled BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

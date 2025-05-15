@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import Link from "next/link"
 import { MoveRight, PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n";
 
 interface HeroProps {
   title: string
@@ -24,6 +25,7 @@ export function Hero({
     () => ["amazing", "new", "wonderful", "beautiful", "smart"],
     []
   );
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -42,7 +44,7 @@ export function Hero({
         <div className="flex gap-8 py-20 lg:py-40 items-center justify-center flex-col">
           <div>
             <Button variant="secondary" size="sm" className="gap-4">
-            Book Local Freelancers Instantly <MoveRight className="w-4 h-4" />
+            {t("home.hero.bookLocalFreelancers")} <MoveRight className="w-4 h-4" />
             </Button>
           </div>
           <div className="flex gap-4 flex-col">

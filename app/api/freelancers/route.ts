@@ -19,6 +19,8 @@ export async function GET(request: Request) {
   const categories = url.searchParams.get("categories")?.split(",").filter(Boolean) || []
   const availableNow = url.searchParams.get("availableNow") === "true"
   const subcategory = url.searchParams.get("subcategory")
+  const wildcards = url.searchParams.get("wildcards")?.split(",").filter(Boolean) || []
+  const wildcardOnly = url.searchParams.get("wildcardOnly") === "true"
 
   // Location parameters
   const latitude = url.searchParams.get("latitude")
@@ -52,9 +54,6 @@ export async function GET(request: Request) {
     if (skills.length > 0) {
       query = query.overlaps("skills", skills)
     }
-
-    // DO NOT filter by category_id on profiles table - it doesn't exist
-    // We'll filter by category in JavaScript after fetching the data
 
     const { data: profilesData, error } = await query
 
@@ -117,6 +116,25 @@ export async function GET(request: Request) {
     // Filter by available now if selected
     if (availableNow) {
       processedFreelancers = processedFreelancers.filter((freelancer) => freelancer.is_available_now)
+    }
+
+    // Filter by wildcards if any
+    if (wildcards.length > 0) {
+      processedFreelancers = processedFreelancers.filter((freelancer) => {
+        // Skip if wildcard matching is not enabled or no wildcard categories are set
+        if (!freelancer.wildcard_enabled || !freelancer.wildcard_categories) return false
+
+        // Check if the freelancer matches any of the selected wildcards
+        return wildcards.some((wildcard) => {
+          const wildcardValue = freelancer.wildcard_categories[wildcard]
+          return wildcardValue === true
+        })
+      })
+    }
+
+    // Filter by wildcard only if enabled
+    if (wildcardOnly) {
+      processedFreelancers = processedFreelancers.filter((freelancer) => freelancer.wildcard_enabled === true)
     }
 
     // Apply location filtering if coordinates are provided

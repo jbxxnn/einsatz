@@ -11,6 +11,7 @@ import type { Database } from "@/lib/database.types"
 import SidebarNav from "@/components/sidebar-nav"
 import JobOfferingsManager from "@/components/job-offerings-manager"
 import { useTranslation } from "@/lib/i18n"
+import WildcardCategoriesForm from "@/components/wildcard-categories-form"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
@@ -109,6 +110,9 @@ export default function JobOfferingsPage() {
               </CardHeader>
               <CardContent>
                 <JobOfferingsManager freelancerId={profile.id} />
+                <div className="mt-6">
+                  <WildcardCategoriesForm profile={profile} />
+                </div>
               </CardContent>
             </Card>
           </div>
