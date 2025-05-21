@@ -21,6 +21,56 @@
       "findFreelancers": "Vind freelancers",
       "becomeFreelancer": "Word freelancer",
       "bookLocalFreelancers": "Boek lokale freelancers direct"
+    },
+    "features": {
+      "title": "Waarom Einsatz Kiezen",
+      "instant": {
+        "title": "Direct Boeken",
+        "description": "Vind en boek lokale freelancers direct voor uw dringende behoeften"
+      },
+      "scheduling": {
+        "title": "Slimme Planning",
+        "description": "Eenvoudige planning met real-time beschikbaarheid en kalenderintegratie"
+      },
+      "secure": {
+        "title": "Veilig Platform",
+        "description": "Veilige betalingen met geverifieerde professionals"
+      }
+    },
+    "whyEinsatz": {
+      "title": "Waarom Einsatz Kiezen?",
+      "subtitle": "Sluit je aan bij duizenden tevreden klanten en freelancers die Einsatz vertrouwen voor hun lokale diensten",
+      "trustElements": {
+        "freelancers": {
+          "title": "230+ Freelancers",
+          "description": "Vertrouwde professionals in jouw regio"
+        },
+        "availability": {
+          "title": "24/7 Beschikbaarheid",
+          "description": "Boek lokale diensten wanneer je wilt"
+        },
+        "satisfaction": {
+          "title": "98% Tevredenheid",
+          "description": "Van geverifieerde klantbeoordelingen"
+        }
+      },
+      "trustBadges": {
+        "verifiedProfessionals": "Geverifieerde Professionals",
+        "securePayments": "Veilige Betalingen",
+        "support": "24/7 Ondersteuning"
+      }
+    },
+    "stats": {
+      "freelancers": "Actieve Freelancers",
+      "jobs": "Voltooide Klussen",
+      "satisfaction": "Klanttevredenheid",
+      "support": "Ondersteuning Beschikbaar"
+    },
+    "cta": {
+      "title": "Klaar om te Beginnen?",
+      "description": "Word vandaag nog lid van ons platform en ervaar de toekomst van freelanceservices",
+      "findFreelancer": "Vind een Freelancer",
+      "becomeFreelancer": "Word Freelancer"
     }
   },
   "freelancer": {
@@ -234,7 +284,26 @@
     "defaultHourlyRateDescription": "Dit is je standaardtarief. Je kunt specifieke tarieven instellen voor elke dienstcategorie.",
     "jobOfferings": "Dienstenaanbod",
     "jobOfferingsDescription": "Beheer je diensten en expertise op de pagina voor dienstenaanbod.",
-    "manageJobOfferings": "Beheer dienstenaanbod"
+    "manageJobOfferings": "Beheer dienstenaanbod",
+    "editAvatar": "Avatar Bewerken",
+    "completeness": {
+      "title": "Profiel Voltooiing",
+      "complete": "Je profiel is compleet! Goed gedaan!",
+      "good": "Je profiel ziet er goed uit! Voeg nog wat details toe om het nog beter te maken.",
+      "partial": "Je profiel is gedeeltelijk compleet. Voeg meer informatie toe om je zichtbaarheid te verbeteren.",
+      "needsInfo": "Je profiel heeft meer informatie nodig. Maak het af om je kansen op werk te vergroten."
+    },
+    "hints": {
+      "firstName": "Je voornaam zoals deze op officiële documenten staat",
+      "lastName": "Je achternaam zoals deze op officiële documenten staat",
+      "email": "Een geldig e-mailadres waar klanten je kunnen bereiken",
+      "phone": "Je contactnummer inclusief landcode (bijv. +31)",
+      "bio": "Je bio is je kans om een goede eerste indruk te maken. Vertel potentiële klanten over je ervaring, vaardigheden en wat je uniek maakt.",
+      "bioTips": "Tips voor het schrijven van een goede bio:",
+      "bioTip1": "Begin met een korte introductie van wie je bent",
+      "bioTip2": "Benadruk je belangrijkste vaardigheden en ervaring",
+      "bioTip3": "Vermeld eventuele certificeringen of speciale kwalificaties"
+    }
   },
   "jobOfferings": {
     "title": "Dienstenaanbod",

@@ -21,6 +21,56 @@
       "findFreelancers": "Find Freelancers",
       "becomeFreelancer": "Become a Freelancer",
       "bookLocalFreelancers": "Book Local Freelancers Instantly"
+    },
+    "features": {
+      "title": "Why Choose Einsatz",
+      "instant": {
+        "title": "Instant Booking",
+        "description": "Find and book local freelancers instantly for your urgent needs"
+      },
+      "scheduling": {
+        "title": "Smart Scheduling",
+        "description": "Easy scheduling with real-time availability and calendar integration"
+      },
+      "secure": {
+        "title": "Secure Platform",
+        "description": "Safe and secure payments with verified professionals"
+      }
+    },
+    "whyEinsatz": {
+      "title": "Why Choose Einsatz?",
+      "subtitle": "Join thousands of satisfied clients and freelancers who trust Einsatz for their local service needs",
+      "trustElements": {
+        "freelancers": {
+          "title": "230+ Freelancers",
+          "description": "Trusted professionals in your area"
+        },
+        "availability": {
+          "title": "24/7 Availability",
+          "description": "Book local services anytime"
+        },
+        "satisfaction": {
+          "title": "98% Satisfaction",
+          "description": "From verified customer reviews"
+        }
+      },
+      "trustBadges": {
+        "verifiedProfessionals": "Verified Professionals",
+        "securePayments": "Secure Payments",
+        "support": "24/7 Support"
+      }
+    },
+    "stats": {
+      "freelancers": "Active Freelancers",
+      "jobs": "Jobs Completed",
+      "satisfaction": "Client Satisfaction",
+      "support": "Support Available"
+    },
+    "cta": {
+      "title": "Ready to Get Started?",
+      "description": "Join our platform today and experience the future of freelance services",
+      "findFreelancer": "Find a Freelancer",
+      "becomeFreelancer": "Become a Freelancer"
     }
   },
   "freelancer": {
@@ -234,7 +284,26 @@
     "defaultHourlyRateDescription": "This is your default rate. You can set specific rates for each job category.",
     "jobOfferings": "Job Offerings",
     "jobOfferingsDescription": "Manage your services and expertise in the dedicated job offerings page.",
-    "manageJobOfferings": "Manage Job Offerings"
+    "manageJobOfferings": "Manage Job Offerings",
+    "editAvatar": "Edit Avatar",
+    "completeness": {
+      "title": "Profile Completeness",
+      "complete": "Your profile is complete! Great job!",
+      "good": "Your profile is looking good! Add a few more details to make it even better.",
+      "partial": "Your profile is partially complete. Add more information to improve your visibility.",
+      "needsInfo": "Your profile needs more information. Complete it to increase your chances of getting hired."
+    },
+    "hints": {
+      "firstName": "Your first name as it appears on official documents",
+      "lastName": "Your last name as it appears on official documents",
+      "email": "A valid email address where clients can reach you",
+      "phone": "Your contact number including country code (e.g., +31)",
+      "bio": "Your bio is your chance to make a great first impression. Tell potential clients about your experience, skills, and what makes you unique.",
+      "bioTips": "Tips for writing a great bio:",
+      "bioTip1": "Start with a brief introduction of who you are",
+      "bioTip2": "Highlight your key skills and experience",
+      "bioTip3": "Mention any certifications or special qualifications"
+    }
   },
   "jobOfferings": {
     "title": "Job Offerings",
@@ -529,7 +598,6 @@
       "hours": "hours",
       "contactSupport": "Contact Support",
       "unpaid": "Unpaid"
-      
     }
   }
 }

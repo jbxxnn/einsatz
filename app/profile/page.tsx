@@ -62,6 +62,12 @@ import { toast } from "@/lib/toast"
 import LoadingSpinner from "@/components/loading-spinner"
 import SidebarNav from "@/components/sidebar-nav"
 import { useTranslation } from "@/lib/i18n"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 // import { LocationSearch } from "@/components/location-search"
 // import { JobCategorySelector } from "@/components/job-category-selector"
 // import { JobSubcategorySelector } from "@/components/job-subcategory-selector"
@@ -313,7 +319,7 @@ export default function ProfilePage() {
             <div className="bg-background rounded-lg shadow-sm border overflow-hidden">
               {/* Banner and Photo */}
               <div className="relative">
-                <div className="h-40 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400"></div>
+                <div className="h-32 bg-gradient-to-r from-black/5 via-black/3 to-background"></div>
                 <div className="absolute bottom-0 left-8 transform translate-y-1/2">
                   <div className="relative">
                     <div className="h-24 w-24 rounded-full border-4 border-background overflow-hidden bg-background">
@@ -326,8 +332,8 @@ export default function ProfilePage() {
                     </div>
                     <button
                       onClick={handleAvatarClick}
-                      className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 shadow-sm"
-                      title="Edit Avatar"
+                      className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 shadow-sm hover:bg-primary/90 transition-colors"
+                      title={t("profile.editAvatar")}
                       type="button"
                     >
                       <Pencil className="h-4 w-4" />
@@ -338,20 +344,43 @@ export default function ProfilePage() {
                       accept="image/*"
                       className="hidden"
                       onChange={handleAvatarChange}
-                      title="Edit"
+                      title={t("profile.editAvatar")}
                     />
                   </div>
                 </div>
               </div>
 
               <div className="pt-16 px-8 pb-8">
-                <h2 className="text-xl font-semibold mb-6">{t("profile.yourPhoto")}</h2>
-                <p className="text-sm text-muted-foreground mb-4">{t("profile.yourPhotoDescription")}</p>
-                <div className="flex gap-3">
-                  <Button type="button" variant="outline" size="sm" onClick={handleAvatarClick}>
-                    <Upload className="h-4 w-4 mr-2" />
-                    {t("profile.uploadNew")}
-                  </Button>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-semibold mb-2">{t("profile.yourPhoto")}</h2>
+                    <p className="text-sm text-muted-foreground">{t("profile.yourPhotoDescription")}</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" size="sm" onClick={handleAvatarClick}>
+                      <Upload className="h-4 w-4 mr-2" />
+                      {t("profile.uploadNew")}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Profile Completeness */}
+                <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium">{t("profile.completeness.title")}</h3>
+                    <span className="text-sm font-medium text-primary">
+                      {calculateProfileCompleteness(profile)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{ width: `${calculateProfileCompleteness(profile)}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    {getCompletenessMessage(calculateProfileCompleteness(profile), t)}
+                  </div>
                 </div>
               </div>
             </div>
@@ -365,7 +394,19 @@ export default function ProfilePage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="firstName">{t("profile.firstName")}</Label>
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="firstName">{t("profile.firstName")}</Label>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{t("profile.hints.firstName")}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
                         <Input
                           id="firstName"
                           value={firstName}
@@ -374,18 +415,54 @@ export default function ProfilePage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName">{t("profile.lastName")}</Label>
+                        <div className="flex items-center gap-2">
+                          <Label htmlFor="lastName">{t("profile.lastName")}</Label>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{t("profile.hints.lastName")}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
                         <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">{t("profile.email")}</Label>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="email">{t("profile.email")}</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{t("profile.hints.email")}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">{t("profile.phone")}</Label>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="phone">{t("profile.phone")}</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{t("profile.hints.phone")}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
                     </div>
 
@@ -429,18 +506,39 @@ export default function ProfilePage() {
 
                 {/* Bio */}
                 <div className="bg-background rounded-lg shadow-sm border p-8">
-                  <h2 className="text-xl font-semibold mb-6">{t("profile.bio")}</h2>
-                  <div className="space-y-2">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold">{t("profile.bio")}</h2>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-sm">
+                          <p>{t("profile.hints.bio")}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="space-y-4">
                     <Textarea
                       id="bio"
                       placeholder={t("profile.bioPlaceholder")}
                       rows={6}
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
+                      className="resize-none"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      {t("profile.bioDescription")}
-                    </p>
+                    <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <div className="space-y-1">
+                        <p>{t("profile.hints.bioTips")}</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>{t("profile.hints.bioTip1")}</li>
+                          <li>{t("profile.hints.bioTip2")}</li>
+                          <li>{t("profile.hints.bioTip3")}</li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -507,5 +605,39 @@ export default function ProfilePage() {
       </div>
     </div>
   )
+}
+
+function calculateProfileCompleteness(profile: Profile | null): number {
+  if (!profile) return 0
+
+  const fields = [
+    profile.first_name,
+    profile.last_name,
+    profile.email,
+    profile.phone,
+    profile.bio,
+    profile.location,
+    profile.avatar_url,
+  ]
+
+  // Add freelancer-specific fields
+  if (profile.user_type === 'freelancer') {
+    fields.push(
+      profile.hourly_rate?.toString(),
+      (profile.metadata as any)?.role,
+      profile.latitude?.toString(),
+      profile.longitude?.toString()
+    )
+  }
+
+  const completedFields = fields.filter(field => field && field.toString().trim() !== '').length
+  return Math.round((completedFields / fields.length) * 100)
+}
+
+function getCompletenessMessage(percentage: number, t: (key: string) => string): string {
+  if (percentage >= 90) return t("profile.completeness.complete")
+  if (percentage >= 70) return t("profile.completeness.good")
+  if (percentage >= 40) return t("profile.completeness.partial")
+  return t("profile.completeness.needsInfo")
 }
 
