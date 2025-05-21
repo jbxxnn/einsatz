@@ -623,10 +623,10 @@ function calculateProfileCompleteness(profile: Profile | null): number {
   // Add freelancer-specific fields
   if (profile.user_type === 'freelancer') {
     fields.push(
-      profile.hourly_rate?.toString(),
-      (profile.metadata as any)?.role,
-      profile.latitude?.toString(),
-      profile.longitude?.toString()
+      profile.hourly_rate?.toString() || null,
+      (profile.metadata as any)?.role || null,
+      profile.latitude?.toString() || null,
+      profile.longitude?.toString() || null
     )
   }
 
