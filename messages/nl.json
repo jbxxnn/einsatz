@@ -303,6 +303,49 @@
       "bioTip1": "Begin met een korte introductie van wie je bent",
       "bioTip2": "Benadruk je belangrijkste vaardigheden en ervaring",
       "bioTip3": "Vermeld eventuele certificeringen of speciale kwalificaties"
+    },
+    "wildcardCategories": {
+      "title": "Wildcard Categorieën",
+      "description": "Selecteer de soorten werk die je wilt doen. Dit helpt klanten je te vinden, zelfs als ze niet weten welke specifieke vaardigheden ze nodig hebben.",
+      "enableWildcard": "Wildcard Matching Inschakelen",
+      "enableWildcardDescription": "Sta klanten toe je te vinden via wildcard categorieën",
+      "enableWildcardTooltip": "Laat klanten je vinden, zelfs als ze niet zeker weten welke dienst ze precies nodig hebben.",
+      "selectCategories": "Selecteer Categorieën",
+      "selectCategoriesDescription": "Kies de soorten werk die je wilt doen",
+      "categories": {
+        "physical_work": {
+          "label": "Fysiek Werk",
+          "description": "Ik ben fysiek in staat en kan fysieke taken uitvoeren"
+        },
+        "customer_facing": {
+          "label": "Klantgericht Werk",
+          "description": "Ik heb goede representatieve en communicatieve vaardigheden"
+        },
+        "outdoor_work": {
+          "label": "Buitenwerk",
+          "description": "Ik heb geen problemen met werken in verschillende weersomstandigheden"
+        },
+        "odd_hours": {
+          "label": "Flexibele Uren",
+          "description": "Ik ben beschikbaar voor vroege ochtenden, late avonden of weekenden"
+        },
+        "repetitive_work": {
+          "label": "Repetitieve Taken",
+          "description": "Ik heb geen problemen met repetitief of routinematig werk"
+        },
+        "analytical_work": {
+          "label": "Analytisch Werk",
+          "description": "Ik heb probleemoplossende en analytische vaardigheden"
+        },
+        "creative_work": {
+          "label": "Creatief Werk",
+          "description": "Ik heb creatieve vaardigheden en innovatief denken"
+        }
+      },
+      "saveChanges": "Wijzigingen Opslaan",
+      "saving": "Opslaan...",
+      "updateSuccess": "Je wildcard instellingen zijn succesvol bijgewerkt.",
+      "updateError": "Het opslaan van je wildcard instellingen is mislukt. Probeer het opnieuw."
     }
   },
   "jobOfferings": {
@@ -315,7 +358,7 @@
     "cardAddOfferings": "Voeg hieronder dienstcategorieën toe om boekingen te ontvangen.",
     "cardSetupAvailability": "Beschikbaarheid instellen",
     "cardMaxOfferings": "Maximaal aantal diensten bereikt",
-    "cardMaxOfferingsDescription": "Je hebt het maximum van {MAX_JOB_OFFERINGS} diensten bereikt. Om een nieuwe dienst toe te voegen, verwijder eerst een bestaande.",
+    "cardMaxOfferingsDescription": "Je hebt het maximum van 3 diensten bereikt. Om een nieuwe dienst toe te voegen, verwijder eerst een bestaande.",
     "cardAddNewOffering": "Nieuwe dienst toevoegen",
     "cardCategory": "Dienstcategorie",
     "cardSubcategory": "Subcategorie",

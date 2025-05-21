@@ -303,6 +303,49 @@
       "bioTip1": "Start with a brief introduction of who you are",
       "bioTip2": "Highlight your key skills and experience",
       "bioTip3": "Mention any certifications or special qualifications"
+    },
+    "wildcardCategories": {
+      "title": "Wildcard Categories",
+      "description": "Select the types of work you're willing to do. This helps clients find you even if they don't know your specific skills.",
+      "enableWildcard": "Enable Wildcard Matching",
+      "enableWildcardDescription": "Allow clients to find you through wildcard categories",
+      "enableWildcardTooltip": "Let clients find you even if they're unsure what exact service they need.",
+      "selectCategories": "Select Categories",
+      "selectCategoriesDescription": "Choose the types of work you're willing to do",
+      "categories": {
+        "physical_work": {
+          "label": "Physical Work",
+          "description": "I'm able-bodied and can perform physical tasks"
+        },
+        "customer_facing": {
+          "label": "Customer-Facing Work",
+          "description": "I have good representation and communication skills"
+        },
+        "outdoor_work": {
+          "label": "Outdoor Work",
+          "description": "I don't mind working in different weather conditions"
+        },
+        "odd_hours": {
+          "label": "Flexible Hours",
+          "description": "I'm available to work early mornings, late nights, or weekends"
+        },
+        "repetitive_work": {
+          "label": "Repetitive Tasks",
+          "description": "I don't mind repetitive or routine work"
+        },
+        "analytical_work": {
+          "label": "Analytical Work",
+          "description": "I have problem-solving and analytical skills"
+        },
+        "creative_work": {
+          "label": "Creative Work",
+          "description": "I have creative skills and innovative thinking"
+        }
+      },
+      "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "updateSuccess": "Your wildcard settings have been updated successfully.",
+      "updateError": "Failed to save your wildcard settings. Please try again."
     }
   },
   "jobOfferings": {
@@ -315,7 +358,7 @@
     "cardAddOfferings": "Add job categories below to start receiving bookings.",
     "cardSetupAvailability": "Setup Availability",
     "cardMaxOfferings": "Maximum offerings reached",
-    "cardMaxOfferingsDescription": "You have reached the maximum of {MAX_JOB_OFFERINGS} job offerings. To add a new offering, please remove an existing one first.",
+    "cardMaxOfferingsDescription": "You have reached the maximum of 3 job offerings. To add a new offering, please remove an existing one first.",
     "cardAddNewOffering": "Add New Job Offering",
     "cardCategory": "Job Category",
     "cardSubcategory": "Job Subcategory",

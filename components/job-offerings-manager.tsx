@@ -266,7 +266,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>{t("jobOfferings.cardMaxOfferings")}</AlertTitle>
           <AlertDescription>
-            {t("jobOfferings.cardMaxOfferingsDescription")}
+            {t("jobOfferings.cardMaxOfferingsDescription", { MAX_JOB_OFFERINGS: 3 })}
           </AlertDescription>
         </Alert>
       ) : (
