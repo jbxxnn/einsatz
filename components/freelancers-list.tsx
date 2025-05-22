@@ -97,7 +97,7 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
   const initials = `${freelancer.first_name?.[0] || ""}${freelancer.last_name?.[0] || ""}`.toUpperCase()
 
   return (
-    <Card>
+    <Card className="transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:scale-[1.01]">
       <Link href={`/freelancers/${freelancer.id}`} passHref>
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row gap-4">
