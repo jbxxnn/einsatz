@@ -15,6 +15,7 @@ import { toast } from "@/lib/toast"
 import { useRouter } from "next/navigation"
 import LoadingSpinner from "@/components/loading-spinner"
 import { useTranslation } from "@/lib/i18n"
+import FreelancerOnboardingProgress from "@/components/freelancer-onboarding-progress"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -207,6 +208,7 @@ export default function DashboardPage() {
 
           <div className="lg:col-span-3 space-y-6">
       <h1 className="text-3xl font-bold mb-6">{t("dashboard.title")}</h1>
+      <FreelancerOnboardingProgress profile={profile} />
 
       <div className="space-y-8">
         {/* Stats section - loads first */}

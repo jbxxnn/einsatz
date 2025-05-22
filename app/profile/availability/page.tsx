@@ -11,6 +11,7 @@ import type { Database } from "@/lib/database.types"
 import SidebarNav from "@/components/sidebar-nav"
 import AvailabilityCalendar from "@/components/availability-calendar"
 import LoadingSpinner from "@/components/loading-spinner"
+import FreelancerOnboardingProgress from "@/components/freelancer-onboarding-progress"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
@@ -98,6 +99,7 @@ export default function AvailabilityPage() {
                 </p>
               </div>
             </div>
+            <FreelancerOnboardingProgress profile={profile} />
 
             <Card>
               <CardHeader>

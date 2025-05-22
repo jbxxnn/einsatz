@@ -644,5 +644,68 @@
       "contactSupport": "Contact Support",
       "unpaid": "Unpaid"
     }
+  },
+  "onboarding": {
+    "title": "Complete Your Profile",
+    "nextStep": "Next step",
+    "completeStep": "Complete Step",
+    "profile": {
+      "title": "Profile Information",
+      "description": "Add your personal and professional details"
+    },
+    "jobOfferings": {
+      "title": "Job Offerings",
+      "description": "Create services you want to offer"
+    },
+    "availability": {
+      "title": "Availability",
+      "description": "Set your working hours and schedule"
+    },
+    "payments": {
+      "title": "Payment Methods",
+      "description": "Set up how you want to get paid"
+    }
+  },
+  "availability": {
+    "calendar": {
+      "title": "Availability Calendar",
+      "description": "Select dates to view and manage your availability"
+    },
+    "status": {
+      "guaranteed": "Guaranteed",
+      "tentative": "Tentative",
+      "unavailable": "Unavailable"
+    },
+    "actions": {
+      "add": "Add",
+      "addAvailability": "Add Availability"
+    },
+    "noAvailability": "No availability set for this date",
+    "recurrence": {
+      "repeats": "Repeats {pattern}{endDate, select, null {} other { until {endDate}}}",
+      "patterns": {
+        "weekly": "Weekly",
+        "biweekly": "Every 2 weeks",
+        "monthly": "Monthly"
+      }
+    },
+    "dialog": {
+      "addTitle": "Add Availability",
+      "editTitle": "Edit Availability",
+      "dateTimeTab": "Date & Time",
+      "recurrenceTab": "Recurrence",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "status": "Availability Status",
+      "selectStatus": "Select status",
+      "selectDate": "Select date",
+      "repeatAvailability": "Repeat this availability",
+      "repeatPattern": "Repeat Pattern",
+      "selectPattern": "Select pattern",
+      "endRecurrence": "End Recurrence",
+      "noEndDate": "No end date"
+    }
   }
 }

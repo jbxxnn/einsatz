@@ -16,6 +16,7 @@ import type { Database } from "@/lib/database.types"
 import LoadingSpinner from "@/components/loading-spinner"
 import SidebarNav from "@/components/sidebar-nav"
 import { useTranslation } from "@/lib/i18n"
+import FreelancerOnboardingProgress from "@/components/freelancer-onboarding-progress"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -212,6 +213,9 @@ export default function BookingsPage() {
 
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
+            {profile.user_type === "freelancer" && (
+              <FreelancerOnboardingProgress profile={profile} />
+            )}
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold">{t("bookings.title")}</h1>
               {profile.user_type === "client" && (

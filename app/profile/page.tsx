@@ -68,6 +68,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import FreelancerOnboardingProgress from "@/components/freelancer-onboarding-progress"
 // import { LocationSearch } from "@/components/location-search"
 // import { JobCategorySelector } from "@/components/job-category-selector"
 // import { JobSubcategorySelector } from "@/components/job-subcategory-selector"
@@ -315,6 +316,7 @@ export default function ProfilePage() {
                 </Link>
               )}
             </div>
+              <FreelancerOnboardingProgress profile={profile} />
 
             <div className="bg-background rounded-lg shadow-sm border overflow-hidden">
               {/* Banner and Photo */}

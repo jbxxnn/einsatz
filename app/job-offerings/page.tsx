@@ -12,6 +12,7 @@ import SidebarNav from "@/components/sidebar-nav"
 import JobOfferingsManager from "@/components/job-offerings-manager"
 import { useTranslation } from "@/lib/i18n"
 import WildcardCategoriesForm from "@/components/wildcard-categories-form"
+import FreelancerOnboardingProgress from "@/components/freelancer-onboarding-progress"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
@@ -100,6 +101,7 @@ export default function JobOfferingsPage() {
                 </p>
               </div>
             </div>
+            <FreelancerOnboardingProgress profile={profile} />
 
             <Card>
               <CardHeader>

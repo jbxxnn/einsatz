@@ -15,6 +15,7 @@ import { useOptimizedSupabase } from "./optimized-supabase-provider"
 import { format, isAfter, isBefore, addWeeks, addMonths } from "date-fns"
 import { CalendarIcon, Clock, Plus, Trash2, RefreshCw, AlertCircle, CheckCircle, HelpCircle } from "lucide-react"
 import { toast } from "@/lib/toast"
+import { useTranslation } from "@/lib/i18n"
 
 type AvailabilityEntry = {
   id?: string
@@ -32,6 +33,7 @@ type AvailabilityCalendarProps = {
 }
 
 export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalendarProps) {
+  const { t } = useTranslation()
   const { supabase } = useOptimizedSupabase()
   const [date, setDate] = useState<Date>(new Date())
   const [availability, setAvailability] = useState<AvailabilityEntry[]>([])
@@ -282,8 +284,8 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Availability Calendar</CardTitle>
-          <CardDescription>Select dates to view and manage your availability</CardDescription>
+          {/* <CardTitle>{t("availability.calendar.title")}</CardTitle> */}
+          {/* <CardDescription>{t("availability.calendar.description")}</CardDescription> */}
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
@@ -308,15 +310,15 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
               <div className="mt-4 flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-green-500" />
-                  <span className="text-sm">Guaranteed</span>
+                  <span className="text-sm">{t("availability.status.guaranteed")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-amber-500" />
-                  <span className="text-sm">Tentative</span>
+                  <span className="text-sm">{t("availability.status.tentative")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-gray-300" />
-                  <span className="text-sm">Unavailable</span>
+                  <span className="text-sm">{t("availability.status.unavailable")}</span>
                 </div>
               </div>
             </div>
@@ -326,15 +328,15 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                 <h3 className="text-lg font-medium">{format(date, "EEEE, MMMM d, yyyy")}</h3>
                 <Button onClick={handleAddAvailability} size="sm">
                   <Plus className="mr-1 h-4 w-4" />
-                  Add
+                  {t("availability.actions.add")}
                 </Button>
               </div>
 
               {selectedDateEntries.length === 0 ? (
                 <div className="rounded-lg border border-dashed p-6 text-center">
-                  <p className="text-sm text-muted-foreground">No availability set for this date</p>
+                  <p className="text-sm text-muted-foreground">{t("availability.noAvailability")}</p>
                   <Button variant="outline" size="sm" className="mt-2" onClick={handleAddAvailability}>
-                    Add Availability
+                    {t("availability.actions.addAvailability")}
                   </Button>
                 </div>
               ) : (
@@ -356,9 +358,12 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <RefreshCw className="h-3 w-3" />
                                 <span>
-                                  Repeats {entry.recurrence_pattern}
-                                  {entry.recurrence_end_date &&
-                                    ` until ${format(new Date(entry.recurrence_end_date), "MMM d, yyyy")}`}
+                                  {t("availability.recurrence.repeats", {
+                                    pattern: t(`availability.recurrence.patterns.${entry.recurrence_pattern}`),
+                                    endDate: entry.recurrence_end_date
+                                      ? format(new Date(entry.recurrence_end_date), "MMM d, yyyy")
+                                      : ""
+                                  })}
                                 </span>
                               </div>
                             )}
@@ -371,7 +376,7 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                               ) : (
                                 <AlertCircle className="h-4 w-4 text-gray-400" />
                               )}
-                              <span className="text-sm capitalize">{entry.certainty_level}</span>
+                              <span className="text-sm capitalize">{t(`availability.status.${entry.certainty_level}`)}</span>
                             </div>
                           </div>
 
@@ -416,24 +421,26 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{selectedEntry ? "Edit Availability" : "Add Availability"}</DialogTitle>
+            <DialogTitle>
+              {selectedEntry ? t("availability.dialog.editTitle") : t("availability.dialog.addTitle")}
+            </DialogTitle>
           </DialogHeader>
 
           <Tabs defaultValue="date-time">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="date-time">Date & Time</TabsTrigger>
-              <TabsTrigger value="recurrence">Recurrence</TabsTrigger>
+              <TabsTrigger value="date-time">{t("availability.dialog.dateTimeTab")}</TabsTrigger>
+              <TabsTrigger value="recurrence">{t("availability.dialog.recurrenceTab")}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="date-time" className="space-y-4 pt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start-date">Start Date</Label>
+                  <Label htmlFor="start-date">{t("availability.dialog.startDate")}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button id="start-date" variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, "PPP") : "Select date"}
+                        {startDate ? format(startDate, "PPP") : t("availability.dialog.selectDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -448,12 +455,12 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="end-date">End Date</Label>
+                  <Label htmlFor="end-date">{t("availability.dialog.endDate")}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button id="end-date" variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, "PPP") : "Select date"}
+                        {endDate ? format(endDate, "PPP") : t("availability.dialog.selectDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -470,39 +477,39 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="start-time">Start Time</Label>
+                  <Label htmlFor="start-time">{t("availability.dialog.startTime")}</Label>
                   <Input id="start-time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="end-time">End Time</Label>
+                  <Label htmlFor="end-time">{t("availability.dialog.endTime")}</Label>
                   <Input id="end-time" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="certainty">Availability Status</Label>
+                <Label htmlFor="certainty">{t("availability.dialog.status")}</Label>
                 <Select value={certaintyLevel} onValueChange={(value) => setCertaintyLevel(value as any)}>
                   <SelectTrigger id="certainty">
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t("availability.dialog.selectStatus")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="guaranteed">
                       <div className="flex items-center">
                         <div className="mr-2 h-2 w-2 rounded-full bg-green-500" />
-                        Guaranteed
+                        {t("availability.status.guaranteed")}
                       </div>
                     </SelectItem>
                     <SelectItem value="tentative">
                       <div className="flex items-center">
                         <div className="mr-2 h-2 w-2 rounded-full bg-amber-500" />
-                        Tentative
+                        {t("availability.status.tentative")}
                       </div>
                     </SelectItem>
                     <SelectItem value="unavailable">
                       <div className="flex items-center">
                         <div className="mr-2 h-2 w-2 rounded-full bg-gray-300" />
-                        Unavailable
+                        {t("availability.status.unavailable")}
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -517,27 +524,27 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                   checked={isRecurring}
                   onCheckedChange={(checked) => setIsRecurring(checked === true)}
                 />
-                <Label htmlFor="is-recurring">Repeat this availability</Label>
+                <Label htmlFor="is-recurring">{t("availability.dialog.repeatAvailability")}</Label>
               </div>
 
               {isRecurring && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="recurrence-pattern">Repeat Pattern</Label>
+                    <Label htmlFor="recurrence-pattern">{t("availability.dialog.repeatPattern")}</Label>
                     <Select value={recurrencePattern} onValueChange={setRecurrencePattern} disabled={!isRecurring}>
                       <SelectTrigger id="recurrence-pattern">
-                        <SelectValue placeholder="Select pattern" />
+                        <SelectValue placeholder={t("availability.dialog.selectPattern")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="biweekly">Every 2 weeks</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="weekly">{t("availability.recurrence.patterns.weekly")}</SelectItem>
+                        <SelectItem value="biweekly">{t("availability.recurrence.patterns.biweekly")}</SelectItem>
+                        <SelectItem value="monthly">{t("availability.recurrence.patterns.monthly")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="recurrence-end">End Recurrence</Label>
+                    <Label htmlFor="recurrence-end">{t("availability.dialog.endRecurrence")}</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -547,7 +554,7 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                           disabled={!isRecurring}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {recurrenceEndDate ? format(recurrenceEndDate, "PPP") : "No end date"}
+                          {recurrenceEndDate ? format(recurrenceEndDate, "PPP") : t("availability.dialog.noEndDate")}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -568,9 +575,11 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
-            <Button onClick={handleSaveAvailability}>{selectedEntry ? "Update" : "Save"}</Button>
+            <Button onClick={handleSaveAvailability}>
+              {selectedEntry ? t("common.save") : t("common.save")}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
