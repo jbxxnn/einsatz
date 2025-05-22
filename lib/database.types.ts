@@ -34,6 +34,8 @@ export interface Database {
             creative_work: boolean
           } | null
           wildcard_enabled: boolean
+          profile_completeness: number
+          is_verified: boolean
         }
         Insert: {
           id: string
@@ -65,6 +67,8 @@ export interface Database {
             creative_work: boolean
           } | null
           wildcard_enabled?: boolean
+          profile_completeness?: number
+          is_verified?: boolean
         }
         Update: {
           id?: string
@@ -96,6 +100,8 @@ export interface Database {
             creative_work: boolean
           } | null
           wildcard_enabled?: boolean
+          profile_completeness?: number
+          is_verified?: boolean
         }
       }
       bookings: {

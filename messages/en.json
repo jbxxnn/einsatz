@@ -152,7 +152,8 @@
       "yearsAway": "years away",
       "hoursAway": "hours away",
       "yearsOfExperience": "years of experience"
-    }
+    },
+    "verified": "Verified"
   },
   "filters": {
     "title": "Filters",

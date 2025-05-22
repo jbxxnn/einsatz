@@ -99,7 +99,9 @@ export default function AvailabilityPage() {
                 </p>
               </div>
             </div>
-            <FreelancerOnboardingProgress profile={profile} />
+            {profile.user_type === "freelancer" && (
+              <FreelancerOnboardingProgress profile={profile} />
+            )}
 
             <Card>
               <CardHeader>

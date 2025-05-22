@@ -208,7 +208,9 @@ export default function DashboardPage() {
 
           <div className="lg:col-span-3 space-y-6">
       <h1 className="text-3xl font-bold mb-6">{t("dashboard.title")}</h1>
-      <FreelancerOnboardingProgress profile={profile} />
+      {profile.user_type === "freelancer" && (
+        <FreelancerOnboardingProgress profile={profile} />
+      )}
 
       <div className="space-y-8">
         {/* Stats section - loads first */}

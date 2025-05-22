@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { MapPin, Star } from "lucide-react"
+import { MapPin, Star, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
@@ -20,6 +20,8 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
   rating?: number
   distance?: number
   is_available_now?: boolean
+  is_verified?: boolean
+  completed_bookings?: number
 }
 
 export default function FreelancersList() {
@@ -109,9 +111,17 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
 
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-              <h3 className="text-lg font-medium">
-                {freelancer.first_name} {freelancer.last_name}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-medium">
+                  {freelancer.first_name} {freelancer.last_name}
+                </h3>
+                {freelancer.is_verified && (
+                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    {t("freelancer.verified")}
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-1">
                 <div className="text-sm font-bold">€{freelancer.hourly_rate}/hr</div>
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />

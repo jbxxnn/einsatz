@@ -79,6 +79,13 @@ export async function GET(request: Request) {
 
         const isAvailableNow = availabilityData && availabilityData.length > 0
 
+        // Check for completed bookings
+        const { data: completedBookings } = await supabase
+          .from("bookings")
+          .select("id")
+          .eq("freelancer_id", profile.id)
+          .eq("status", "completed")
+
         // Calculate distance if coordinates are available
         let distance = null
         if (latitude && longitude && profile.latitude && profile.longitude) {
@@ -95,6 +102,7 @@ export async function GET(request: Request) {
           job_offerings: formattedOfferings,
           is_available_now: isAvailableNow,
           distance: distance,
+          completed_bookings: completedBookings?.length || 0
         }
       }),
     )

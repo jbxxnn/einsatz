@@ -101,7 +101,9 @@ export default function JobOfferingsPage() {
                 </p>
               </div>
             </div>
-            <FreelancerOnboardingProgress profile={profile} />
+            {profile.user_type === "freelancer" && (
+              <FreelancerOnboardingProgress profile={profile} />
+            )}
 
             <Card>
               <CardHeader>

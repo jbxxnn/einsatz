@@ -237,6 +237,42 @@ export default function ProfilePage() {
 
       if (!user) throw new Error('User not found')
 
+      // Calculate profile completeness
+      const fields = [
+        firstName,
+        lastName,
+        email,
+        phone,
+        bio,
+        location,
+        newAvatarUrl,
+      ]
+
+      // Add freelancer-specific fields
+      if (profile?.user_type === 'freelancer') {
+        fields.push(
+          hourlyRate?.toString() || null,
+          (profile.metadata as any)?.role || null,
+          locationCoords?.lat?.toString() || null,
+          locationCoords?.lng?.toString() || null
+        )
+      }
+
+      const completedFields = fields.filter(field => field && field.toString().trim() !== '').length
+      const profileCompleteness = Math.round((completedFields / fields.length) * 100)
+
+      // Check for completed bookings if freelancer
+      let isVerified = profileCompleteness >= 90
+      if (profile?.user_type === 'freelancer') {
+        const { data: completedBookings } = await supabase
+          .from('bookings')
+          .select('id')
+          .eq('freelancer_id', user.id)
+          .eq('status', 'completed')
+        
+        isVerified = isVerified || Boolean(completedBookings?.length)
+      }
+
       const updates = {
         id: user.id,
         first_name: firstName,
@@ -257,6 +293,9 @@ export default function ProfilePage() {
         longitude: locationCoords?.lng,
         formatted_address: locationCoords?.formattedAddress,
         service_radius: profile?.user_type === 'freelancer' ? serviceRadius : null,
+        // Add profile completeness and verification status
+        profile_completeness: profileCompleteness,
+        is_verified: isVerified,
       }
 
       const { error } = await supabase.from('profiles').update(updates).eq('id', user.id)
@@ -316,7 +355,9 @@ export default function ProfilePage() {
                 </Link>
               )}
             </div>
+            {profile.user_type === "freelancer" && (
               <FreelancerOnboardingProgress profile={profile} />
+            )}
 
             <div className="bg-background rounded-lg shadow-sm border overflow-hidden">
               {/* Banner and Photo */}
