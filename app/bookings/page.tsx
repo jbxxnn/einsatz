@@ -234,21 +234,34 @@ export default function BookingsPage() {
                   (b) => new Date(b.start_time) > new Date() && ["pending", "confirmed"].includes(b.status),
                 ).length === 0 ? (
                   <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-10">
-                      <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <div className="relative w-24 h-24 mb-6">
+                        <Image
+                          src="/illustrations/calendar.svg"
+                          alt="Calendar illustration"
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
                       <h3 className="text-xl font-medium mb-2">{t("bookings.noUpcomingBookings")}</h3>
-                      <p className="text-muted-foreground text-center max-w-md mb-4">
+                      <p className="text-muted-foreground text-center max-w-md mb-6">
                         {profile.user_type === "client"
                           ? t("bookings.noUpcomingBookingsClient")
                           : t("bookings.noUpcomingBookingsFreelancer")}
                       </p>
                       {profile.user_type === "client" ? (
                         <Link href="/freelancers">
-                          <Button>{t("bookings.findFreelancers")}</Button>
+                          <Button size="lg" className="gap-2">
+                            <Calendar className="h-5 w-5" />
+                            {t("bookings.findFreelancers")}
+                          </Button>
                         </Link>
                       ) : (
                         <Link href="/profile">
-                          <Button>{t("bookings.updateProfile")}</Button>
+                          <Button size="lg" className="gap-2">
+                            <Calendar className="h-5 w-5" />
+                            {t("bookings.updateProfile")}
+                          </Button>
                         </Link>
                       )}
                     </CardContent>
@@ -369,10 +382,21 @@ export default function BookingsPage() {
                     new Date(b.start_time) < new Date() || ["completed", "cancelled", "disputed"].includes(b.status),
                 ).length === 0 ? (
                   <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-10">
-                      <Clock className="h-12 w-12 text-muted-foreground mb-4" />
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <div className="relative w-24 h-24 mb-6">
+                        <Image
+                          src="/illustrations/history.svg"
+                          alt="History illustration"
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
                       <h3 className="text-xl font-medium mb-2">{t("bookings.noPastBookings")}</h3>
-                      <p className="text-muted-foreground text-center max-w-md">{t("bookings.pastBookingsWillAppear")}</p>
+                      <p className="text-muted-foreground text-center max-w-md">
+                        {profile.user_type === "client"
+                          ? t("bookings.pastBookingsClient")
+                          : t("bookings.pastBookingsFreelancer")}
+                      </p>
                     </CardContent>
                   </Card>
                 ) : (
