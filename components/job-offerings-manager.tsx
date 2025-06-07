@@ -86,7 +86,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   }, [supabase, freelancerId])
 
   const handleAddOffering = async () => {
-    if (!selectedCategoryId || !hourlyRate) {
+    if (!selectedCategoryId) {
       toast.error(t("jobOfferings.cardAddOfferingError"))
       return
     }
@@ -118,7 +118,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           freelancer_id: freelancerId,
           category_id: selectedCategoryId,
           subcategory_id: selectedSubcategoryId,
-          hourly_rate: Number.parseFloat(hourlyRate),
+          hourly_rate: Number.parseFloat(hourlyRate) || 45.00,
           description: description,
           experience_years: experienceYears ? Number.parseFloat(experienceYears) : null,
           is_available_now: false,

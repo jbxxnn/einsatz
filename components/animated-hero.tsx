@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link"
-import { MoveRight, PhoneCall } from "lucide-react";
+import { MoveRight, PhoneCall, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
+import { useOptimizedSupabase } from "@/components/optimized-supabase-provider";
 
 interface HeroProps {
   title: string
@@ -21,11 +22,33 @@ export function Hero({
   becomeFreelancerText,
 }: HeroProps) {
   const [titleNumber, setTitleNumber] = useState(0);
+  const [profile, setProfile] = useState<any>(null);
+  const { supabase } = useOptimizedSupabase();
   const titles = useMemo(
     () => ["amazing", "new", "wonderful", "beautiful", "smart"],
     []
   );
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+          setProfile(profileData);
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, [supabase]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -38,15 +61,56 @@ export function Hero({
     return () => clearTimeout(timeoutId);
   }, [titleNumber, titles]);
 
+  const renderButtons = () => {
+    if (!profile) {
+      return (
+        <div className="flex flex-row gap-3">
+          <Link href="/freelancers">
+            <Button size="lg" className="gap-4" variant="outline">
+              {findFreelancersText} <PhoneCall className="w-4 h-4" />
+            </Button>
+          </Link>
+          <Link href="/register?type=freelancer">
+            <Button size="lg" className="gap-4">
+              {becomeFreelancerText} <MoveRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+      );
+    }
+
+    if (profile.user_type === "freelancer") {
+      return (
+        <div className="flex flex-row gap-3">
+          <Link href="/dashboard">
+            <Button size="lg" className="gap-4">
+              {t("home.hero.goToDashboard")} <LayoutDashboard className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-row gap-3">
+        <Link href="/freelancers">
+          <Button size="lg" className="gap-4">
+            {findFreelancersText} <PhoneCall className="w-4 h-4" />
+          </Button>
+        </Link>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full">
       <div className="container mx-auto">
         <div className="flex gap-8 py-20 lg:py-40 items-center justify-center flex-col">
-          <div>
+          {/* <div>
             <Button variant="secondary" size="sm" className="gap-4">
             {t("home.hero.bookLocalFreelancers")} <MoveRight className="w-4 h-4" />
             </Button>
-          </div>
+          </div> */}
           <div className="flex gap-4 flex-col">
             <h1 className="text-5xl md:text-7xl max-w-2xl tracking-tighter text-center font-regular">
               <span className="text-spektr-cyan-50">{title}</span>
@@ -80,18 +144,7 @@ export function Hero({
             {description}
             </p>
           </div>
-          <div className="flex flex-row gap-3">
-          <Link href="/freelancers">
-            <Button size="lg" className="gap-4" variant="outline">
-            {findFreelancersText} <PhoneCall className="w-4 h-4" />
-            </Button>
-            </Link>
-            <Link href="/register?type=freelancer">
-            <Button size="lg" className="gap-4">
-            {becomeFreelancerText} <MoveRight className="w-4 h-4" />
-            </Button>
-            </Link>
-          </div>
+          {renderButtons()}
         </div>
       </div>
     </div>

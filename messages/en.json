@@ -17,20 +17,21 @@
     "hero": {
       "title": "Find the Perfect Freelancer",
       "subtitle": "Connect with skilled professionals for your projects",
-      "description": "Join our platform to find talented freelancers or showcase your skills to potential clients",
+      "description": "Freelancers with commitment. Locally and directly deployable.",
       "findFreelancers": "Find Freelancers",
       "becomeFreelancer": "Become a Freelancer",
-      "bookLocalFreelancers": "Book Local Freelancers Instantly"
+      "bookLocalFreelancers": "Book Local Freelancers Instantly",
+      "goToDashboard": "Go to Dashboard"
     },
     "features": {
       "title": "Why Choose Einsatz",
       "instant": {
-        "title": "Instant Booking",
+        "title": "Direct Booking",
         "description": "Find and book local freelancers instantly for your urgent needs"
       },
       "scheduling": {
-        "title": "Smart Scheduling",
-        "description": "Easy scheduling with real-time availability and calendar integration"
+        "title": "Security within the DBA Act",
+        "description": "Easily complete the DBA check and use the appropriate contract. This way you work without the risk of being a pseudo-self-employed and within the rules."
       },
       "secure": {
         "title": "Secure Platform",
@@ -364,7 +365,9 @@
     "cardCategory": "Job Category",
     "cardSubcategory": "Job Subcategory",
     "cardHourlyRate": "Hourly Rate (€)",
-    "cardExperienceYears": "Years of Experience"
+    "cardExperienceYears": "Years of Experience",
+    "cardAddJobOffering": "Add Job Offering",
+    "cardAddOfferingError": "Error adding job offering"
   },
   "bookings": {
     "title": "Bookings",

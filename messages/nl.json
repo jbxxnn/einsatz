@@ -17,10 +17,11 @@
     "hero": {
       "title": "Vind de perfecte freelancer",
       "subtitle": "Leg contact met bekwame professionals voor jouw projecten",
-      "description": "Sluit je aan bij ons platform om getalenteerde freelancers te vinden of je vaardigheden te tonen aan potentiële klanten",
+      "description": "Freelancers met inzet. Lokaal en direct inzetbaar.",
       "findFreelancers": "Vind freelancers",
       "becomeFreelancer": "Word freelancer",
-      "bookLocalFreelancers": "Boek lokale freelancers direct"
+      "bookLocalFreelancers": "Boek lokale freelancers direct",
+      "goToDashboard": "Ga naar dashboard"  
     },
     "features": {
       "title": "Waarom Einsatz Kiezen",
@@ -29,8 +30,8 @@
         "description": "Vind en boek lokale freelancers direct voor uw dringende behoeften"
       },
       "scheduling": {
-        "title": "Slimme Planning",
-        "description": "Eenvoudige planning met real-time beschikbaarheid en kalenderintegratie"
+        "title": "Zekerheid binnen de Wet DBA",
+        "description": "Doorloop eenvoudig de DBA-check en gebruik het juiste contract. Zo werk je zonder risico op schijnzelfstandigheid en binnen de regels."
       },
       "secure": {
         "title": "Veilig Platform",
@@ -364,7 +365,9 @@
     "cardCategory": "Dienstcategorie",
     "cardSubcategory": "Subcategorie",
     "cardHourlyRate": "Uurtarief (€)",
-    "cardExperienceYears": "Jaren ervaring"
+    "cardExperienceYears": "Jaren ervaring",
+    "cardAddJobOffering": "Dienst toevoegen",
+    "cardAddOfferingError": "Fout bij het toevoegen van dienst"
   },
   "bookings": {
     "title": "Boekingen",
