@@ -1,253 +1,167 @@
 'use client'
 
-import { Hero } from "@/components/animated-hero"
 import { useTranslation } from "@/lib/i18n"
-import { PhoneCall, Calendar, Shield, Users, Clock, Star, CheckCircle, MapPin, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { useFreelancers } from "@/lib/data-fetching"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { Database } from "@/lib/database.types"
-import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
-import { useEffect, useState } from "react"
-
-type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
-  job_offerings?: Array<{
-    id: string
-    category_name: string
-  }>
-  rating?: number
-  distance?: number
-  is_available_now?: boolean
-}
+import { ArrowRight, MessageCircle } from "lucide-react"
 
 export default function Home() {
   const { t } = useTranslation()
-  const { data, error, isLoading } = useFreelancers({})
-  const freelancers = data?.freelancers || []
-  const [profile, setProfile] = useState<any>(null);
-  const { supabase } = useOptimizedSupabase();
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-          setProfile(profileData);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
-
-    fetchProfile();
-  }, [supabase]);
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] transform bg-white bg-[radial-gradient(60%_120%_at_50%_50%,hsla(0,0%,100%,0)_0,rgba(252,205,238,.5)_100%)]">
-      <section className="w-full">
-        <Hero 
-          title={t("home.hero.title")}
-          subtitle={t("home.hero.subtitle")}
-          description={t("home.hero.description")}
-          findFreelancersText={t("home.hero.findFreelancers")}
-          becomeFreelancerText={t("home.hero.becomeFreelancer")}
-        />
-      </section>
-
-      {/* Why Einsatz Section - Only show for non-freelancers */}
-      {profile?.user_type !== "freelancer" && (
-        <section className="w-full py-20 bg-muted/50">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold mb-4">{t("home.whyEinsatz.title")}</h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                {t("home.whyEinsatz.subtitle")}
-              </p>
+    <div className="min-h-screen bg-[#0e2316] text-white relative overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: 'url(/Hero-BG-Pattern-31kpi5Kk.webp)'
+        }}
+      ></div>
+      
+      {/* Dark Overlay for better text readability */}
+      <div className="absolute inset-0 bg-[#0e2316]/20"></div>
+      
+      {/* Content */}
+      <div className="relative z-10">
+      {/* Header */}
+      <header className="py-8 px-[15%] w-full">
+        <div className="flex items-center justify-between bg-[#0e2316] rounded-xl p-4 border border-[#3e4f454d]">
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-[#33CC99] rounded-full flex items-center justify-center animate-pulse" >
+              {/* <span className="text-[#1A302B] font-bold text-sm">E</span> */}
             </div>
+            <div>
+              <h1 className="text-xl font-bold">Einsatz</h1>
+              <p className="text-xs text-gray-300">Freelance Platform</p>
+            </div>
+          </div>
 
-            {/* Example Freelancer Cards */}
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {isLoading ? (
-                  // Loading skeletons
-                  [...Array(12)].map((_, i) => (
-                    <Card key={i} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col gap-4">
-                          <div className="flex items-center gap-4">
-                            <Skeleton className="h-16 w-16 rounded-full" />
-                            <div className="space-y-2">
-                              <Skeleton className="h-4 w-32" />
-                              <Skeleton className="h-3 w-16" />
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <Skeleton className="h-6 w-20" />
-                            <Skeleton className="h-6 w-24" />
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Skeleton className="h-3 w-3" />
-                            <Skeleton className="h-3 w-24" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : error ? (
-                  <div className="col-span-full text-center text-muted-foreground">
-                    {t("common.error")}
-                  </div>
-                ) : freelancers.length === 0 ? (
-                  <div className="col-span-full text-center text-muted-foreground">
-                    {t("freelancers.results.none")}
-                  </div>
-                ) : (
-                  freelancers.slice(0, 12).map((freelancer: Freelancer) => (
-                    <Card key={freelancer.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col gap-4">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-16 w-16">
-                              <AvatarImage src={freelancer.avatar_url || "/placeholder.svg"} alt={`${freelancer.first_name} ${freelancer.last_name}`} />
-                              <AvatarFallback>{freelancer.first_name?.[0]}{freelancer.last_name?.[0]}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <h3 className="text-lg font-medium">{freelancer.first_name} {freelancer.last_name}</h3>
-                              <div className="flex items-center gap-1">
-                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                <span className="text-sm font-medium">{freelancer.rating || "4.5"}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {freelancer.job_offerings?.slice(0, 2).map((offering) => (
-                              <Badge key={offering.id} variant="secondary">
-                                {offering.category_name}
-                              </Badge>
-                            ))}
-                          </div>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <MapPin className="h-3 w-3" />
-                            <span>{freelancer.location || "Location not specified"}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
+              <a href="/freelancers"><span className="text-xs">Find Freelancers</span></a>
+            </div>
+            <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
+              <a href="/login"><span className="text-xs">Jobs Offerings</span></a>
+            </div>
+            <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
+              <a href="#"><span className="text-xs">Learn more</span></a>
+            </div>
+          </nav>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            <Link href="/login">
+              <Button variant="ghost" className="text-[#1A302B] bg-[#ecf7e9] hover:bg-[#33CC99] px-10 rounded-lg">
+                Login
+              </Button>
+            </Link>
+            <Link href="/register">
+            <Button className="bg-[#33CC99] text-[#1A302B] hover:bg-[#ecf7e9] px-10 rounded-lg">
+              Open an account
+            </Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="w-full px-8 py-20">
+        
+        <div className="container mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            {/* Left Side - Text Content */}
+            <div className="flex-1 space-y-8">
+              <div className="space-y-4">
+                <h1 className="text-5xl lg:text-5xl font-semibold leading-tight font-playfair">
+                  <span className="block">
+                  Connect with skilled professionals for your projects.</span>
+                </h1>
               </div>
+              
+              <p className="text-lg font-regular text-white max-w-2xl leading-relaxed font-helvetica">
+              Freelancers with commitment. Locally and directly deployable.
+              </p>
 
-              {/* See All Freelancers Button */}
-              <div className="flex justify-center mt-8">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/freelancers">
-                  <Button size="lg" variant="outline">
-                    {t("common.findFreelancers")}
+                  <Button size="lg" className="bg-[#33CC99] text-[#1A302B] hover:bg-[#2BB88A] px-8 py-4 text-lg font-semibold">
+                  Find Freelancers <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
               </div>
             </div>
 
-            {/* Trust Badges */}
-            <div className="mt-16 flex flex-wrap justify-center gap-8 items-center">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium">{t("home.whyEinsatz.trustBadges.verifiedProfessionals")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium">{t("home.whyEinsatz.trustBadges.securePayments")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium">{t("home.whyEinsatz.trustBadges.support")}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+            {/* Right Side - Visual Collage */}
+            <div className="flex-1 relative">
+              <div className="relative w-full h-[600px]">
+                {/* Abstract Shape Container */}
+                <div className="absolute inset-0">
+                  <svg viewBox="0 0 600 600" className="w-full h-full">
+                    <defs>
+                      <linearGradient id="shapeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#33CC99" stopOpacity="0.1" />
+                        <stop offset="100%" stopColor="#F2C94C" stopOpacity="0.1" />
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Main abstract shape */}
+                    <path
+                      d="M50 100 L200 50 L350 80 L450 150 L500 300 L450 450 L300 500 L150 480 L80 350 L50 100 Z"
+                      fill="url(#shapeGradient)"
+                      stroke="#33CC99"
+                      strokeWidth="2"
+                      opacity="0.3"
+                    />
+                    
+                    {/* Additional geometric elements */}
+                    <rect x="100" y="120" width="120" height="80" fill="#33CC99" opacity="0.2" rx="8" />
+                    <polygon points="300,200 350,150 400,200 350,250" fill="#F2C94C" opacity="0.2" />
+                    <circle cx="400" cy="350" r="60" fill="#33CC99" opacity="0.15" />
+                  </svg>
+                </div>
 
-      {/* Features Section */}
-      <section className="w-full py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">{t("home.features.title")}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-6 rounded-lg border bg-card hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <PhoneCall className="w-6 h-6 text-primary" />
+                {/* Image Placeholders */}
+                <div className="absolute top-20 left-20 w-32 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow-lg">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">Freelancers</span>
+                  </div>
+                </div>
+
+                <div className="absolute top-40 left-40 w-40 h-32 bg-gradient-to-br from-green-400 to-green-600 rounded-lg shadow-lg">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">Projects</span>
+                  </div>
+                </div>
+
+                <div className="absolute top-60 right-20 w-48 h-36 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg shadow-lg">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">Collaboration</span>
+                  </div>
+                </div>
+
+                <div className="absolute bottom-40 left-60 w-36 h-28 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg shadow-lg">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">Success</span>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">{t("home.features.instant.title")}</h3>
-              <p className="text-muted-foreground">{t("home.features.instant.description")}</p>
-            </div>
-            <div className="p-6 rounded-lg border bg-card hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{t("home.features.scheduling.title")}</h3>
-              <p className="text-muted-foreground">{t("home.features.scheduling.description")}</p>
-            </div>
-            <div className="p-6 rounded-lg border bg-card hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                <Lock className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">{t("home.features.secure.title")}</h3>
-              <p className="text-muted-foreground">{t("home.features.secure.description")}</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Statistics Section */}
-      {/* <section className="w-full py-20 bg-muted">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <h3 className="text-4xl font-bold text-primary mb-2">1000+</h3>
-              <p className="text-muted-foreground">{t("home.stats.freelancers")}</p>
-            </div>
-            <div>
-              <h3 className="text-4xl font-bold text-primary mb-2">5000+</h3>
-              <p className="text-muted-foreground">{t("home.stats.jobs")}</p>
-            </div>
-            <div>
-              <h3 className="text-4xl font-bold text-primary mb-2">98%</h3>
-              <p className="text-muted-foreground">{t("home.stats.satisfaction")}</p>
-            </div>
-            <div>
-              <h3 className="text-4xl font-bold text-primary mb-2">24/7</h3>
-              <p className="text-muted-foreground">{t("home.stats.support")}</p>
-            </div>
-          </div>
-        </div>
-      </section> */}
-
-      {/* CTA Section */}
-      <section className="w-full py-20 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-4">{t("home.cta.title")}</h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto">{t("home.cta.description")}</p>
-          <div className="flex gap-4 justify-center">
-            <Link href="/register?type=client">
-              <Button size="lg" variant="secondary">
-                {t("home.cta.findFreelancer")}
-              </Button>
-            </Link>
-            <Link href="/register?type=freelancer">
-              <Button size="lg" variant="outline" className="bg-transparent">
-                {t("home.cta.becomeFreelancer")}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Support Chat Icon */}
+      <div className="fixed bottom-8 right-8">
+        <button 
+          className="w-12 h-12 bg-[#33CC99] rounded-full flex items-center justify-center shadow-lg hover:bg-[#2BB88A] transition-colors"
+          aria-label="Support chat"
+        >
+          <MessageCircle className="w-6 h-6 text-[#1A302B]" />
+        </button>
+      </div>
+      </div>
     </div>
   )
 }

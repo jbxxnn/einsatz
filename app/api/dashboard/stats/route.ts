@@ -35,87 +35,45 @@ export async function GET() {
 
     // Get stats based on user type
     if (profile.user_type === "client") {
-      // Total bookings
-      const { count: totalBookings, error: totalError } = await supabase
+      // Single query to get all booking data for client
+      const { data: bookings, error: bookingsError } = await supabase
         .from("bookings")
-        .select("*", { count: "exact", head: true })
+        .select("status, total_amount, payment_status, start_time")
         .eq("client_id", session.user.id)
 
-      if (totalError) throw totalError
-      stats.totalBookings = totalBookings
+      if (bookingsError) throw bookingsError
 
-      // Upcoming bookings
-      const { count: upcomingBookings, error: upcomingError } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .eq("client_id", session.user.id)
-        .gte("start_time", now)
-        .in("status", ["pending", "confirmed"])
-
-      if (upcomingError) throw upcomingError
-      stats.upcomingBookings = upcomingBookings
-
-      // Completed bookings
-      const { count: completedBookings, error: completedError } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .eq("client_id", session.user.id)
-        .eq("status", "completed")
-
-      if (completedError) throw completedError
-      stats.completedBookings = completedBookings
-
-      // Total spent
-      const { data: payments, error: paymentsError } = await supabase
-        .from("bookings")
-        .select("total_amount")
-        .eq("client_id", session.user.id)
-        .eq("payment_status", "paid")
-
-      if (paymentsError) throw paymentsError
-      stats.totalSpent = payments.reduce((sum, booking) => sum + booking.total_amount, 0)
+      // Calculate stats from the single query result
+      stats.totalBookings = bookings.length
+      stats.upcomingBookings = bookings.filter(b => 
+        new Date(b.start_time) >= new Date(now) && 
+        ["pending", "confirmed"].includes(b.status)
+      ).length
+      stats.completedBookings = bookings.filter(b => b.status === "completed").length
+      stats.totalSpent = bookings
+        .filter(b => b.payment_status === "paid")
+        .reduce((sum, booking) => sum + (booking.total_amount || 0), 0)
     } else {
-      // Total bookings for freelancer
-      const { count: totalBookings, error: totalError } = await supabase
+      // Single query to get all booking data for freelancer
+      const { data: bookings, error: bookingsError } = await supabase
         .from("bookings")
-        .select("*", { count: "exact", head: true })
+        .select("status, total_amount, payment_status, start_time")
         .eq("freelancer_id", session.user.id)
 
-      if (totalError) throw totalError
-      stats.totalBookings = totalBookings
+      if (bookingsError) throw bookingsError
 
-      // Upcoming bookings
-      const { count: upcomingBookings, error: upcomingError } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .eq("freelancer_id", session.user.id)
-        .gte("start_time", now)
-        .in("status", ["pending", "confirmed"])
+      // Calculate stats from the single query result
+      stats.totalBookings = bookings.length
+      stats.upcomingBookings = bookings.filter(b => 
+        new Date(b.start_time) >= new Date(now) && 
+        ["pending", "confirmed"].includes(b.status)
+      ).length
+      stats.completedBookings = bookings.filter(b => b.status === "completed").length
+      stats.totalEarned = bookings
+        .filter(b => b.payment_status === "paid")
+        .reduce((sum, booking) => sum + (booking.total_amount || 0), 0)
 
-      if (upcomingError) throw upcomingError
-      stats.upcomingBookings = upcomingBookings
-
-      // Completed bookings
-      const { count: completedBookings, error: completedError } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .eq("freelancer_id", session.user.id)
-        .eq("status", "completed")
-
-      if (completedError) throw completedError
-      stats.completedBookings = completedBookings
-
-      // Total earned
-      const { data: earnings, error: earningsError } = await supabase
-        .from("bookings")
-        .select("total_amount")
-        .eq("freelancer_id", session.user.id)
-        .eq("payment_status", "paid")
-
-      if (earningsError) throw earningsError
-      stats.totalEarned = earnings.reduce((sum, booking) => sum + booking.total_amount, 0)
-
-      // Active job offerings
+      // Get active job offerings count
       const { count: activeOfferings, error: offeringsError } = await supabase
         .from("freelancer_job_offerings")
         .select("*", { count: "exact", head: true })

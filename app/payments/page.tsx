@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
+import { useOptimizedUser } from "@/components/optimized-user-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -11,9 +12,33 @@ import { CreditCard, Download, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
-import LoadingSpinner from "@/components/loading-spinner"
-import SidebarNav from "@/components/sidebar-nav"
 import { toast } from "@/lib/toast"
+import { 
+  SidebarProvider, 
+  Sidebar, 
+  SidebarInset
+} from "@/components/ui/sidebar"
+import ModernSidebarNav from "@/components/modern-sidebar-nav"
+import OptimizedHeader from "@/components/optimized-header"
+
+// Skeleton for immediate loading
+function PaymentsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <div className="flex gap-4">
+          <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+          <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+        </div>
+        <div className="h-4 w-48 bg-muted rounded animate-pulse mt-2" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div className="h-[400px] w-full bg-muted rounded animate-pulse" />
+        <div className="h-[400px] w-full bg-muted rounded animate-pulse" />
+      </div>
+    </div>
+  )
+}
 
 type Invoice = Database["public"]["Tables"]["invoices"]["Row"] & {
   booking: {
@@ -25,79 +50,38 @@ type Invoice = Database["public"]["Tables"]["invoices"]["Row"] & {
 export default function PaymentsPage() {
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
-  const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
+  const { profile, isLoading: isProfileLoading } = useOptimizedUser()
   const [invoices, setInvoices] = useState<Invoice[]>([])
-  const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("invoices")
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-
+    if (!profile) return;
+    const fetchInvoices = async () => {
       try {
-        // Get current user
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
-        if (!user) {
-          router.push("/login")
-          return
-        }
-
-        // Get profile
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single()
-
-        if (profileError) {
-          throw profileError
-        }
-
-        setProfile(profileData)
-
-        // Fetch invoices
         let query
-
-        if (profileData.user_type === "client") {
+        if (profile.user_type === "client") {
           query = supabase
             .from("invoices")
-            .select(`
-              *,
-              booking:booking_id(title, start_time)
-            `)
-            .eq("client_id", user.id)
+            .select(`*,booking:booking_id(title, start_time)`)
+            .eq("client_id", profile.id)
             .order("created_at", { ascending: false })
         } else {
           query = supabase
             .from("invoices")
-            .select(`
-              *,
-              booking:booking_id(title, start_time)
-            `)
-            .eq("freelancer_id", user.id)
+            .select(`*,booking:booking_id(title, start_time)`)
+            .eq("freelancer_id", profile.id)
             .order("created_at", { ascending: false })
         }
-
         const { data: invoicesData, error: invoicesError } = await query
-
-        if (invoicesError) {
-          throw invoicesError
-        }
-
+        if (invoicesError) throw invoicesError
         setInvoices(invoicesData as Invoice[])
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error("Error fetching invoices:", error)
         toast.error("Failed to load payments data. Please try again.")
-      } finally {
-        setLoading(false)
       }
     }
-
-    fetchData()
-  }, [supabase, router, toast])
+    fetchInvoices()
+  }, [supabase, profile])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -130,11 +114,24 @@ export default function PaymentsPage() {
     }
   }
 
-  if (loading) {
+  if (isProfileLoading) {
     return (
-      <div className="container py-10 flex justify-center items-center min-h-[50vh]">
-        <LoadingSpinner />
-      </div>
+      <SidebarProvider className="w-full">
+        <div className="flex min-h-screen bg-muted/30 w-full">
+          <Sidebar>
+            {/* Show minimal sidebar during loading */}
+            <div className="p-4">
+              <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+            </div>
+          </Sidebar>
+          <SidebarInset className="w-full">
+            <OptimizedHeader />
+            <div className="p-6">
+              <PaymentsSkeleton />
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     )
   }
 
@@ -148,239 +145,161 @@ export default function PaymentsPage() {
   }
 
   return (
-    <div className="bg-muted/30 min-h-screen">
-      <div className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <SidebarNav profile={profile} />
+    <SidebarProvider className="w-full">
+    <div className="flex min-h-screen bg-muted/30 w-full">
+      <Sidebar>
+        {profile && <ModernSidebarNav profile={profile} />}
+      </Sidebar>
+      <SidebarInset className="w-full">
+        <OptimizedHeader />
+        <div className="lg:col-span-3 space-y-6 p-6 pb-20 bg-[#f7f7f7] h-full">
+          {/* <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 bg-background px-6"> */}
+            {/* <SidebarTrigger className="-ml-1" /> */}
+            <div className="flex items-center gap-2">
+              {/* <h1 className="text-lg font-semibold">Payments</h1> */}
           </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">Payments</h1>
               {profile.user_type === "freelancer" && (
-                <Button>
+              <Button className="ml-auto">
                   <CreditCard className="h-4 w-4 mr-2" />
                   Set Up Payment Method
                 </Button>
               )}
-            </div>
+          {/* </header> */}
 
+          <div className="flex flex-1 flex-col gap-6 p-6 pt-0">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+              <div className="p-6 bg-background rounded-lg overflow-hidden">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="text-xs font-medium text-black">
                     {profile.user_type === "client" ? "Total Spent" : "Total Earned"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-center">
+                  <div className="text-xl font-bold">
                     €
                     {invoices
                       .filter((i) => i.status === "paid")
                       .reduce((sum, invoice) => sum + invoice.amount, 0)
                       .toFixed(2)}
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {profile.user_type === "client" ? "Pending Payments" : "Pending Earnings"}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
+                </div>
+              </div>
+              <div className="p-6 bg-background rounded-lg overflow-hidden">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="text-xs font-medium text-black">
+                  {profile.user_type === "client" ? "Pending Payments" : "Pending Earnings"}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-center">
+                  <div className="text-xl font-bold">
                     €
                     {invoices
                       .filter((i) => i.status === "sent")
                       .reduce((sum, invoice) => sum + invoice.amount, 0)
                       .toFixed(2)}
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Invoices</CardTitle>
-                </CardHeader>
-                <CardContent>
+                </div>
+              </div>
+              <div className="p-6 bg-background rounded-lg overflow-hidden">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="text-xs font-medium text-black">
+                  <CardTitle className="text-sm font-medium text-black">Total Invoices</CardTitle>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-center">
+                  <div className="text-xl font-bold">
                   <div className="text-2xl font-bold">{invoices.length}</div>
-                </CardContent>
-              </Card>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <Tabs defaultValue="all">
-              <div className="flex justify-between items-center mb-4">
+            <Tabs defaultValue="invoices" className="space-y-4">
                 <TabsList>
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="paid">Paid</TabsTrigger>
-                  <TabsTrigger value="pending">Pending</TabsTrigger>
+                <TabsTrigger value="invoices">Invoices</TabsTrigger>
+                <TabsTrigger value="transactions">Transactions</TabsTrigger>
                 </TabsList>
-              </div>
 
-              <TabsContent value="all" className="space-y-4">
+              <TabsContent value="invoices" className="space-y-4">
                 {invoices.length === 0 ? (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-10">
-                      <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-xl font-medium mb-2">No invoices yet</h3>
-                      <p className="text-muted-foreground text-center max-w-md mb-4">
+                 <div className="p-6 bg-background rounded-lg overflow-hidden">
+                 <div className="flex flex-col items-center justify-center">
+                      <h3 className="text-lg text-black font-medium mb-1">No invoices yet</h3>
+                      <p className="text-black text-xs text-center max-w-md">
                         {profile.user_type === "client"
-                          ? "You haven't made any payments yet. Book a freelancer to get started."
-                          : "You haven't received any payments yet. Complete jobs to get paid."}
+                          ? "Your invoices will appear here once you make bookings."
+                          : "Your invoices will appear here once you complete jobs."}
                       </p>
-                      {profile.user_type === "client" && (
-                        <Link href="/freelancers">
-                          <Button>Find Freelancers</Button>
-                        </Link>
-                      )}
-                    </CardContent>
-                  </Card>
+                 </div>
+                </div>
                 ) : (
-                  <Card>
-                    <CardContent className="p-0">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="text-left p-4">Invoice</th>
-                              <th className="text-left p-4">Date</th>
-                              <th className="text-left p-4">Service</th>
-                              <th className="text-left p-4">Amount</th>
-                              <th className="text-left p-4">Status</th>
-                              <th className="text-right p-4">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
+                  <div className="space-y-4">
                             {invoices.map((invoice) => (
-                              <tr key={invoice.id} className="border-b hover:bg-muted/50">
-                                <td className="p-4">#{invoice.id.substring(0, 8)}</td>
-                                <td className="p-4">{format(new Date(invoice.created_at), "MMM d, yyyy")}</td>
-                                <td className="p-4">{invoice.booking.title}</td>
-                                <td className="p-4 font-medium">€{invoice.amount.toFixed(2)}</td>
-                                <td className="p-4">{getStatusBadge(invoice.status)}</td>
-                                <td className="p-4 text-right">
-                                  <Button variant="ghost" size="sm">
-                                    <Download className="h-4 w-4" />
+                      <div className="p-6 bg-background rounded-lg overflow-hidden" key={invoice.id}>
+                        <div className="p-6">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg text-black font-semibold">
+                                  Invoice #{invoice.id}
+                                </h3>
+                                {getStatusBadge(invoice.status)}
+                              </div>
+                              <p className="text-xs text-black mb-2">
+                                {invoice.booking?.title || "Booking"}
+                              </p>
+                              <div className="flex items-center text-xs text-black">
+                                <Clock className="h-4 w-4 mr-1" />
+                                <span>
+                                  {format(new Date(invoice.created_at), "MMM d, yyyy")}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <div className="text-right">
+                                <p className="text-xl font-bold">€{invoice.amount.toFixed(2)}</p>
+                                <p className="text-xs text-black">
+                                  {invoice.status === "paid" ? "Paid" : "Due"}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm">
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Download
+                                </Button>
+                                {invoice.status === "sent" && profile.user_type === "client" && (
+                                  <Button size="sm">
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    Pay Now
                                   </Button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    ))}
+                      </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="paid" className="space-y-4">
-                {invoices.filter((i) => i.status === "paid").length === 0 ? (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-10">
-                      <CheckCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-xl font-medium mb-2">No paid invoices</h3>
-                      <p className="text-muted-foreground text-center max-w-md">Paid invoices will appear here.</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card>
-                    <CardContent className="p-0">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="text-left p-4">Invoice</th>
-                              <th className="text-left p-4">Date</th>
-                              <th className="text-left p-4">Service</th>
-                              <th className="text-left p-4">Amount</th>
-                              <th className="text-left p-4">Status</th>
-                              <th className="text-right p-4">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {invoices
-                              .filter((i) => i.status === "paid")
-                              .map((invoice) => (
-                                <tr key={invoice.id} className="border-b hover:bg-muted/50">
-                                  <td className="p-4">#{invoice.id.substring(0, 8)}</td>
-                                  <td className="p-4">{format(new Date(invoice.created_at), "MMM d, yyyy")}</td>
-                                  <td className="p-4">{invoice.booking.title}</td>
-                                  <td className="p-4 font-medium">€{invoice.amount.toFixed(2)}</td>
-                                  <td className="p-4">{getStatusBadge(invoice.status)}</td>
-                                  <td className="p-4 text-right">
-                                    <Button variant="ghost" size="sm">
-                                      <Download className="h-4 w-4" />
-                                    </Button>
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-
-              <TabsContent value="pending" className="space-y-4">
-                {invoices.filter((i) => i.status === "sent").length === 0 ? (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-10">
-                      <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-xl font-medium mb-2">No pending invoices</h3>
-                      <p className="text-muted-foreground text-center max-w-md">Pending invoices will appear here.</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card>
-                    <CardContent className="p-0">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="text-left p-4">Invoice</th>
-                              <th className="text-left p-4">Date</th>
-                              <th className="text-left p-4">Service</th>
-                              <th className="text-left p-4">Amount</th>
-                              <th className="text-left p-4">Status</th>
-                              <th className="text-right p-4">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {invoices
-                              .filter((i) => i.status === "sent")
-                              .map((invoice) => (
-                                <tr key={invoice.id} className="border-b hover:bg-muted/50">
-                                  <td className="p-4">#{invoice.id.substring(0, 8)}</td>
-                                  <td className="p-4">{format(new Date(invoice.created_at), "MMM d, yyyy")}</td>
-                                  <td className="p-4">{invoice.booking.title}</td>
-                                  <td className="p-4 font-medium">€{invoice.amount.toFixed(2)}</td>
-                                  <td className="p-4">{getStatusBadge(invoice.status)}</td>
-                                  <td className="p-4 text-right">
-                                    {profile.user_type === "client" && <Button size="sm">Pay Now</Button>}
-                                    {profile.user_type === "freelancer" && (
-                                      <Button variant="ghost" size="sm">
-                                        <Download className="h-4 w-4" />
-                                      </Button>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+              <TabsContent value="transactions" className="space-y-4">
+                  <div className="p-6 bg-background rounded-lg overflow-hidden">
+                    <div className="flex flex-col items-center justify-center">
+                    <CreditCard className="h-12 w-12 text-black mb-4" />
+                    <h3 className="text-lg text-black font-medium mb-2">Transaction History</h3>
+                    <p className="text-black text-center max-w-md text-xs">
+                      Your transaction history will appear here once you have completed payments.
+                    </p>
+                    </div>
+                  </div>
               </TabsContent>
             </Tabs>
           </div>
-        </div>
+          </div>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   )
 }
 

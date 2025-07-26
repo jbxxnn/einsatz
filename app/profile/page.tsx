@@ -1,14 +1,14 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
+import { useOptimizedUser } from "@/components/optimized-user-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   User,
   Briefcase,
@@ -28,16 +28,8 @@ import {
   Facebook,
   Youtube,
   Twitch,
-  // Discord,
   Slack,
-  // Skype,
-  // Zoom,
-  // Whatsapp,
-  // Telegram,
   Signal,
-  // Keybase,
-  // Matrix,
-  // Element,
   Rocket,
   Send,
   Share2,
@@ -48,7 +40,7 @@ import {
   AlertCircle,
   Info,
   HelpCircle,
-  Loader2,
+  Loader,
   Pencil,
   Upload,
   LogOut,
@@ -59,8 +51,6 @@ import type { Database } from "@/lib/database.types"
 import { LocationInput } from "@/components/location-input"
 import { AvatarUpload } from "@/components/avatar-upload"
 import { toast } from "@/lib/toast"
-import LoadingSpinner from "@/components/loading-spinner"
-import SidebarNav from "@/components/sidebar-nav"
 import { useTranslation } from "@/lib/i18n"
 import {
   Tooltip,
@@ -69,23 +59,43 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import FreelancerOnboardingProgress from "@/components/freelancer-onboarding-progress"
-// import { LocationSearch } from "@/components/location-search"
-// import { JobCategorySelector } from "@/components/job-category-selector"
-// import { JobSubcategorySelector } from "@/components/job-subcategory-selector"
-// import { AvailabilityCalendar } from "@/components/availability-calendar"
-// import { AvailabilitySchedule } from "@/components/availability-schedule"
-// import { LoadingSpinner } from "@/components/loading-spinner"
-// import { SidebarNav } from "@/components/sidebar-nav"
+import CoverTemplateSelector from "@/components/cover-template-selector"
+import { getCoverTemplate } from "@/lib/cover-templates"
+import { 
+  SidebarProvider, 
+  Sidebar, 
+  SidebarInset
+} from "@/components/ui/sidebar"
+import ModernSidebarNav from "@/components/modern-sidebar-nav"
+import OptimizedHeader from "@/components/optimized-header"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
+
+// Skeleton components for immediate loading
+function ProfileSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center space-x-4">
+        <Skeleton className="h-20 w-20 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-[200px]" />
+          <Skeleton className="h-4 w-[150px]" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Skeleton className="h-[400px] w-full" />
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    </div>
+  )
+}
 
 export default function ProfilePage() {
   const { t } = useTranslation()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
-  const [loading, setLoading] = useState(true)
+  const { profile, isLoading: isProfileLoading } = useOptimizedUser()
   const [updating, setUpdating] = useState(false)
-  const [profile, setProfile] = useState<Profile | null>(null)
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
@@ -110,62 +120,43 @@ export default function ProfilePage() {
     twitter: "",
     instagram: "",
   })
+  const [selectedCoverTemplate, setSelectedCoverTemplate] = useState<string | null>(null)
+  const [showCoverSelector, setShowCoverSelector] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true)
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.push("/login")
-        return
-      }
-
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-
-      if (error) {
-        console.error("Error fetching profile:", error)
-        toast.error(t("profile.error"))
-      } else if (data) {
-        setProfile(data)
-        setFirstName(data.first_name || "")
-        setLastName(data.last_name || "")
-        setEmail(data.email || "")
-        setPhone(data.phone || "")
-        setBio(data.bio || "")
-        setLocation(data.location || "")
-        setHourlyRate(data.hourly_rate?.toString() || "")
-        setAvatarUrl(data.avatar_url)
-        setServiceRadius(data.service_radius || 10)
+  // Initialize form state from profile data
+  React.useEffect(() => {
+    if (profile) {
+      setFirstName(profile.first_name || "")
+      setLastName(profile.last_name || "")
+      setEmail(profile.email || "")
+      setPhone(profile.phone || "")
+      setBio(profile.bio || "")
+      setLocation(profile.location || "")
+      setHourlyRate(profile.hourly_rate?.toString() || "")
+      setAvatarUrl(profile.avatar_url)
+      setServiceRadius(profile.service_radius || 10)
 
         // Set coordinates if available
         setLocationCoords({
-          lat: data.latitude || null,
-          lng: data.longitude || null,
-          formattedAddress: data.formatted_address || null,
+          lat: profile.latitude || 0,
+          lng: profile.longitude || 0,
+          formattedAddress: profile.formatted_address || "",
         })
 
-        // Extract social links from metadata if available
-        if (data.metadata && typeof data.metadata === "object") {
-          const metadata = data.metadata as any
-          setSocialLinks({
-            website: metadata.website || "",
-            linkedin: metadata.linkedin || "",
-            twitter: metadata.twitter || "",
-            instagram: metadata.instagram || "",
-          })
-        }
+      // Extract social links and cover template from metadata if available
+      if (profile.metadata && typeof profile.metadata === "object") {
+        const metadata = profile.metadata as any
+        setSocialLinks({
+          website: metadata.website || "",
+          linkedin: metadata.linkedin || "",
+          twitter: metadata.twitter || "",
+          instagram: metadata.instagram || "",
+        })
+        setSelectedCoverTemplate(metadata.coverTemplate || null)
       }
-
-      setLoading(false)
     }
-
-    fetchProfile()
-  }, [supabase, router, toast])
+  }, [profile])
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click()
@@ -287,6 +278,7 @@ export default function ProfilePage() {
         metadata: {
           ...(typeof profile?.metadata === 'object' && profile.metadata !== null ? profile.metadata : {}),
           ...socialLinks,
+          coverTemplate: selectedCoverTemplate,
         },
         // Add location data
         latitude: locationCoords?.lat,
@@ -305,11 +297,7 @@ export default function ProfilePage() {
 
       toast.success(t("profile.updateSuccess"))
 
-      // Update local state
-      setProfile({
-        ...profile!,
-        ...updates,
-      } as Profile)
+      // Note: Profile will be updated automatically by the useOptimizedUser hook
     } catch (error: any) {
       console.error('Error updating profile:', error)
       toast.error(error.message || t("profile.updateError"))
@@ -319,11 +307,25 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) {
+  if (isProfileLoading) {
     return (
-      <div className="container py-10 flex justify-center items-center min-h-[50vh]">
-        <LoadingSpinner />
-      </div>
+      <SidebarProvider className="w-full">
+        <div className="flex min-h-screen bg-muted/30 w-full">
+          <Sidebar>
+            {/* Show minimal sidebar during loading */}
+            <div className="p-4">
+              <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+            </div>
+          </Sidebar>
+          
+          <SidebarInset className="w-full">
+            <OptimizedHeader />
+            <div className="p-6">
+              <ProfileSkeleton />
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     )
   }
 
@@ -337,32 +339,45 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="bg-muted/30 min-h-screen">
-      <div className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <SidebarNav profile={profile} />
-          </div>
+    <SidebarProvider className="w-full">
+      <div className="flex min-h-screen bg-muted/30 w-full">
+        <Sidebar>
+          {profile && <ModernSidebarNav profile={profile} />}
+        </Sidebar>
 
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
+          <SidebarInset className="w-full">
+          <OptimizedHeader />
+          <div className="lg:col-span-3 space-y-6 p-6 pb-20 bg-[#f7f7f7]">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">{t("profile.title")}</h1>
-              {profile.user_type === "freelancer" && (
+              {/* <h1 className="text-3xl font-bold">{t("profile.title")}</h1> */}
+              {/* {profile.user_type === "freelancer" && (
                 <Link href={`/freelancers/${profile.id}`}>
                   <Button variant="outline">{t("profile.previewProfile")}</Button>
                 </Link>
-              )}
+              )} */}
             </div>
             {profile.user_type === "freelancer" && (
               <FreelancerOnboardingProgress profile={profile} />
             )}
 
-            <div className="bg-background rounded-lg shadow-sm border overflow-hidden">
+            <div className="bg-background rounded-lg overflow-hidden">
               {/* Banner and Photo */}
               <div className="relative">
-                <div className="h-32 bg-gradient-to-r from-black/5 via-black/3 to-background"></div>
+                <div 
+                  className="h-32 relative overflow-hidden"
+                  style={{
+                    background: getCoverTemplate(selectedCoverTemplate)?.pattern || "linear-gradient(135deg, #1e293b 0%, #334155 50%, #64748b 100%)",
+                    backgroundSize: "cover"
+                  }}
+                >
+                  {/* Pattern Overlay */}
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="w-full h-full" style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+                    }}></div>
+                  </div>
+                </div>
                 <div className="absolute bottom-0 left-8 transform translate-y-1/2">
                   <div className="relative">
                     <div className="h-24 w-24 rounded-full border-4 border-background overflow-hidden bg-background">
@@ -396,8 +411,8 @@ export default function ProfilePage() {
               <div className="pt-16 px-8 pb-8">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
-                    <h2 className="text-xl font-semibold mb-2">{t("profile.yourPhoto")}</h2>
-                    <p className="text-sm text-muted-foreground">{t("profile.yourPhotoDescription")}</p>
+                    <h2 className="text-lg font-semibold mb-1">{t("profile.yourPhoto")}</h2>
+                    <p className="text-xs text-black">{t("profile.yourPhotoDescription")}</p>
                   </div>
                   <div className="flex gap-3">
                     <Button type="button" variant="outline" size="sm" onClick={handleAvatarClick}>
@@ -417,28 +432,59 @@ export default function ProfilePage() {
                   </div>
                   <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-primary transition-all duration-300"
+                      className="h-full bg-[#15dda9] transition-all duration-300"
                       style={{ width: `${calculateProfileCompleteness(profile)}%` }}
                     />
                   </div>
-                  <div className="mt-2 text-sm text-muted-foreground">
+                  <div className="mt-2 text-xs text-black">
                     {getCompletenessMessage(calculateProfileCompleteness(profile), t)}
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* Cover Template Selection (for freelancers) */}
+            {profile.user_type === "freelancer" && (
+              <div className="bg-background rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold mb-1">{t("profile.coverDesign")}</h2>
+                    <p className="text-xs text-black">
+                      {t("profile.coverDesignDescription")}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCoverSelector(!showCoverSelector)}
+                  >
+                    {showCoverSelector ? t("profile.hideOptions") : t("profile.chooseCover")}
+                  </Button>
+                </div>
+                
+                {/* Collapsible Template Selector */}
+                {showCoverSelector && (
+                  <div className="border-t pt-4">
+                    <CoverTemplateSelector
+                      selectedTemplate={selectedCoverTemplate}
+                      onTemplateSelect={setSelectedCoverTemplate}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             <form onSubmit={handleUpdateProfile}>
               <div className="space-y-6">
                 {/* Personal Information */}
-                <div className="bg-background rounded-lg shadow-sm border p-8">
-                  <h2 className="text-xl font-semibold mb-6">{t("profile.personalInformation")}</h2>
+                <div className="bg-background rounded-lg p-8">
+                  <h2 className="text-lg font-semibold mb-6">{t("profile.personalInformation")}</h2>
 
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Label htmlFor="firstName">{t("profile.firstName")}</Label>
+                          <Label htmlFor="firstName" className="text-xs text-black">{t("profile.firstName")}</Label>
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger>
@@ -455,11 +501,12 @@ export default function ProfilePage() {
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
                           required
+                          className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                         />
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Label htmlFor="lastName">{t("profile.lastName")}</Label>
+                          <Label htmlFor="lastName" className="text-xs text-black">{t("profile.lastName")}</Label>
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger>
@@ -471,13 +518,14 @@ export default function ProfilePage() {
                             </Tooltip>
                           </TooltipProvider>
                         </div>
-                        <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                        <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none" />
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Label htmlFor="email">{t("profile.email")}</Label>
+                        <Label htmlFor="email" className="text-xs text-black">{t("profile.email")}</Label>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger>
@@ -489,12 +537,12 @@ export default function ProfilePage() {
                           </Tooltip>
                         </TooltipProvider>
                       </div>
-                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"/>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Label htmlFor="phone">{t("profile.phone")}</Label>
+                        <Label htmlFor="phone" className="text-xs text-black">{t("profile.phone")}</Label>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger>
@@ -506,10 +554,12 @@ export default function ProfilePage() {
                           </Tooltip>
                         </TooltipProvider>
                       </div>
-                      <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                      <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none" />
+                    </div>
                     </div>
 
                     {/* New Location Input Component */}
+                    
                     <LocationInput
                       value={location}
                       onChange={handleLocationChange}
@@ -519,7 +569,7 @@ export default function ProfilePage() {
                       showRadius={profile.user_type === "freelancer"}
                       radiusValue={serviceRadius}
                       onRadiusChange={setServiceRadius}
-                      className="space-y-2"
+                      className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                     />
 
                     {profile.user_type === "freelancer" && locationCoords && locationCoords.lat && locationCoords.lng && (
@@ -532,15 +582,16 @@ export default function ProfilePage() {
 
                     {profile.user_type === "freelancer" && (
                       <div className="space-y-2">
-                        <Label htmlFor="role">{t("profile.professionalTitle")}</Label>
+                        <Label htmlFor="role" className="text-xs text-black">{t("profile.professionalTitle")}</Label>
                         <Input
                           id="role"
                           placeholder={t("profile.professionalTitlePlaceholder")}
                           value={(profile.metadata as { role?: string })?.role || ""}
                           onChange={(e) => {
                             const updatedMetadata = { ...(profile.metadata as object), role: e.target.value }
-                            setProfile({ ...profile, metadata: updatedMetadata })
+                            // Note: Profile will be updated when form is submitted
                           }}
+                          className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                         />
                       </div>
                     )}
@@ -550,7 +601,7 @@ export default function ProfilePage() {
                 {/* Bio */}
                 <div className="bg-background rounded-lg shadow-sm border p-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold">{t("profile.bio")}</h2>
+                    <h2 className="text-lg font-semibold">{t("profile.bio")}</h2>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger>
@@ -569,7 +620,7 @@ export default function ProfilePage() {
                       rows={6}
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      className="resize-none"
+                      className="resize-none rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                     />
                     <div className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -604,7 +655,7 @@ export default function ProfilePage() {
                               placeholder={t("profile.defaultHourlyRatePlaceholder")}
                               value={hourlyRate}
                               onChange={(e) => setHourlyRate(e.target.value)}
-                              className="pl-10"
+                              className="pl-10 rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                             />
                           </div>
                           <p className="text-xs text-muted-foreground">
@@ -633,7 +684,7 @@ export default function ProfilePage() {
                   <Button type="submit" size="lg" disabled={updating}>
                     {updating ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
                         {t("profile.saving")}
                       </>
                     ) : (
@@ -644,9 +695,9 @@ export default function ProfilePage() {
               </div>
             </form>
           </div>
+          </SidebarInset>
         </div>
-      </div>
-    </div>
+    </SidebarProvider>
   )
 }
 

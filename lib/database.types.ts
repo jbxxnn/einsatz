@@ -350,6 +350,7 @@ export interface Database {
           is_available_now: boolean
           description: string | null
           experience_years: number | null
+          metadata: Json | null
           created_at: string
           updated_at: string
         }
@@ -363,6 +364,7 @@ export interface Database {
           is_available_now?: boolean
           description?: string | null
           experience_years?: number | null
+          metadata?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -376,6 +378,7 @@ export interface Database {
           is_available_now?: boolean
           description?: string | null
           experience_years?: number | null
+          metadata?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -415,24 +418,330 @@ export interface Database {
           updated_at?: string
         }
       }
+      freelancer_availability: {
+        Row: {
+          id: string
+          freelancer_id: string
+          category_id: string | null
+          start_time: string
+          end_time: string
+          is_recurring: boolean
+          recurrence_pattern: string | null
+          recurrence_end_date: string | null
+          certainty_level: "guaranteed" | "tentative" | "unavailable"
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          freelancer_id: string
+          category_id?: string | null
+          start_time: string
+          end_time: string
+          is_recurring?: boolean
+          recurrence_pattern?: string | null
+          recurrence_end_date?: string | null
+          certainty_level?: "guaranteed" | "tentative" | "unavailable"
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          freelancer_id?: string
+          category_id?: string | null
+          start_time?: string
+          end_time?: string
+          is_recurring?: boolean
+          recurrence_pattern?: string | null
+          recurrence_end_date?: string | null
+          certainty_level?: "guaranteed" | "tentative" | "unavailable"
+          created_at?: string
+          updated_at?: string
+        }
+      }
       real_time_availability: {
         Row: {
           freelancer_id: string
-          category_id: string
           is_available_now: boolean
           last_updated: string
         }
         Insert: {
           freelancer_id: string
-          category_id: string
           is_available_now?: boolean
           last_updated?: string
         }
         Update: {
           freelancer_id?: string
-          category_id?: string
           is_available_now?: boolean
           last_updated?: string
+        }
+      }
+      dba_questions: {
+        Row: {
+          id: string
+          category: "control" | "substitution" | "tools" | "risk" | "economic_independence"
+          question_text_en: string
+          question_text_nl: string
+          question_type: string
+          options: Json | null
+          weight: number
+          is_freelancer_question: boolean
+          is_required: boolean
+          order_index: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          category: "control" | "substitution" | "tools" | "risk" | "economic_independence"
+          question_text_en: string
+          question_text_nl: string
+          question_type?: string
+          options?: Json | null
+          weight?: number
+          is_freelancer_question: boolean
+          is_required?: boolean
+          order_index: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          category?: "control" | "substitution" | "tools" | "risk" | "economic_independence"
+          question_text_en?: string
+          question_text_nl?: string
+          question_type?: string
+          options?: Json | null
+          weight?: number
+          is_freelancer_question?: boolean
+          is_required?: boolean
+          order_index?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      dba_freelancer_answers: {
+        Row: {
+          id: string
+          freelancer_id: string
+          job_category_id: string
+          question_id: string
+          answer_value: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          freelancer_id: string
+          job_category_id: string
+          question_id: string
+          answer_value: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          freelancer_id?: string
+          job_category_id?: string
+          question_id?: string
+          answer_value?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      dba_booking_answers: {
+        Row: {
+          id: string
+          booking_id: string
+          client_id: string
+          freelancer_id: string
+          question_id: string
+          answer_value: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          client_id: string
+          freelancer_id: string
+          question_id: string
+          answer_value: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          client_id?: string
+          freelancer_id?: string
+          question_id?: string
+          answer_value?: string
+          created_at?: string
+        }
+      }
+      dba_reports: {
+        Row: {
+          id: string
+          booking_id: string
+          freelancer_id: string
+          client_id: string
+          score: number
+          risk_level: "safe" | "doubtful" | "high_risk"
+          answers_json: Json
+          pdf_url: string | null
+          contract_pdf_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          freelancer_id: string
+          client_id: string
+          score: number
+          risk_level: "safe" | "doubtful" | "high_risk"
+          answers_json: Json
+          pdf_url?: string | null
+          contract_pdf_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          freelancer_id?: string
+          client_id?: string
+          score?: number
+          risk_level?: "safe" | "doubtful" | "high_risk"
+          answers_json?: Json
+          pdf_url?: string | null
+          contract_pdf_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      dba_waivers: {
+        Row: {
+          id: string
+          booking_id: string
+          client_id: string
+          waiver_reason: string | null
+          ip_address: string | null
+          user_agent: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          client_id: string
+          waiver_reason?: string | null
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          client_id?: string
+          waiver_reason?: string | null
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+      }
+      dba_audit_logs: {
+        Row: {
+          id: string
+          booking_id: string | null
+          user_id: string
+          action: string
+          details: Json | null
+          ip_address: string | null
+          user_agent: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id?: string | null
+          user_id: string
+          action: string
+          details?: Json | null
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string | null
+          user_id?: string
+          action?: string
+          details?: Json | null
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+      }
+      freelancer_global_availability: {
+        Row: {
+          id: string
+          availability_group_id: string
+          freelancer_id: string
+          start_time: string
+          end_time: string
+          is_recurring: boolean
+          recurrence_pattern: string | null
+          recurrence_end_date: string | null
+          certainty_level: "guaranteed" | "tentative" | "unavailable"
+          service_id: string
+          category_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          availability_group_id?: string
+          freelancer_id: string
+          start_time: string
+          end_time: string
+          is_recurring?: boolean
+          recurrence_pattern?: string | null
+          recurrence_end_date?: string | null
+          certainty_level?: string
+          service_id: string
+          category_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          availability_group_id?: string
+          freelancer_id?: string
+          start_time?: string
+          end_time?: string
+          is_recurring?: boolean
+          recurrence_pattern?: string | null
+          recurrence_end_date?: string | null
+          certainty_level?: string
+          service_id?: string
+          category_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      job_offering_availability_settings: {
+        Row: {
+          freelancer_id: string
+          job_offering_id: string
+          use_global_availability: boolean
+        }
+        Insert: {
+          freelancer_id: string
+          job_offering_id: string
+          use_global_availability?: boolean
+        }
+        Update: {
+          freelancer_id?: string
+          job_offering_id?: string
+          use_global_availability?: boolean
         }
       }
     }

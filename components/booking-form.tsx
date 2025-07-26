@@ -10,25 +10,55 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 import { toast } from "@/lib/toast"
-import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2 } from "lucide-react"
+// import { toast } from "@/hooks/use-toast"
+import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2, FileText, ChevronRight, ChevronLeft, AlertTriangle } from "lucide-react"
 import { format, addDays } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
+import DBAClientQuestionnaire from "./dba-client-questionnaire"
+import DBAReportDisplay from "./dba-report-display"
+import DBAWaiverModal from "./dba-waiver-modal"
+import { useDBAReport } from "@/hooks/use-dba-report"
+import { useDBAWaiver } from "@/hooks/use-dba-waiver"
+
+
+
+const CustomNoBookingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="50" 
+  height="50" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M21.08 8.58v6.84c0 1.12-.6 2.16-1.57 2.73l-5.94 3.43c-.97.56-2.17.56-3.15 0l-5.94-3.43a3.15 3.15 0 0 1-1.57-2.73V8.58c0-1.12.6-2.16 1.57-2.73l5.94-3.43c.97-.56 2.17-.56 3.15 0l5.94 3.43c.97.57 1.57 1.6 1.57 2.73Z" 
+    fill="currentColor">
+      </path>
+      <path d="M12 13.75c-.41 0-.75-.34-.75-.75V7.75c0-.41.34-.75.75-.75s.75.34.75.75V13c0 .41-.34.75-.75.75ZM12 17.249c-.13 0-.26-.03-.38-.08-.13-.05-.23-.12-.33-.21-.09-.1-.16-.21-.22-.33a.986.986 0 0 1-.07-.38c0-.26.1-.52.29-.71.1-.09.2-.16.33-.21.37-.16.81-.07 1.09.21.09.1.16.2.21.33.05.12.08.25.08.38s-.03.26-.08.38-.12.23-.21.33a.99.99 0 0 1-.71.29Z" 
+      fill="currentColor">
+        </path>
+        </svg>
+)
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
   job_offerings?: any[]
   is_available_now?: boolean
 }
 
-interface AvailabilityBlock {
-  id: string
+type AvailabilityBlock = {
   start: string
   end: string
   availableStartTimes: string[]
   certainty_level: "guaranteed" | "tentative" | "unavailable"
-  is_recurring: boolean
-  recurrence_pattern?: string | null
+}
+
+type DBAAnswer = {
+  question_id: string
+  answer_value: string
 }
 
 interface BookingFormProps {
@@ -37,6 +67,8 @@ interface BookingFormProps {
   selectedCategoryId?: string | null
   onBack: () => void
 }
+
+type BookingStep = 'details' | 'dba' | 'payment'
 
 export default function BookingForm({ freelancer, selectedDate, selectedCategoryId, onBack }: BookingFormProps) {
   const router = useRouter()
@@ -54,7 +86,18 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null)
   const [debugInfo, setDebugInfo] = useState<string>("")
   const [paymentMethod, setPaymentMethod] = useState<"online" | "offline">("online")
+  const [currentStep, setCurrentStep] = useState<BookingStep>('details')
+  const [bookingId, setBookingId] = useState<string | null>(null)
+  const [clientId, setClientId] = useState<string | null>(null)
+  const [dbaAnswers, setDbaAnswers] = useState<DBAAnswer[]>([])
+  const [dbaCompleted, setDbaCompleted] = useState(false)
+  const [dbaReport, setDbaReport] = useState<any>(null)
+  const [showWaiverModal, setShowWaiverModal] = useState(false)
+  const [waiverCreated, setWaiverCreated] = useState(false)
   const { t } = useTranslation()
+  const { generateReport } = useDBAReport()
+  const { hasWaiver } = useDBAWaiver()
+
   // Calculate valid end times based on selected start time
   const validEndTimes = useMemo(() => {
     if (!selectedStartTime || availabilityBlocks.length === 0) return []
@@ -128,6 +171,13 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     const fetchAvailability = async () => {
       if (!selectedDate || !selectedCategoryId) return
 
+      console.log('🔄 [DEBUG] Starting availability fetch:', {
+        date: selectedDate,
+        categoryId: selectedCategoryId,
+        freelancerId: freelancer.id,
+        timestamp: new Date().toISOString()
+      })
+
       setFetchingAvailability(true)
       setNoAvailability(false)
       setSuggestedDate(null)
@@ -140,6 +190,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
+        console.log('📡 [DEBUG] Making API request to:', `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`)
+
         const response = await fetch(
           `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`,
           { signal: controller.signal, cache: "no-store" },
@@ -147,61 +199,79 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
         clearTimeout(timeoutId)
 
+        console.log('📥 [DEBUG] API Response status:', response.status, response.ok)
+
         if (!response.ok) {
           throw new Error(t("bookingform.failedToFetchAvailability"))
         }
 
         const data = await response.json()
 
+        console.log('📊 [DEBUG] API Response data:', {
+          hasAvailabilityBlocks: !!data.availabilityBlocks,
+          blocksCount: data.availabilityBlocks?.length || 0,
+          blocks: data.availabilityBlocks,
+          timestamp: new Date().toISOString()
+        })
+
         // Add debug info
         setDebugInfo(JSON.stringify(data, null, 2))
 
         if (data.availabilityBlocks && data.availabilityBlocks.length > 0) {
+          console.log('✅ [DEBUG] Setting availability blocks:', data.availabilityBlocks)
           setAvailabilityBlocks(data.availabilityBlocks)
-
-          // Flatten all available start times across all blocks
-          const allStartTimes = data.availabilityBlocks.flatMap((block: AvailabilityBlock) => block.availableStartTimes)
-
-          if (allStartTimes.length === 0) {
-            setNoAvailability(true)
-            findNextAvailableDate(selectedDate)
-          }
         } else {
-          setAvailabilityBlocks([])
+          console.log('❌ [DEBUG] No availability blocks found, setting noAvailability to true')
           setNoAvailability(true)
-          findNextAvailableDate(selectedDate)
+          // Try to find next available date
+          await findNextAvailableDate(selectedDate)
         }
       } catch (error: any) {
-        console.error("Error fetching availability:", error)
+        console.error('💥 [DEBUG] Error in fetchAvailability:', error)
         if (error.name === "AbortError") {
+          console.log('⏰ [DEBUG] Request was aborted due to timeout')
           toast.error(t("bookingform.takingTooLongToLoadAvailability"))
         } else {
+          console.error("Error fetching availability:", error)
           toast.error(t("bookingform.failedToFetchFreelancerAvailability"))
         }
-        setAvailabilityBlocks([])
+        setNoAvailability(true)
       } finally {
+        console.log('🏁 [DEBUG] Fetch availability completed, setting fetchingAvailability to false')
         setFetchingAvailability(false)
       }
     }
 
     fetchAvailability()
-  }, [selectedDate, selectedCategoryId, freelancer.id, toast])
+  }, [selectedDate, selectedCategoryId, freelancer.id])
 
   // Function to find the next available date
   const findNextAvailableDate = async (startDate: Date) => {
+    console.log('🔍 [DEBUG] Starting findNextAvailableDate for:', startDate)
+    
     // Try the next 7 days
     for (let i = 1; i <= 7; i++) {
       const nextDate = addDays(startDate, i)
       const formattedDate = format(nextDate, "yyyy-MM-dd")
+
+      console.log(`🔍 [DEBUG] Checking day ${i}:`, formattedDate)
 
       try {
         const response = await fetch(
           `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`,
         )
 
-        if (!response.ok) continue
+        if (!response.ok) {
+          console.log(`❌ [DEBUG] Day ${i} response not ok:`, response.status)
+          continue
+        }
 
         const data = await response.json()
+
+        console.log(`📊 [DEBUG] Day ${i} data:`, {
+          hasBlocks: !!data.availabilityBlocks,
+          blocksCount: data.availabilityBlocks?.length || 0
+        })
 
         if (data.availabilityBlocks && data.availabilityBlocks.length > 0) {
           // Check if there are actually available start times
@@ -209,22 +279,49 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             (block: AvailabilityBlock) => block.availableStartTimes.length > 0,
           )
 
+          console.log(`🔍 [DEBUG] Day ${i} hasAvailableTimes:`, hasAvailableTimes)
+
           if (hasAvailableTimes) {
+            console.log(`✅ [DEBUG] Found available date:`, nextDate)
             setSuggestedDate(nextDate)
             return
           }
         }
       } catch (error) {
-        console.error("Error checking future date:", error)
+        console.error(`💥 [DEBUG] Error checking day ${i}:`, error)
       }
     }
+    
+    console.log('❌ [DEBUG] No available dates found in next 7 days')
   }
 
   // Get all available start times across all blocks
   const allAvailableStartTimes = useMemo(() => {
     const startTimes = availabilityBlocks.flatMap((block) => block.availableStartTimes)
-    return [...new Set(startTimes)].sort() // Remove duplicates and sort
+    const uniqueSortedTimes = [...new Set(startTimes)].sort() // Remove duplicates and sort
+    
+    console.log('🕐 [DEBUG] allAvailableStartTimes calculated:', {
+      availabilityBlocksCount: availabilityBlocks.length,
+      allStartTimes: startTimes,
+      uniqueSortedTimes: uniqueSortedTimes,
+      timestamp: new Date().toISOString()
+    })
+    
+    return uniqueSortedTimes
   }, [availabilityBlocks])
+
+  // Debug effect to track state changes
+  useEffect(() => {
+    console.log('🔄 [DEBUG] State changed:', {
+      fetchingAvailability,
+      noAvailability,
+      availabilityBlocksCount: availabilityBlocks.length,
+      allAvailableStartTimesCount: allAvailableStartTimes.length,
+      selectedStartTime,
+      selectedEndTime,
+      timestamp: new Date().toISOString()
+    })
+  }, [fetchingAvailability, noAvailability, availabilityBlocks, allAvailableStartTimes, selectedStartTime, selectedEndTime])
 
   // Get certainty level for display
   const getCertaintyLevel = useMemo(() => {
@@ -265,9 +362,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const handleCreateBooking = async () => {
     if (!selectedDate) {
       toast.error(t("bookingform.pleaseSelectADate"))
       return
@@ -323,16 +418,71 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         throw error
       }
 
+      setBookingId(data[0].id)
+      setClientId(user.id)
+      setCurrentStep('dba')
       toast.success(t("bookingform.bookingCreated"))
-
-      // Redirect to payment page
-      router.push(`/bookings/${data[0].id}/payment`)
     } catch (error: any) {
       toast.error(error.message || t("bookingform.somethingWentWrong"))
     } finally {
       setLoading(false)
     }
   }
+
+  const handleDBAComplete = async (answers: DBAAnswer[]) => {
+    setDbaAnswers(answers)
+    setDbaCompleted(true)
+    
+    // Generate DBA report
+    if (bookingId && clientId && selectedCategoryId) {
+      try {
+        const report = await generateReport({
+          bookingId,
+          freelancerId: freelancer.id,
+          clientId,
+          jobCategoryId: selectedCategoryId
+        })
+        
+        if (report) {
+          setDbaReport(report)
+          toast.success(`Compliance score: ${report.score}% - Risk level: ${report.risk_level}`)
+        }
+      } catch (error) {
+        console.error('Failed to generate DBA report:', error)
+        toast.error("DBA report could not be generated, but you can continue with payment.")
+      }
+    }
+    
+    setCurrentStep('payment')
+  }
+
+  const handleDBASave = (answers: DBAAnswer[]) => {
+    setDbaAnswers(answers)
+  }
+
+  const handleWaiverCreated = () => {
+    setWaiverCreated(true)
+    setDbaCompleted(true)
+    // Skip to payment step after waiver
+    setCurrentStep('payment')
+  }
+
+  const checkForExistingWaiver = async () => {
+    if (bookingId) {
+      const hasExistingWaiver = await hasWaiver(bookingId)
+      if (hasExistingWaiver) {
+        setWaiverCreated(true)
+        setDbaCompleted(true)
+      }
+    }
+  }
+
+  // Check for existing waiver when booking is created
+  useEffect(() => {
+    if (bookingId) {
+      checkForExistingWaiver()
+    }
+  }, [bookingId])
 
   const handleSelectSuggestedDate = () => {
     if (suggestedDate) {
@@ -341,17 +491,30 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     }
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Button type="button" variant="ghost" size="sm" className="mb-2 -ml-2 text-muted-foreground" onClick={onBack}>
-        <ArrowLeft className="h-4 w-4 mr-1" />
-        {t("bookingform.back")}
-      </Button>
+  const getStepProgress = () => {
+    switch (currentStep) {
+      case 'details': return 33
+      case 'dba': return 66
+      case 'payment': return 100
+      default: return 0
+    }
+  }
 
+  const getStepTitle = () => {
+    switch (currentStep) {
+      case 'details': return t("bookingform.stepDetails")
+      case 'dba': return t("bookingform.stepDBA")
+      case 'payment': return t("bookingform.stepPayment")
+      default: return ''
+    }
+  }
+
+  const renderDetailsStep = () => (
+    <form onSubmit={(e) => { e.preventDefault(); handleCreateBooking(); }} className="space-y-4">
       {categoryName && (
         <div className="mb-2">
           <p className="font-medium">{categoryName} {t("bookingform.service")}</p>
-          <p className="text-sm text-muted-foreground">€{hourlyRate}/{t("bookingform.hour")}</p>
+          <p className="text-sm text-muted-foreground text-black">€{hourlyRate} {t("freelancer.filters.hour")}</p>
         </div>
       )}
 
@@ -372,6 +535,18 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
               <p className="text-sm text-muted-foreground">{t("bookingform.noAvailability")}</p>
             </div>
 
+            {/* Debug Info Display */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs">
+                <p><strong>Debug Info:</strong></p>
+                <p>Fetching: {fetchingAvailability ? 'Yes' : 'No'}</p>
+                <p>No Availability: {noAvailability ? 'Yes' : 'No'}</p>
+                <p>Blocks Count: {availabilityBlocks.length}</p>
+                <p>Available Times: {allAvailableStartTimes.length}</p>
+                <p>Suggested Date: {suggestedDate ? format(suggestedDate, "yyyy-MM-dd") : 'None'}</p>
+              </div>
+            )}
+
             {suggestedDate ? (
               <div className="mt-2 text-center">
                 <p className="text-sm mb-2">
@@ -388,6 +563,18 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Debug Info Display for Available Times */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="p-2 bg-green-100 border border-green-300 rounded text-xs">
+                <p><strong>Debug - Available Times:</strong></p>
+                <p>Blocks Count: {availabilityBlocks.length}</p>
+                <p>Available Times: {allAvailableStartTimes.length}</p>
+                <p>Certainty Level: {getCertaintyLevel}</p>
+                <p>Selected Start: {selectedStartTime || 'None'}</p>
+                <p>Selected End: {selectedEndTime || 'None'}</p>
+              </div>
+            )}
+
             {/* Availability Status Indicator */}
             {getCertaintyLevel && (
               <div className="flex items-center p-2 rounded-md bg-muted/30 text-sm">
@@ -412,15 +599,15 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
             {/* Start Time Selector */}
             <div className="space-y-2">
-              <Label htmlFor="start-time">{t("bookingform.startTime")}</Label>
+              <Label htmlFor="start-time" className="text-xs text-black">{t("bookingform.startTime")}</Label>
               <Select value={selectedStartTime || ""} onValueChange={setSelectedStartTime}>
                 <SelectTrigger id="start-time">
-                  <SelectValue placeholder={t("bookingform.selectStartTime")} />
+                  <SelectValue placeholder={t("bookingform.selectStartTime")} className="text-xs text-black" />
                 </SelectTrigger>
                 <SelectContent>
                   {allAvailableStartTimes.length > 0 ? (
                     allAvailableStartTimes.map((time) => (
-                      <SelectItem key={time} value={time}>
+                      <SelectItem key={time} value={time} className="text-xs text-black">
                         {formatTime(time)}
                       </SelectItem>
                     ))
@@ -435,19 +622,19 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
             {/* End Time Selector - only enabled if start time is selected */}
             <div className="space-y-2">
-              <Label htmlFor="end-time">{t("bookingform.endTime")}</Label>
+              <Label htmlFor="end-time" className="text-xs text-black">{t("bookingform.endTime")}</Label>
               <Select
                 value={selectedEndTime || ""}
                 onValueChange={setSelectedEndTime}
                 disabled={!selectedStartTime || validEndTimes.length === 0}
               >
                 <SelectTrigger id="end-time">
-                  <SelectValue placeholder={selectedStartTime ? t("bookingform.selectEndTime") : t("bookingform.selectStartTimeFirst")} />
+                  <SelectValue placeholder={selectedStartTime ? t("bookingform.selectEndTime") : t("bookingform.selectStartTimeFirst")} className="text-xs text-black" />
                 </SelectTrigger>
                 <SelectContent>
                   {validEndTimes.length > 0 ? (
                     validEndTimes.map((time) => (
-                      <SelectItem key={time} value={time}>
+                      <SelectItem key={time} value={time} className="text-xs text-black">
                         {formatTime(time)}
                       </SelectItem>
                     ))
@@ -462,7 +649,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
             {/* Duration Display */}
             {selectedStartTime && selectedEndTime && (
-              <div className="text-sm text-muted-foreground">
+                <div className="text-xs text-black">
                 {t("bookingform.duration")}: {calculateHours()} {calculateHours() === 1 ? t("bookingform.hour") : t("bookingform.hours")}
               </div>
             )}
@@ -471,7 +658,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="location">{t("bookingform.location")}</Label>
+        <Label htmlFor="location" className="text-xs text-black">{t("bookingform.location")}</Label>
         <div className="relative">
           <MapPin className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -486,7 +673,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">{t("bookingform.jobDescription")}</Label>
+        <Label htmlFor="description" className="text-xs text-black">{t("bookingform.jobDescription")}</Label>
         <Textarea
           id="description"
           placeholder={t("bookingform.describeJob")}
@@ -499,46 +686,46 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       <div className="border-t pt-4 mt-4">
         <div className="flex justify-between mb-2">
-          <span>{t("bookingform.duration")}</span>
-          <span>{calculateHours()} {t("bookingform.hours")}</span>
+          <span className="text-xs text-black">{t("bookingform.duration")}</span>
+          <span className="text-xs text-black">{calculateHours()} {t("bookingform.hours")}</span>
         </div>
         <div className="flex justify-between mb-2">
-          <span>{t("bookingform.hourlyRate")}</span>
-          <span>€{hourlyRate || freelancer.hourly_rate || 0}</span>
+          <span className="text-xs text-black">{t("bookingform.hourlyRate")}</span>
+          <span className="text-xs text-black">€{hourlyRate || freelancer.hourly_rate || 0}</span>
         </div>
         <div className="flex justify-between font-bold">
-          <span>{t("bookingform.total")}</span>
-          <span>€{calculateTotal().toFixed(2)}</span>
+          <span className="text-xs text-black">{t("bookingform.total")}</span>
+          <span className="text-xs text-black">€{calculateTotal().toFixed(2)}</span>
         </div>
       </div>
 
       <div className="space-y-2 border-t pt-4">
-        <Label>{t("bookingform.paymentMethod")}</Label>
+        <Label className="text-xs text-black">{t("bookingform.paymentMethod")}</Label>
         <div className="grid grid-cols-2 gap-4">
           <div
-            className={`border rounded-md p-3 cursor-pointer flex items-center ${
+            className={`border rounded-md p-3 cursor-pointer flex items-center text-xs text-black ${
               paymentMethod === "online" ? "border-primary bg-primary/5" : "border-muted"
             }`}
             onClick={() => setPaymentMethod("online")}
           >
             <div
-              className={`w-4 h-4 rounded-full border mr-2 ${
+              className={`w-2 h-2 rounded-full border mr-4 ${
                 paymentMethod === "online" ? "border-primary bg-primary" : "border-muted"
               }`}
             ></div>
             <div>
-              <p className="font-medium">{t("bookingform.onlinePayment")}</p>
-              <p className="text-xs text-muted-foreground">{t("bookingform.paySecurely")}</p>
+              <p className="font-medium text-xs text-black">{t("bookingform.onlinePayment")}</p>
+              <p className="text-xs text-black">{t("bookingform.paySecurely")}</p>
             </div>
           </div>
           <div
-            className={`border rounded-md p-3 cursor-pointer flex items-center ${
+            className={`border rounded-md p-3 cursor-pointer flex items-center text-xs text-black ${
               paymentMethod === "offline" ? "border-primary bg-primary/5" : "border-muted"
             }`}
             onClick={() => setPaymentMethod("offline")}
           >
             <div
-              className={`w-4 h-4 rounded-full border mr-2 ${
+              className={`w-2 h-2 rounded-full border mr-4 ${
                 paymentMethod === "offline" ? "border-primary bg-primary" : "border-muted"
               }`}
             ></div>
@@ -555,12 +742,224 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         className="w-full"
         disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || paymentMethod === "online"}
       >
-        {loading ? t("bookingform.processing") : paymentMethod === "online" ? t("bookingform.onlinePaymentComingSoon") : t("bookingform.bookWithOfflinePayment")}
+        {loading ? t("bookingform.processing") : t("bookingform.continueToDBA")}
       </Button>
 
       <p className="text-xs text-center text-muted-foreground">
         {t("bookingform.byBooking")}
       </p>
     </form>
+  )
+
+  const renderDBAStep = () => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <CustomNoBookingsIcon className="h-5 w-5 text-primary" />
+          <h2 className="text-sm font-semibold">{t("bookingform.dbaStepTitle")}</h2>
+        </div>
+        <Badge variant="secondary">{t("bookingform.required")}</Badge>
+      </div>
+      
+      <p className="text-xs text-black">
+        {t("bookingform.dbaStepDescription")}
+      </p>
+
+      {/* Waiver Option */}
+      {bookingId && clientId && !waiverCreated && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+            <div className="space-y-2">
+              <h4 className="font-semibold text-orange-500">
+                {t("dba.waiver.option.title")}
+              </h4>
+              <p className="text-xs text-orange-500">
+                {t("dba.waiver.option.warning")}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowWaiverModal(true)}
+                className="border-orange-500 text-orange-700 bg-orange-200 hover:bg-orange-100 text-xs"
+              >
+                {t("dba.waiver.option.skipDBA")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DBA Questionnaire */}
+      {bookingId && clientId && !waiverCreated && (
+        <DBAClientQuestionnaire
+          bookingId={bookingId}
+          clientId={clientId}
+          freelancerId={freelancer.id}
+          onComplete={handleDBAComplete}
+          onSave={handleDBASave}
+        />
+      )}
+
+      {/* Waiver Status */}
+      {waiverCreated && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="h-5 w-5 text-orange-600" />
+            <div>
+              <h4 className="font-semibold text-orange-800">
+                {t("dba.waiver.status.title")}
+              </h4>
+              <p className="text-sm text-orange-700">
+                {t("dba.waiver.status.description")}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-3 pt-4">
+        <Button
+          variant="outline"
+          onClick={() => setCurrentStep('details')}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          {t("bookingform.back")}
+        </Button>
+        
+        <Button
+          onClick={() => setCurrentStep('payment')}
+          disabled={!dbaCompleted}
+          className="flex items-center gap-2 ml-auto"
+        >
+          {t("bookingform.continueToPayment")}
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderPaymentStep = () => (
+    <div className="space-y-4">
+      {/* DBA Report Display */}
+      {bookingId && clientId && selectedCategoryId && (
+        <DBAReportDisplay
+          bookingId={bookingId}
+          freelancerId={freelancer.id}
+          clientId={clientId}
+          jobCategoryId={selectedCategoryId}
+          bookingDetails={{
+            title: categoryName || 'Service',
+            description: description,
+            startDate: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
+            endDate: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
+            total: calculateTotal()
+          }}
+          freelancerDetails={{
+            name: `${freelancer.first_name} ${freelancer.last_name}`,
+            email: freelancer.email
+          }}
+          onReportGenerated={setDbaReport}
+        />
+      )}
+
+      <div className="flex items-center gap-2">
+        <CheckCircle className="h-5 w-5 text-green-500" />
+        <h2 className="text-sm font-semibold">{t("bookingform.paymentStepTitle")}</h2>
+      </div>
+      
+      <p className="text-xs text-black">
+        {t("bookingform.paymentStepDescription")}
+      </p>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm text-black">{t("bookingform.bookingSummary")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between">
+            <span className="text-xs text-black">{t("bookingform.duration")}</span>
+            <span className="text-xs text-black">{calculateHours()} {t("bookingform.hours")}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-xs text-black">{t("bookingform.hourlyRate")}</span>
+            <span className="text-xs text-black">€{hourlyRate || freelancer.hourly_rate || 0}</span>
+          </div>
+          <div className="flex justify-between font-bold text-lg">
+            <span className="text-xs text-black">{t("bookingform.total")}</span>
+            <span className="text-xs text-black">€{calculateTotal().toFixed(2)}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {dbaCompleted && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm text-black flex items-center gap-2">
+              <CustomNoBookingsIcon className="h-5 w-5 text-green-500" />
+              {t("bookingform.dbaCompleted")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-black">
+              {t("bookingform.dbaCompletedDescription")}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex gap-3 pt-4">
+        <Button
+          variant="outline"
+          onClick={() => setCurrentStep('dba')}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          {t("bookingform.back")}
+        </Button>
+        
+        <Button
+          onClick={() => router.push(`/bookings/${bookingId}/payment`)}
+          className="flex items-center gap-2 ml-auto"
+        >
+          {t("bookingform.proceedToPayment")}
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="space-y-6">
+      {/* Progress Header */}
+      <div className="space-y-4">
+        <Button type="button" variant="ghost" size="sm" className="-ml-2 text-muted-foreground" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          {t("bookingform.back")}
+        </Button>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">{getStepTitle()}</h2>
+            <Badge variant="outline">Step {currentStep === 'details' ? 1 : currentStep === 'dba' ? 2 : 3} of 3</Badge>
+          </div>
+          <Progress value={getStepProgress()} className="h-2" />
+        </div>
+      </div>
+
+      {/* Step Content */}
+      {currentStep === 'details' && renderDetailsStep()}
+      {currentStep === 'dba' && renderDBAStep()}
+      {currentStep === 'payment' && renderPaymentStep()}
+
+      {/* Waiver Modal */}
+      <DBAWaiverModal
+        isOpen={showWaiverModal}
+        onClose={() => setShowWaiverModal(false)}
+        bookingId={bookingId || ''}
+        onWaiverCreated={handleWaiverCreated}
+      />
+    </div>
   )
 }

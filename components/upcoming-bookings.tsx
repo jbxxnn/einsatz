@@ -1,6 +1,6 @@
 "use client"
 
-import { useBookings } from "@/lib/data-fetching"
+import { useUpcomingBookings } from "@/hooks/use-bookings"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -19,11 +19,11 @@ type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
 
 export default function UpcomingBookings() {
   const { profile } = useOptimizedUser()
-  const { data: bookings, error, isLoading } = useBookings()
+  const { data, error, isLoading } = useUpcomingBookings(10) // Get 10 bookings, we'll filter client-side
   const { t } = useTranslation()
 
-  // Filter for upcoming bookings
-  const upcomingBookings = bookings
+  // Filter for upcoming bookings from the response
+  const upcomingBookings = data?.bookings
     ?.filter((b: Booking) => new Date(b.start_time) > new Date() && ["pending", "confirmed"].includes(b.status))
     .slice(0, 3) // Show only 3 most recent
 

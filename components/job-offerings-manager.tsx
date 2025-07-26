@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/lib/toast"
-import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase } from "lucide-react"
+import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Shield, Loader } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import JobCategorySelector from "@/components/job-category-selector"
 import JobSubcategorySelector from "@/components/job-subcategory-selector"
 import AvailabilityCalendar from "@/components/availability-calendar"
+import DBAFreelancerQuestionnaire from "@/components/dba-freelancer-questionnaire"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 import LoadingSpinner from "@/components/loading-spinner"
@@ -43,6 +45,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [saving, setSaving] = useState(false)
   const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false)
   const [selectedOfferingCategoryId, setSelectedOfferingCategoryId] = useState<string | null>(null)
+  const [dbaDialogOpen, setDbaDialogOpen] = useState(false)
+  const [selectedDbaCategoryId, setSelectedDbaCategoryId] = useState<string | null>(null)
+  const [selectedDbaCategoryName, setSelectedDbaCategoryName] = useState<string>("")
 
   useEffect(() => {
     const fetchOfferings = async () => {
@@ -194,108 +199,126 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("jobOfferings.cardTitle")}</CardTitle>
-          <CardDescription>
-            {t("jobOfferings.cardDescription")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-background rounded-lg overflow-hidden">
+      <div className="p-6">
+      <h2 className="text-lg font-semibold mb-1">{t("jobOfferings.cardTitle")}</h2>
+          <p className="text-xs text-black">{t("jobOfferings.cardDescription")}</p>
+        </div>
+        <div className="p-6">
           {loading ? (
-            <div className="flex justify-center py-4">
-              <LoadingSpinner />
+            <div className="flex justify-center items-center min-h-screen w-full">
+              <Loader className="h-8 w-8 animate-spin" />
             </div>
           ) : offerings.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
+            <div className="text-center py-4 text-black text-sm">
               <p>{t("jobOfferings.cardNoOfferings")}</p>
               <p>{t("jobOfferings.cardAddOfferings")}</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {offerings.map((offering) => (
-                <div key={offering.id} className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <h3 className="font-medium">{offering.category_name}</h3>
-                      {offering.subcategory_name && (
-                        <p className="text-sm text-muted-foreground">{offering.subcategory_name}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">€{offering.hourly_rate}/hour</p>
-                      {/* {offering.experience_years && (
-                        <p className="text-sm text-muted-foreground">
-                          {offering.experience_years} {offering.experience_years === 1 ? "year" : "years"} of experience
-                        </p>
-                      )} */}
-                    </div>
-                    <div className="flex gap-2">
-                      {/* <Button variant="outline" size="sm" onClick={() => openAvailabilityDialog(offering.category_id)}>
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Set Availability
-                      </Button> */}
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteOffering(offering.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* {offering.description && (
-                    <div className="mt-2 text-sm text-muted-foreground">
-                      <p>{offering.description}</p>
-                    </div>
-                  )} */}
-                </div>
-              ))}
+              <Table>
+                <TableHeader>
+                  <TableRow className="text-xs text-black">
+                    <TableHead>{t("jobOfferings.category")}</TableHead>
+                    <TableHead>{t("jobOfferings.subcategory")}</TableHead>
+                    <TableHead>{t("jobOfferings.hourlyRate")}</TableHead>
+                    <TableHead>{t("jobOfferings.experienceYears")}</TableHead>
+                    <TableHead className="text-right">{t("jobOfferings.actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {offerings.map((offering) => (
+                    <TableRow key={offering.id} className="text-xs text-black">
+                      <TableCell className="font-medium">
+                        {offering.category_name}
+                      </TableCell>
+                      <TableCell>
+                        {offering.subcategory_name || "-"}
+                      </TableCell>
+                      <TableCell>
+                        €{offering.hourly_rate}/hour
+                      </TableCell>
+                      <TableCell>
+                        {offering.experience_years ? `${offering.experience_years} ${offering.experience_years === 1 ? "year" : "years"}` : "-"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setSelectedDbaCategoryId(offering.category_id)
+                              setSelectedDbaCategoryName(offering.category_name)
+                              setDbaDialogOpen(true)
+                            }}
+                          >
+                            <Shield className="h-4 w-4 mr-2" />
+                            DBA
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteOffering(offering.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              
               <div className="mt-[20px]">
-              <Link href="/profile/availability">
-                        <Button>
-                          <Briefcase className="h-4 w-4 mr-2" />
-                          {t("jobOfferings.cardSetupAvailability")}
-                        </Button>
-                      </Link>
-                      </div>
+                <Link href="/profile/availability">
+                  <Button>
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    {t("jobOfferings.cardSetupAvailability")}
+                  </Button>
+                </Link>
+              </div>
             </div>
-            
           )}
-        </CardContent>
-        
-      </Card>
+        </div>
+      </div>
 
       {hasReachedMaxOfferings ? (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{t("jobOfferings.cardMaxOfferings")}</AlertTitle>
-          <AlertDescription>
-            {t("jobOfferings.cardMaxOfferingsDescription", { MAX_JOB_OFFERINGS: 3 })}
-          </AlertDescription>
-        </Alert>
+        <div className="bg-background rounded-lg overflow-hidden">
+          <div className="p-6 flex gap-2">
+            <AlertCircle className="h-4 w-4" />
+            <div>
+            <AlertTitle className="text-sm text-black">{t("jobOfferings.cardMaxOfferings")}</AlertTitle>
+            <AlertDescription className="text-xs text-black">
+              {t("jobOfferings.cardMaxOfferingsDescription", { MAX_JOB_OFFERINGS: 3 })}
+            </AlertDescription>
+          </div>
+          </div>
+        </div>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("jobOfferings.cardAddNewOffering")}</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-background rounded-lg overflow-hidden">
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-1">{t("jobOfferings.cardAddNewOffering")}</h2>
+          </div>
+          <div className="p-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="category">{t("jobOfferings.cardCategory")}</Label>
+                <Label htmlFor="category" className="text-xs text-black">{t("jobOfferings.cardCategory")}</Label>
                 <JobCategorySelector
                   selectedCategories={selectedCategoryId ? [selectedCategoryId] : []}
                   onChange={(categories) => setSelectedCategoryId(categories[0] || null)}
                   multiple={false}
+                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="subcategory">{t("jobOfferings.cardSubcategory")}</Label>
+                <Label htmlFor="subcategory" className="text-xs text-black">{t("jobOfferings.cardSubcategory")}</Label>
                 <JobSubcategorySelector
                   categoryId={selectedCategoryId}
                   selectedSubcategory={selectedSubcategoryId}
                   onChange={setSelectedSubcategoryId}
+                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="hourlyRate">{t("jobOfferings.cardHourlyRate")}</Label>
+                <Label htmlFor="hourlyRate" className="text-xs text-black">{t("jobOfferings.cardHourlyRate")}</Label>
                 <Input
                   id="hourlyRate"
                   type="number"
@@ -304,11 +327,12 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                   placeholder="45.00"
                   value={hourlyRate}
                   onChange={(e) => setHourlyRate(e.target.value)}
+                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="experienceYears">{t("jobOfferings.cardExperienceYears")}</Label>
+                <Label htmlFor="experienceYears" className="text-xs text-black">{t("jobOfferings.cardExperienceYears")}</Label>
                 <Input
                   id="experienceYears"
                   type="number"
@@ -317,17 +341,19 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                   placeholder="3.5"
                   value={experienceYears}
                   onChange={(e) => setExperienceYears(e.target.value)}
+                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">{t("jobOfferings.cardDescription")}</Label>
+                <Label htmlFor="description" className="text-xs text-black">{t("jobOfferings.cardDescription")}</Label>
                 <Textarea
                   id="description"
                   placeholder="Describe your experience and services for this job category"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
+                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                 />
               </div>
 
@@ -345,8 +371,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                 )}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Availability Dialog */}
@@ -356,6 +382,28 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
             <DialogTitle>{t("jobOfferings.cardSetAvailability")}</DialogTitle>
           </DialogHeader>
           <AvailabilityCalendar freelancerId={freelancerId} />
+        </DialogContent>
+      </Dialog>
+
+      {/* DBA Questionnaire Dialog */}
+      <Dialog open={dbaDialogOpen} onOpenChange={setDbaDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("dba.freelancer.title")}</DialogTitle>
+          </DialogHeader>
+          {selectedDbaCategoryId && selectedDbaCategoryName && (
+            <DBAFreelancerQuestionnaire
+              jobCategoryId={selectedDbaCategoryId}
+              jobCategoryName={selectedDbaCategoryName}
+              onComplete={() => {
+                setDbaDialogOpen(false)
+                toast.success(t("dba.answers.saved"))
+              }}
+              onSave={() => {
+                toast.success(t("dba.answers.saved"))
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

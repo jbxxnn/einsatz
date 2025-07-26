@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link"
-import { MoveRight, PhoneCall, LayoutDashboard } from "lucide-react";
+import { MoveRight, PhoneCall, LayoutDashboard, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n";
-import { useOptimizedSupabase } from "@/components/optimized-supabase-provider";
+import { useOptimizedUser } from "@/components/optimized-user-provider";
 
 interface HeroProps {
   title: string
@@ -22,33 +22,12 @@ export function Hero({
   becomeFreelancerText,
 }: HeroProps) {
   const [titleNumber, setTitleNumber] = useState(0);
-  const [profile, setProfile] = useState<any>(null);
-  const { supabase } = useOptimizedSupabase();
+  const { profile, isProfileLoading, isLoading } = useOptimizedUser();
   const titles = useMemo(
     () => ["amazing", "new", "wonderful", "beautiful", "smart"],
     []
   );
   const { t } = useTranslation();
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-          setProfile(profileData);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
-
-    fetchProfile();
-  }, [supabase]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -62,6 +41,12 @@ export function Hero({
   }, [titleNumber, titles]);
 
   const renderButtons = () => {
+    // Don't show anything while anything is loading
+    if (isLoading || isProfileLoading) {
+      return null;
+    }
+
+    // Show appropriate buttons based on user type
     if (!profile) {
       return (
         <div className="flex flex-row gap-3">

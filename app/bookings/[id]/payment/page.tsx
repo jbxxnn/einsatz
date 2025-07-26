@@ -5,13 +5,14 @@ import { useParams, useRouter } from "next/navigation"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, CheckCircle, CreditCard, Loader2 } from "lucide-react"
+import { ArrowLeft, CheckCircle, CreditCard, Loader } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
 import { toast } from "sonner"
 import { useTranslation } from "@/lib/i18n"
+import OptimizedHeader from "@/components/optimized-header"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -99,8 +100,8 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="container py-10 flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex justify-center items-center min-h-screen w-full">
+        <Loader className="h-8 w-8 animate-spin" />
       </div>
     )
   }
@@ -115,6 +116,8 @@ export default function PaymentPage() {
   }
 
   return (
+    <>
+    <OptimizedHeader />
     <div className="container py-10">
       <Link href="/dashboard" className="flex items-center text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="h-4 w-4 mr-2" />
@@ -345,10 +348,10 @@ export default function PaymentPage() {
                   </Button>
                   <Button onClick={handlePayment} disabled={processing}>
                     {processing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <div className="flex justify-center items-center min-h-screen w-full">
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
                         {t("payments.processing")}
-                      </>
+                      </div>
                     ) : (
                       `${t("payments.pay")} €${booking.total_amount.toFixed(2)}`
                     )}
@@ -396,6 +399,7 @@ export default function PaymentPage() {
         )}
       </div>
     </div>
+    </>
   )
 }
 

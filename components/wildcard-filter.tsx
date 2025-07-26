@@ -82,7 +82,7 @@ export default function WildcardFilter({ selectedWildcards, onChange }: Wildcard
     <div className="space-y-2">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger className="flex w-full items-center justify-between">
-        <Label className="text-sm font-medium">Wildcard Search</Label>
+        <Label className="text-xs text-black font-bold">Wildcard Search</Label>
           <div
             role="button"
             tabIndex={0}
@@ -107,10 +107,10 @@ export default function WildcardFilter({ selectedWildcards, onChange }: Wildcard
                 onCheckedChange={() => toggleWildcard(option.id)}
               />
               <div className="grid gap-0.5">
-                <Label htmlFor={`wildcard-${option.id}`} className="text-sm font-normal cursor-pointer">
+                <Label htmlFor={`wildcard-${option.id}`} className="text-xs text-black font-bold cursor-pointer">
                   {option.label}
                 </Label>
-                <p className="text-xs text-muted-foreground">{option.description}</p>
+                <p className="text-xs text-black">{option.description}</p>
               </div>
             </div>
           ))}

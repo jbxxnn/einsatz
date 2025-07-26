@@ -1,75 +1,76 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
+import { useOptimizedUser } from "@/components/optimized-user-provider"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "@/lib/toast"
-import LoadingSpinner from "@/components/loading-spinner"
 import type { Database } from "@/lib/database.types"
-import SidebarNav from "@/components/sidebar-nav"
 import JobOfferingsManager from "@/components/job-offerings-manager"
 import { useTranslation } from "@/lib/i18n"
 import WildcardCategoriesForm from "@/components/wildcard-categories-form"
 import FreelancerOnboardingProgress from "@/components/freelancer-onboarding-progress"
+import { 
+  SidebarProvider, 
+  Sidebar, 
+  SidebarInset
+} from "@/components/ui/sidebar"
+import ModernSidebarNav from "@/components/modern-sidebar-nav"
+import OptimizedHeader from "@/components/optimized-header"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
+
+// Skeleton components for immediate loading
+function JobOfferingsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-[300px]" />
+        <Skeleton className="h-4 w-[200px]" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Skeleton className="h-[400px] w-full" />
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    </div>
+  )
+}
 
 export default function JobOfferingsPage() { 
   const { t } = useTranslation()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
-  const [loading, setLoading] = useState(true)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const { profile, isLoading: isProfileLoading } = useOptimizedUser()
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true)
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.push("/login")
-        return
-      }
-
-      // Fetch profile
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single()
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError)
-        toast.error("Failed to load profile")
-        router.push("/dashboard")
-        return
-      }
-
-      setProfile(profileData)
-
-      // If not a freelancer, redirect
-      if (profileData.user_type !== "freelancer") {
-        toast.error("Access denied")
-        router.push("/dashboard")
-        return
-      }
-
-      setLoading(false)
+  // Check if user is freelancer and redirect if not
+  React.useEffect(() => {
+    if (profile && profile.user_type !== "freelancer") {
+      toast.error("Access denied")
+      router.push("/dashboard")
     }
+  }, [profile, router])
 
-    fetchProfile()
-  }, [supabase, router])
-
-  if (loading) {
+  if (isProfileLoading) {
     return (
-      <div className="container py-10 flex justify-center items-center min-h-[50vh]">
-        <LoadingSpinner />
-      </div>
+      <SidebarProvider className="w-full">
+        <div className="flex min-h-screen bg-muted/30 w-full">
+          <Sidebar>
+            {/* Show minimal sidebar during loading */}
+            <div className="p-4">
+              <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+            </div>
+          </Sidebar>
+          
+          <SidebarInset className="w-full">
+            <OptimizedHeader />
+            <div className="p-6">
+              <JobOfferingsSkeleton />
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     )
   }
 
@@ -83,45 +84,45 @@ export default function JobOfferingsPage() {
   }
 
   return (
-    <div className="bg-muted/30 min-h-screen">
-      <div className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <SidebarNav profile={profile} />
-          </div>
+    <SidebarProvider className="w-full">
+      <div className="flex min-h-screen bg-muted/30 w-full">
+        <Sidebar>
+          {profile && <ModernSidebarNav profile={profile} />}
+        </Sidebar>
 
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
+          <SidebarInset className="w-full">
+          <OptimizedHeader />
+          <div className="lg:col-span-3 space-y-6 p-6 pb-20 bg-[#f7f7f7]">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold">{t("jobOfferings.title")}</h1>
-                <p className="text-muted-foreground mt-1">
+                {/* <h1 className="text-3xl font-bold">{t("jobOfferings.title")}</h1> */}
+                {/* <p className="text-muted-foreground mt-1">
                   {t("jobOfferings.description")}
-                </p>
+                </p> */}
               </div>
             </div>
             {profile.user_type === "freelancer" && (
               <FreelancerOnboardingProgress profile={profile} />
             )}
 
-            <Card>
-              <CardHeader>
+            {/* <Card> */}
+              {/* <CardHeader> */}
                 {/* <CardTitle>Your Services</CardTitle> */}
                 {/* <CardDescription>
                   Add and manage the services you offer to clients
                 </CardDescription> */}
-              </CardHeader>
-              <CardContent>
+              {/* </CardHeader> */}
+              {/* <CardContent> */}
                 <JobOfferingsManager freelancerId={profile.id} />
                 <div className="mt-6">
                   <WildcardCategoriesForm profile={profile} />
                 </div>
-              </CardContent>
-            </Card>
+              {/* </CardContent> */}
+            {/* </Card> */}
           </div>
-        </div>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   )
 } 

@@ -92,6 +92,7 @@
     "select": "Select",
     "selected": "Selected",
     "selectDate": "Select Date",
+    "selectServiceFirst": "Please select a service first to view availability",
     "continueToBooking": "Continue to Booking",
     "whyBookWithEinsatz": "Why book with Einsatz",
     "securePayments": "Secure payments, released only when you approve",
@@ -141,7 +142,7 @@
       "selectRadiusPlaceholder": "Select radius",
       "milesAway": "miles away",
       "of": "of",
-      "hour": "hours",
+      "hour": "p/hr",
       "minutes": "minutes",
       "days": "days",
       "weeks": "weeks",
@@ -154,7 +155,13 @@
       "hoursAway": "hours away",
       "yearsOfExperience": "years of experience"
     },
-    "verified": "Verified"
+    "verified": "Verified",
+    "message": "Message",
+    "topRated": "Top Rated",
+    "fastResponse": "Fast Response",
+    "completionRate": "Completion Rate",
+    "avgResponse": "Avg Response",
+    "servicesAvailable": "services available"
   },
   "filters": {
     "title": "Filters",
@@ -193,6 +200,11 @@
       "none": "No freelancers found"
     }
   },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "showing": "Showing {from}-{to} of {total} freelancers"
+  },
   "header": {
     "findFreelancers": "Find Freelancers",
     "dashboard": "Dashboard",
@@ -212,12 +224,97 @@
     "bookings": "Bookings",
     "payments": "Payments",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "availability": "Availability",
+    "home": "Home",
+    "account": "Account",
+    "navigation": "Navigation",
+    "freelancer": "Freelancer",
+    "client": "Client"
   },
   "dashboard": {
     "title": "Dashboard",
     "profileNotFound": "Profile not found",
     "goToHome": "Go to Home",
+
+
+    "welcome": "Welcome back, {name}! 👋",
+    "hereIsWhatIsHappening": "Here's what's happening with your projects today.",
+    "totalSpent": "Total Spent",
+    "allTimeSpending": "All time spending",
+    "activeProjects": "Active Projects",
+    "ongoingProjects": "Ongoing projects",
+    "upcomingBookings": "Upcoming Bookings",
+    "completedBookings": "Completed Bookings",
+    "cancelledBookings": "Cancelled Bookings",
+    "pendingBookings": "Pending Bookings",
+    "totalEarnings": "Total Earnings",
+    "activeBookings": "Bookings",
+    "totalClients": "Total Clients",
+    "avgResponseTime": "Avg Response Time",
+    "freelancersUsed": "Freelancers Used",
+    "uniqueFreelancers": "Unique Freelancers",
+    "projectsCompleted": "Projects Completed",
+    "successfulProjects": "Successful Projects",
+    "unableToLoadDashboardStatistics": "Unable to load dashboard statistics",
+    "trendUp": "+{trend}% from last month",
+    "trendDown": "{trend}% from last month",
+    "trendNoChange": "No change from last month",
+    "confirmed": "Confirmed",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "client": "Client",
+    "freelancer": "Freelancer",
+    "service": "Service",
+    "dateAndTime": "Date & Time",
+    "duration": "Duration",
+    "price": "Price",
+    "status": "Status",
+    "actions": "Actions",
+    "noLocation": "No location",
+    "openMenu": "Open menu",
+    "viewDetails": "View Details",
+    "message": "Message to {role}",
+    "reschedule": "Reschedule",
+    "acceptBooking": "Accept Booking",
+    "cancelBooking": "Cancel Booking",
+    "viewAllBookings": "View All Bookings",
+    "unableToLoadBookings": "Unable to load bookings",
+    "noBookingsData": "No bookings data",
+    "upcoming": "Upcoming",
+    "noUpcomingBookings": "No upcoming bookings",
+    "noUpcomingBookingsDescription": "You don't have any upcoming bookings at the moment.",
+    "noCompletedBookings": "No completed bookings",
+    "noCompletedBookingsDescription": "You haven't completed any bookings yet.",
+    "noCancelledBookings": "No cancelled bookings",
+    "noCancelledBookingsDescription": "You don't have any cancelled bookings.",
+    "performanceMetrics": "Performance Metrics",
+    "projectAnalytics": "Project Analytics",
+    "topPerformer": "Top Performer",
+    "unableToLoadPerformanceMetrics": "Unable to load performance metrics",
+    "unableToLoadProjectAnalytics": "Unable to load project analytics",
+    "noPerformanceData": "No performance data",
+    "averageRating": "Average Rating",
+    "reviews": "reviews",
+    "noReviewsYet": "no reviews yet",
+    "responseTime": "Response Time",
+    "averageResponseTime": "Average Response Time",
+    "hours": "hours",
+    "minutes": "minutes",
+    "seconds": "seconds",
+    "days": "days",
+    "weeks": "weeks",
+    "ofTotalBookings": "of total bookings",
+    "uniqueClients": "unique clients",
+    "activeClient": "Active Client",
+    "avgProjectCost": "Avg Project Cost",
+    "perProject": "Per project",
+    "from": "from",
+    "completionRate": "Completion Rate",
+    
+
+
     "stats": {
       "bookings": "Bookings",
       "upcoming": "Upcoming",
@@ -288,6 +385,11 @@
     "jobOfferingsDescription": "Manage your services and expertise in the dedicated job offerings page.",
     "manageJobOfferings": "Manage Job Offerings",
     "editAvatar": "Edit Avatar",
+    "coverDesign": "Cover Design",
+    "coverDesignDescription": "Choose a professional cover design for your profile",
+    "coverDesignTooltip": "Select a cover design that represents your professional style",
+    "hideOptions": "Hide Options",
+    "chooseCover": "Choose Cover",
     "completeness": {
       "title": "Profile Completeness",
       "complete": "Your profile is complete! Great job!",
@@ -367,7 +469,12 @@
     "cardHourlyRate": "Hourly Rate (€)",
     "cardExperienceYears": "Years of Experience",
     "cardAddJobOffering": "Add Job Offering",
-    "cardAddOfferingError": "Error adding job offering"
+    "cardAddOfferingError": "Error adding job offering",
+    "category": "Category",
+    "subcategory": "Subcategory",
+    "hourlyRate": "Hourly Rate",
+    "experienceYears": "Years of Experience",
+    "actions": "Actions"
   },
   "bookings": {
     "title": "Bookings",
@@ -437,6 +544,20 @@
     "paymentDisputed": "Payment Disputed"
   },
   "bookingform": {
+    "stepDetails": "Booking Details",
+    "stepDBA": "DBA Compliance",
+    "stepPayment": "Payment",
+    "dbaStepTitle": "DBA Compliance Questionnaire",
+    "dbaStepDescription": "Complete the DBA compliance questionnaire to ensure legal compliance with Dutch labor law.",
+    "paymentStepTitle": "Payment & Confirmation",
+    "paymentStepDescription": "Review your booking details and proceed to payment.",
+    "bookingSummary": "Booking Summary",
+    "dbaCompleted": "DBA Questionnaire Completed",
+    "dbaCompletedDescription": "Your DBA compliance questionnaire has been completed successfully.",
+    "continueToDBA": "Continue to DBA Questionnaire",
+    "continueToPayment": "Continue to Payment",
+    "proceedToPayment": "Proceed to Payment",
+    "required": "Required",
     "selectStartTime": "Select Start Time",
     "selectEndTime": "Select End Time",
     "selectStartTimeFirst": "Select Start Time First",
@@ -653,9 +774,12 @@
     "title": "Complete Your Profile",
     "nextStep": "Next step",
     "completeStep": "Complete Step",
+    "of": "of",
+    "completed": "completed",
     "profile": {
       "title": "Profile Information",
-      "description": "Add your personal and professional details"
+      "description": "Add your personal and professional details",
+      "complete": "complete"
     },
     "jobOfferings": {
       "title": "Job Offerings",
@@ -663,7 +787,9 @@
     },
     "availability": {
       "title": "Availability",
-      "description": "Set your working hours and schedule"
+      "description": "Set your working hours and schedule",
+      "availabilitySet": "Availability set",
+      "noAvailabilitySet": "No availability set"
     },
     "payments": {
       "title": "Payment Methods",
@@ -671,6 +797,10 @@
     }
   },
   "availability": {
+    "profileNotFound": "Profile not found",
+    "goToHome": "Go to Home",
+    "manageAvailability": "Manage Availability",
+    "manageAvailabilityDescription": "Set your working hours and schedule",
     "calendar": {
       "title": "Availability Calendar",
       "description": "Select dates to view and manage your availability"
@@ -710,6 +840,161 @@
       "selectPattern": "Select pattern",
       "endRecurrence": "End Recurrence",
       "noEndDate": "No end date"
+    },
+    "error": {
+      "failedToLoadAvailability": "Failed to load availability",
+      "retry": "Retry"
+    },
+    "legend": {
+      "title": "Availability Legend"
+    },
+    "table": {
+      "time": "Time",
+      "recurrence": "Recurrence",
+      "status": "Status",
+      "actions": "Actions",
+      "oneTime": "One-time"
+    }
+  },
+  "dba": {
+    "freelancer": {
+      "title": "DBA Compliance Questionnaire",
+      "description": "Complete this questionnaire for {category} to ensure compliance with Dutch labor law",
+      "info": "Your answers help determine your legal classification as a freelancer. This information is used to generate compliance reports for your bookings."
+    },
+    "client": {
+      "title": "DBA Compliance Questions",
+      "description": "Answer these questions to complete the DBA compliance check for this booking",
+      "info": "Your answers, combined with the freelancer's profile, will generate a DBA compliance report for this booking."
+    },
+    "progress": {
+      "label": "Progress",
+      "questions": "questions answered"
+    },
+    "category": {
+      "completed": "Completed"
+    },
+    "answer": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "save": {
+      "button": "Save Answers",
+      "saving": "Saving...",
+      "advance": {
+        "title": "Answers Saved & Advanced",
+        "description": "Your answers have been saved and you've been moved to the next incomplete category: {category}"
+      },
+      "success": {
+        "title": "Answers Saved",
+        "description": "Your DBA answers have been saved successfully"
+      },
+      "error": {
+        "title": "Save Failed",
+        "description": "Failed to save your answers. Please try again."
+      }
+    },
+    "complete": {
+      "button": "Complete Questionnaire",
+      "warning": "Please answer all questions before completing the questionnaire"
+    },
+    "error": {
+      "loading": {
+        "title": "Loading Error",
+        "description": "Failed to load DBA questions"
+      },
+      "fetchingData": "Error fetching DBA data",
+      "savingAnswers": "Error saving DBA answers",
+      "generatingReport": "Error generating DBA report"
+    },
+    "report": {
+      "title": "DBA Compliance Report",
+      "score": "Compliance Score",
+      "riskLevel": "Risk Level",
+      "safe": "Safe (Independent)",
+      "doubtful": "Doubtful",
+      "highRisk": "High Risk (Employee)",
+      "download": "Download Report",
+      "view": "View Report"
+    },
+    "waiver": {
+      "title": "DBA Check Waiver",
+      "description": "You can choose to skip the DBA compliance check, but this may have legal implications.",
+      "legalWarning": {
+        "title": "Legal Warning",
+        "paragraph1": "By skipping the DBA compliance check, you acknowledge that you understand the potential legal implications.",
+        "paragraph2": "The DBA (Declaration of Labor Relations) is designed to protect both parties and ensure compliance with Dutch labor law.",
+        "paragraph3": "Skipping this check may result in legal uncertainty about the nature of your working relationship."
+      },
+      "whatYouSkip": {
+        "title": "What you're skipping:",
+        "item1": "DBA compliance questionnaire for both parties",
+        "item2": "Automated risk assessment and scoring",
+        "item3": "Professional DBA compliance report",
+        "item4": "Legal classification of the working relationship"
+      },
+      "reason": "Reason for waiver",
+      "reasonPlaceholder": "Please provide a reason for skipping the DBA check (optional)...",
+      "reasonHelp": "This information is stored for compliance purposes and may be reviewed by authorities.",
+      "understood": "I understand the legal implications of skipping the DBA compliance check and accept full responsibility for this decision.",
+      "confirm": "I confirm that I want to skip the DBA compliance check and proceed without this legal protection.",
+      "processing": "Processing...",
+      "skipDBA": "Skip DBA Check",
+      "option": {
+        "title": "Skip DBA Check",
+        "description": "You can choose to skip the DBA compliance check for this booking.",
+        "warning": "This will bypass the legal compliance assessment. Consider the implications carefully.",
+        "skipDBA": "Skip DBA Check"
+      },
+      "status": {
+        "title": "DBA Check Waived",
+        "description": "The DBA compliance check has been waived for this booking.",
+        "waived": "DBA Check Waived",
+        "signedOn": "Waiver signed on",
+        "reason": "Reason provided",
+        "legalNotice": {
+          "title": "Legal Notice",
+          "description": "This booking proceeds without DBA compliance verification. Both parties should ensure they understand the legal implications of their working relationship."
+        }
+      },
+      "success": {
+        "title": "DBA Check Waived",
+        "description": "The DBA compliance check has been successfully waived for this booking."
+      },
+      "error": {
+        "title": "Error",
+        "description": "Failed to create waiver. Please try again.",
+        "confirmationRequired": "Please confirm that you understand the implications before proceeding."
+      }
+    }
+  },
+  "contract": {
+    "title": "Service Contract",
+    "description": "Professional service agreement with DBA compliance information",
+    "generate": "Generate Contract",
+    "view": "View Contract",
+    "download": "Download Contract",
+    "regenerate": "Regenerate Contract",
+    "generating": "Generating...",
+    "downloading": "Downloading...",
+    "regenerating": "Regenerating...",
+    "noContract": "No Contract Available",
+    "noContractDescription": "Generate a professional service contract that includes booking details and DBA compliance information.",
+    "contractInfo": "Contract Information",
+    "contractNumber": "Contract Number",
+    "status": "Status",
+    "generated": "Generated",
+    "dbaCompliance": "DBA Compliance",
+    "included": "Included",
+    "generatedOn": "Generated",
+    "updateDescription": "Need to update the contract? Regenerate it with the latest information.",
+    "success": {
+      "title": "Contract Generated",
+      "description": "Contract has been generated successfully."
+    },
+    "error": {
+      "title": "Error",
+      "description": "Failed to generate contract. Please try again."
     }
   }
 }

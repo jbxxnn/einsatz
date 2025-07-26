@@ -1,4 +1,5 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+// import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
@@ -6,8 +7,8 @@ import { NextResponse } from "next/server"
 export const revalidate = 3600 // Revalidate at most every hour
 
 export async function GET() {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
 
   try {
     const { data: categories, error } = await supabase.from("job_categories").select("*").order("name")

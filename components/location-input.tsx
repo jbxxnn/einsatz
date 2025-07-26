@@ -115,7 +115,7 @@ export function LocationInput({
               placeholder={placeholder}
               value={inputValue}
               onChange={(e) => handleInputChange(e.target.value)}
-              className="pl-8"
+              className="pl-8 rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
               onFocus={() => setIsOpen(true)}
               onBlur={() => setTimeout(() => setIsOpen(false), 200)}
             />

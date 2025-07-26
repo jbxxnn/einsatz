@@ -1,13 +1,14 @@
 "use client"
 
-import { useSearchParams } from "next/navigation"
-import { useFreelancers } from "@/lib/data-fetching"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
+import { useFreelancers } from "@/hooks/use-freelancers"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { MapPin, Star, CheckCircle } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { MapPin, Star, CheckCircle, AlertCircle, RefreshCw, BadgeCheck, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
@@ -26,11 +27,18 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
 
 export default function FreelancersList() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
   const { t } = useTranslation()
+  
+  // Get pagination parameters from URL
+  const currentPage = parseInt(searchParams.get("page") || "1")
+  const limit = parseInt(searchParams.get("limit") || "12")
+  
   // Get all filter parameters from URL
   const filters = {
     search: searchParams.get("search") || undefined,
-    categories: searchParams.get("categories") || undefined,
+    categories: searchParams.get("categories")?.split(",").filter(Boolean) || undefined,
     minPrice: searchParams.get("minPrice") || undefined,
     maxPrice: searchParams.get("maxPrice") || undefined,
     availableNow: searchParams.get("availableNow") === "true",
@@ -38,45 +46,118 @@ export default function FreelancersList() {
     latitude: searchParams.get("latitude") || undefined,
     longitude: searchParams.get("longitude") || undefined,
     radius: searchParams.get("radius") || undefined,
-    wildcards: searchParams.get("wildcards") || undefined,
+    wildcards: searchParams.get("wildcards")?.split(",").filter(Boolean) || undefined,
     wildcardOnly: searchParams.get("wildcardOnly") === "true",
+    page: currentPage,
+    limit: limit,
   }
 
-  const { data, error, isLoading } = useFreelancers(filters)
+  const { data, error, isLoading, isFetching, refetch } = useFreelancers(filters)
   const freelancers = data?.freelancers || []
+  const pagination = data?.pagination || { page: 1, limit: 12, total: 0, hasMore: false }
 
+  // Navigation functions
+  const goToPage = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (page === 1) {
+      params.delete("page")
+    } else {
+      params.set("page", page.toString())
+    }
+    router.push(`${pathname}?${params.toString()}`)
+  }
+
+  const goToNextPage = () => {
+    if (pagination.hasMore) {
+      goToPage(currentPage + 1)
+    }
+  }
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1)
+    }
+  }
+
+  // Show loading state
   if (isLoading) {
     return (
       <div className="space-y-6">
-        {[...Array(5)].map((_, i) => (
+        {[...Array(6)].map((_, i) => (
           <FreelancerSkeleton key={i} />
         ))}
       </div>
     )
   }
 
+  // Show error state with retry option
   if (error) {
     return (
       <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <h3 className="text-lg font-medium">Error loading freelancers</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              There was a problem loading the freelancer list. Please try again.
+        <CardContent className="p-8">
+          <div className="text-center space-y-4">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {t("freelancers.error.title") || "Error loading freelancers"}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {t("freelancers.error.description") || "There was a problem loading the freelancer list. Please try again."}
             </p>
+              <Button onClick={() => refetch()} variant="outline" disabled={isFetching}>
+                {isFetching ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Retrying...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Try Again
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
     )
   }
 
+  // Show empty state
   if (freelancers.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <h3 className="text-lg font-medium">No freelancers found</h3>
-            <p className="text-sm text-muted-foreground mt-1">Try adjusting your filters to find more freelancers.</p>
+        <CardContent className="p-8">
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+              <MapPin className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {t("freelancers.empty.title") || "No freelancers found"}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {t("freelancers.empty.description") || "Try adjusting your filters to find more freelancers."}
+              </p>
+              <Button 
+                onClick={() => refetch()} 
+                variant="outline" 
+                disabled={isFetching}
+              >
+                {isFetching ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Refresh
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -85,9 +166,80 @@ export default function FreelancersList() {
 
   return (
     <div className="space-y-6">
+      {/* Results header with count and refresh indicator */}
+      <div className="flex items-center justify-between ">
+        <div className="text-xs text-black">
+          {t("freelancers.results.found", { count: freelancers.length }) || 
+           `${freelancers.length} freelancer${freelancers.length !== 1 ? 's' : ''} found`}
+        </div>
+        {isFetching && (
+          <div className="flex items-center gap-2 text-xs text-black">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            Updating...
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Freelancers list */}
       {freelancers.map((freelancer: Freelancer) => (
         <FreelancerCard key={freelancer.id} freelancer={freelancer} />
       ))}
+      </div>
+
+      {/* Pagination Controls */}
+      {pagination.total > 0 && (
+        <div className="flex items-center justify-between pt-6">
+          <div className="text-xs text-black">
+            {t("pagination.showing", { 
+              from: (currentPage - 1) * limit + 1, 
+              to: Math.min(currentPage * limit, pagination.total),
+              total: pagination.total 
+            }) || `Showing ${(currentPage - 1) * limit + 1}-${Math.min(currentPage * limit, pagination.total)} of ${pagination.total} freelancers`}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToPreviousPage}
+              disabled={currentPage <= 1}
+              className="text-xs text-black bg-transparent"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              {t("pagination.previous") || "Previous"}
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, Math.ceil(pagination.total / limit)) }, (_, i) => {
+                const pageNum = i + 1
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => goToPage(pageNum)}
+                    className="w-8 h-8 p-0"
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              })}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToNextPage}
+              disabled={!pagination.hasMore}
+              className="text-xs text-black bg-transparent"
+            >
+              {t("pagination.next") || "Next"}
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -96,11 +248,36 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
   const { t } = useTranslation()
   const initials = `${freelancer.first_name?.[0] || ""}${freelancer.last_name?.[0] || ""}`.toUpperCase()
 
+  // Function to get category color based on category name
+  const getCategoryColor = (categoryName: string) => {
+    const colors = [
+      'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200',
+      'bg-green-100 text-green-800 border-green-200 hover:bg-green-200',
+      'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200',
+      'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200',
+      'bg-pink-100 text-pink-800 border-pink-200 hover:bg-pink-200',
+      'bg-indigo-100 text-indigo-800 border-indigo-200 hover:bg-indigo-200',
+      'bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200',
+      'bg-red-100 text-red-800 border-red-200 hover:bg-red-200',
+      'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200',
+      'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
+    ]
+    
+    // Use the category name to determine color (hash-based for consistency)
+    const hash = categoryName.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0)
+      return a & a
+    }, 0)
+    
+    return colors[Math.abs(hash) % colors.length]
+  }
+
   return (
-    <Card className="transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:scale-[1.01]">
-      <Link href={`/freelancers/${freelancer.id}`} passHref>
-      <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row gap-4">
+    <Card className="transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:scale-[1.01] rounded-xl">
+      <a href={`/freelancers/${freelancer.id}`}>
+        <CardContent className="h-full flex items-center justify-between pt-6 px-4">
+          <div className="flex flex-col md:flex-row gap-6 items-center">
+            <div>
           <Avatar className="h-16 w-16">
             <AvatarImage
               src={freelancer.avatar_url || "/placeholder.svg"}
@@ -108,11 +285,73 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
             />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
-
-          <div className="flex-1">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+               <h3 className="text-md font-medium group-hover:text-primary transition-colors text-black">
+                    {freelancer.first_name} {freelancer.last_name}
+                  </h3>
+                  {freelancer.is_verified && (
+                    <BadgeCheck className="h-3 w-3 mr-1 text-green-500" />
+                  )}
+              </div>
+              <div className="flex items-center gap-2 mb-6">
+               <div className="text-xs">€{freelancer.hourly_rate}/hr</div>
+                 <MapPin className="h-3 w-3 ml-2 text-black" />
+                               <span className="border-b border-gray-400 text-xs" style={{ borderStyle: 'dashed', borderWidth: '0 0 1px 0', borderImage: 'repeating-linear-gradient(to right, #9ca3af 0, #9ca3af 4px, transparent 4px, transparent 8px) 1' }}>
+                 {freelancer.location && (
+                   <TooltipProvider>
+                     <Tooltip>
+                       <TooltipTrigger asChild>
+                         <span className="cursor-help text-xs">
+                           {freelancer.location.length > 10 
+                             ? `${freelancer.location.substring(0, 10)}...` 
+                             : freelancer.location}
+                         </span>
+                       </TooltipTrigger>
+                       <TooltipContent>
+                         <p>{freelancer.location}</p>
+                       </TooltipContent>
+                     </Tooltip>
+                   </TooltipProvider>
+                 )}
+               </span>
+               </div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-medium">
+                  {freelancer.job_offerings?.map((offering) => (
+                    <TooltipProvider key={offering.id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge 
+                            className={`text-xs cursor-help rounded-br-md border transition-colors ${getCategoryColor(offering.category_name)}`}
+                          >
+                            {offering.category_name.length > 5 
+                              ? `${offering.category_name.substring(0, 5)}...` 
+                              : offering.category_name}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{offering.category_name}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))}
+                </div>
+            </div>
+          </div>
+          {/* <div className="flex flex-col md:flex-row gap-4"> */}
+            {/* <Avatar className="h-16 w-16"> */}
+              {/* <AvatarImage */}
+                {/* // src={freelancer.avatar_url || "/placeholder.svg"} */}
+                {/* // alt={`${freelancer.first_name} ${freelancer.last_name}`} */}
+              {/* /> */}
+              {/* <AvatarFallback>{initials}</AvatarFallback> */}
+            {/* </Avatar> */}
+
+            {/* <div className="flex-1"> */}
+              {/* <div className="flex flex-col md:flex-row md:items-center justify-between gap-2"> */}
+                {/* <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-medium group-hover:text-primary transition-colors">
                   {freelancer.first_name} {freelancer.last_name}
                 </h3>
                 {freelancer.is_verified && (
@@ -121,49 +360,54 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                     {t("freelancer.verified")}
                   </Badge>
                 )}
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="text-sm font-bold">€{freelancer.hourly_rate}/hr</div>
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-sm font-medium">{freelancer.rating || "0"}</span>
-              </div>
-            </div>
+                  {freelancer.is_available_now && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
+                      {t("freelancer.availableNow") || "Available Now"}
+                    </Badge>
+                  )}
+                </div> */}
+                {/* <div className="flex items-center gap-1"> */}
+                  {/* <div className="text-sm font-bold">€{freelancer.hourly_rate}/hr</div> */}
+                  {/* <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" /> */}
+                  {/* <span className="text-sm font-medium">{freelancer.rating || "0"}</span> */}
+                {/* </div> */}
+              {/* </div> */}
 
-            {/* <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{freelancer.bio}</p> */}
-
-            <div className="flex flex-wrap gap-2 mt-2">
+              {/* <div className="flex flex-wrap gap-2 mt-2">
               {freelancer.job_offerings?.slice(0, 3).map((offering) => (
-                <Badge key={offering.id} variant="secondary">
+                  <Badge key={offering.id} variant="secondary" className="text-xs">
                   {offering.category_name}
                 </Badge>
               ))}
-            </div>
+                {freelancer.job_offerings && freelancer.job_offerings.length > 3 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{freelancer.job_offerings.length - 3} more
+                  </Badge>
+                )}
+              </div> */}
 
-            {freelancer.location && (
+              {/* {freelancer.location && (
               <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
                 <MapPin className="h-3 w-3" />
                 <span>{freelancer.location}</span>
                 {typeof freelancer.distance === 'number' && (
-                  <span className="ml-1 text-green-500">({Math.round(freelancer.distance * 10) / 10} {t("freelancer.filters.milesAway")})</span>
+                    <span className="ml-1 text-green-500">
+                      ({Math.round(freelancer.distance * 10) / 10} {t("freelancer.filters.milesAway") || "km away"})
+                    </span>
                 )}
               </div>
-            )}
-          </div>
+              )} */}
 
-          {/* <div className="flex flex-col gap-2 items-center md:items-end justify-center">
-            <div className="text-lg font-bold">€{freelancer.hourly_rate}/hr</div>
-            {freelancer.is_available_now && (
-              <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-200">
-                Available Now
-              </Badge>
-            )}
-            <Link href={`/freelancers/${freelancer.id}`} passHref>
-              <Button>View Profile</Button>
-            </Link>
+              {/* Additional info */}
+              {/* <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                {freelancer.completed_bookings && freelancer.completed_bookings > 0 && (
+                  <span>{freelancer.completed_bookings} {t("freelancer.completedBookings") || "completed bookings"}</span>
+                )}
           </div> */}
-        </div>
+            {/* </div> */}
+          {/* </div> */}
       </CardContent>
-      </Link>
+      </a>
     </Card>
   )
 }
@@ -176,19 +420,18 @@ function FreelancerSkeleton() {
           <Skeleton className="h-16 w-16 rounded-full" />
 
           <div className="flex-1">
-            <Skeleton className="h-6 w-40 mb-2" />
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-3/4" />
-
-            <div className="flex gap-2 mt-3">
-              <Skeleton className="h-5 w-16" />
-              <Skeleton className="h-5 w-16" />
+            <div className="flex items-center justify-between mb-2">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-6 w-20" />
             </div>
+
+            <div className="flex gap-2 mb-2">
+              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-5 w-16" />
           </div>
 
-          <div className="flex flex-col gap-2 items-center md:items-end">
-            <Skeleton className="h-6 w-20" />
-            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-4 w-32" />
           </div>
         </div>
       </CardContent>

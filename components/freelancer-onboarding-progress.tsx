@@ -176,10 +176,10 @@ export default function FreelancerOnboardingProgress({ profile }: { profile: Pro
                 {step.progress && (
                   <p className="text-xs text-muted-foreground mt-1">
                     {step.id === "availability" 
-                      ? (step.progress.current > 0 ? "Availability set" : "No availability set")
+                      ? (step.progress.current > 0 ? t("onboarding.availability.availabilitySet") : t("onboarding.availability.noAvailabilitySet"))
                       : step.id === "profile"
-                      ? `${step.progress.current}% complete`
-                      : `${step.progress.current} of ${step.progress.total} completed`}
+                      ? `${step.progress.current}% ${t("onboarding.profile.complete")}`
+                      : `${step.progress.current} ${t("onboarding.of")} ${step.progress.total} ${t("onboarding.completed")}`}
                   </p>
                 )}
               </div>

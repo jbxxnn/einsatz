@@ -9,20 +9,171 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import FreelancerAvailabilityCalendar from "@/components/freelancer-availability-calendar"
 import { toast } from "@/lib/toast"
-import { MapPin, Star, Clock, CheckCircle } from "lucide-react"
+import { MapPin, Star, Clock, CheckCircle, MessageCircle, Shield, Award, Zap, Globe, User, Loader, ShieldCheck } from "lucide-react"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
 import BookingForm from "@/components/booking-form"
 import { useTranslation } from "@/lib/i18n"
+import { getCoverTemplate } from "@/lib/cover-templates"
+import OptimizedHeader from "@/components/optimized-header"
+import { Skeleton } from "@/components/ui/skeleton"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"] & {
   category_name: string
+  icon?: string
 }
+
+
+const CustomProfileIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="18" 
+  height="18" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M12 2C9.38 2 7.25 4.13 7.25 6.75c0 2.57 2.01 4.65 4.63 4.74.08-.01.16-.01.22 0h.07a4.738 4.738 0 0 0 4.58-4.74C16.75 4.13 14.62 2 12 2Z" 
+    fill="currentColor"
+    ></path>
+    <path d="M17.08 14.149c-2.79-1.86-7.34-1.86-10.15 0-1.27.85-1.97 2-1.97 3.23s.7 2.37 1.96 3.21c1.4.94 3.24 1.41 5.08 1.41 1.84 0 3.68-.47 5.08-1.41 1.26-.85 1.96-1.99 1.96-3.23-.01-1.23-.7-2.37-1.96-3.21Z" 
+    fill="currentColor"
+    ></path>
+    </svg>
+)
+const CustomViewDetailsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="18" 
+  height="18" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M16.19 2H7.81C4.17 2 2 4.17 2 7.81v8.37C2 19.83 4.17 22 7.81 22h8.37c3.64 0 5.81-2.17 5.81-5.81V7.81C22 4.17 19.83 2 16.19 2Z" 
+    fill="currentColor">
+      </path>
+      <path d="M16 11.25h-3.25V8c0-.41-.34-.75-.75-.75s-.75.34-.75.75v3.25H8c-.41 0-.75.34-.75.75s.34.75.75.75h3.25V16c0 .41.34.75.75.75s.75-.34.75-.75v-3.25H16c.41 0 .75-.34.75-.75s-.34-.75-.75-.75Z" 
+      fill="currentColor">
+        </path>
+        </svg>
+  )
+const CustomResponseIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="18" 
+  height="18" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path d="M15.2347 9.35222C14.7986 8.3708 14.1647 7.48993 13.3727 6.76472L12.719 6.16501C12.6968 6.14521 12.6701 6.13115 12.6412 6.12408C12.6124 6.11701 12.5822 6.11714 12.5533 6.12446C12.5245 6.13178 12.4979 6.14606 12.4759 6.16606C12.4539 6.18605 12.4371 6.21114 12.427 6.23913L12.1351 7.07693C11.9531 7.60251 11.6185 8.13933 11.1445 8.66716C11.1131 8.70085 11.0771 8.70984 11.0524 8.71208C11.0277 8.71433 10.9895 8.70984 10.9559 8.67839C10.9244 8.65144 10.9087 8.61101 10.9109 8.57058C10.994 7.21843 10.5897 5.69333 9.70478 4.03347C8.97256 2.65437 7.95508 1.57849 6.68379 0.828294L5.75615 0.282493C5.63486 0.210618 5.47988 0.304954 5.48662 0.446458L5.53603 1.52458C5.56973 2.2613 5.48437 2.91267 5.28223 3.45398C5.03516 4.11657 4.68027 4.732 4.22656 5.28454C3.91081 5.66854 3.55294 6.01587 3.15967 6.31999C2.2125 7.0481 1.44233 7.98105 0.906836 9.049C0.372656 10.1263 0.0944017 11.3123 0.09375 12.5147C0.09375 13.5749 0.302637 14.6013 0.715918 15.5694C1.11497 16.5015 1.69085 17.3474 2.41172 18.0603C3.13945 18.7791 3.98398 19.3451 4.9251 19.7382C5.8999 20.1469 6.9331 20.3536 8 20.3536C9.06689 20.3536 10.1001 20.1469 11.0749 19.7404C12.0137 19.3496 12.8674 18.7797 13.5883 18.0626C14.316 17.3438 14.8865 16.5038 15.2841 15.5717C15.6967 14.6062 15.9084 13.5669 15.9062 12.517C15.9062 11.4209 15.6816 10.3562 15.2347 9.35222Z" 
+    fill="currentColor">
+      </path>
+      </svg>
+)
+const CustomPaymentsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="18" 
+  height="18" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M19.3 7.92v5.15c0 3.08-1.76 4.4-4.4 4.4H6.11c-.45 0-.88-.04-1.28-.13-.25-.04-.49-.11-.71-.19-1.5-.56-2.41-1.86-2.41-4.08V7.92c0-3.08 1.76-4.4 4.4-4.4h8.79c2.24 0 3.85.95 4.28 3.12.07.4.12.81.12 1.28Z" 
+    fill="currentColor">
+      </path>
+      <path d="M22.298 10.92v5.15c0 3.08-1.76 4.4-4.4 4.4h-8.79c-.74 0-1.41-.1-1.99-.32-1.19-.44-2-1.35-2.29-2.81.4.09.83.13 1.28.13h8.79c2.64 0 4.4-1.32 4.4-4.4V7.92c0-.47-.04-.89-.12-1.28 1.9.4 3.12 1.74 3.12 4.28Z" 
+      fill="currentColor">
+        </path>
+        <path d="M10.5 13.14a2.64 2.64 0 1 0 0-5.28 2.64 2.64 0 0 0 0 5.28ZM4.781 8.25c-.41 0-.75.34-.75.75v3c0 .41.34.75.75.75s.75-.34.75-.75V9c0-.41-.33-.75-.75-.75ZM16.21 8.25c-.41 0-.75.34-.75.75v3c0 .41.34.75.75.75s.75-.34.75-.75V9c0-.41-.33-.75-.75-.75Z" 
+        fill="currentColor">
+          </path>
+          </svg>
+)
+const CustomNoBookingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="50" 
+  height="50" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M21.08 8.58v6.84c0 1.12-.6 2.16-1.57 2.73l-5.94 3.43c-.97.56-2.17.56-3.15 0l-5.94-3.43a3.15 3.15 0 0 1-1.57-2.73V8.58c0-1.12.6-2.16 1.57-2.73l5.94-3.43c.97-.56 2.17-.56 3.15 0l5.94 3.43c.97.57 1.57 1.6 1.57 2.73Z" 
+    fill="currentColor">
+      </path>
+      <path d="M12 13.75c-.41 0-.75-.34-.75-.75V7.75c0-.41.34-.75.75-.75s.75.34.75.75V13c0 .41-.34.75-.75.75ZM12 17.249c-.13 0-.26-.03-.38-.08-.13-.05-.23-.12-.33-.21-.09-.1-.16-.21-.22-.33a.986.986 0 0 1-.07-.38c0-.26.1-.52.29-.71.1-.09.2-.16.33-.21.37-.16.81-.07 1.09.21.09.1.16.2.21.33.05.12.08.25.08.38s-.03.26-.08.38-.12.23-.21.33a.99.99 0 0 1-.71.29Z" 
+      fill="currentColor">
+        </path>
+        </svg>
+)
+const CustomMapIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="24" 
+  height="24" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M20.621 8.45c-1.05-4.62-5.08-6.7-8.62-6.7h-.01c-3.53 0-7.57 2.07-8.62 6.69-1.17 5.16 1.99 9.53 4.85 12.28a5.436 5.436 0 0 0 3.78 1.53c1.36 0 2.72-.51 3.77-1.53 2.86-2.75 6.02-7.11 4.85-12.27Z" 
+    fill="currentColor">
+      </path>
+      <path d="M12.002 13.46a3.15 3.15 0 1 0 0-6.3 3.15 3.15 0 0 0 0 6.3Z" 
+      fill="currentColor">
+        </path>
+        </svg>
+)
+const CustomMessagesIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="24" 
+  height="24" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M2 12.97V6.99C2 4.23 4.24 2 7 2h10c2.76 0 5 2.23 5 4.99v6.98c0 2.75-2.24 4.98-5 4.98h-1.5c-.31 0-.61.15-.8.4l-1.5 1.99c-.66.88-1.74.88-2.4 0l-1.5-1.99c-.16-.22-.52-.4-.8-.4H7c-2.76 0-5-2.23-5-4.98v-1Z" 
+    fill="currentColor">
+      </path>
+      <path d="M12 12c-.56 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.44 1-1 1ZM16 12c-.56 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.44 1-1 1ZM8 12c-.56 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.44 1-1 1Z" 
+      fill="currentColor">
+        </path>
+        </svg>
+)
 
 interface FreelancerWithOfferings extends Profile {
   job_offerings: JobOffering[]
   is_available_now: boolean
+}
+
+// Skeleton for immediate loading
+function FreelancerProfileSkeleton() {
+  return (
+    <div className="container py-10">
+      <div className="relative mb-8">
+        <div className="h-64 rounded-2xl bg-muted animate-pulse" />
+        <div className="absolute -bottom-16 left-8">
+          <div className="w-32 h-32 rounded-full border-8 border-white shadow-lg bg-muted animate-pulse" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-20">
+        <div className="lg:col-span-1 space-y-6">
+          <div className="space-y-4">
+            <div className="h-8 w-48 bg-muted rounded animate-pulse" />
+            <div className="flex gap-2">
+              <div className="h-6 w-20 bg-muted rounded animate-pulse" />
+              <div className="h-6 w-20 bg-muted rounded animate-pulse" />
+            </div>
+            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+            <div className="h-10 w-full bg-muted rounded animate-pulse" />
+            <div className="h-10 w-full bg-muted rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="lg:col-span-3 space-y-8">
+          <div className="h-10 w-40 bg-muted rounded animate-pulse" />
+          <div className="h-64 w-full bg-muted rounded animate-pulse" />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function FreelancerProfile() {
@@ -36,6 +187,16 @@ export default function FreelancerProfile() {
   const [showBookingForm, setShowBookingForm] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [reviews, setReviews] = useState<any[]>([])
+  const [completedJobs, setCompletedJobs] = useState<number>(0)
+  const [activeTab, setActiveTab] = useState<'services' | 'reviews'>('services')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalReviews, setTotalReviews] = useState(0)
+  const reviewsPerPage = 20
+
+  // Clear selected date when category changes
+  useEffect(() => {
+    setSelectedDate(undefined)
+  }, [selectedCategoryId])
 
   useEffect(() => {
     const fetchFreelancer = async () => {
@@ -59,7 +220,7 @@ export default function FreelancerProfile() {
           .from("freelancer_job_offerings")
           .select(`
           *,
-          job_categories (id, name)
+          job_categories (id, name, icon)
         `)
           .eq("freelancer_id", params.id)
 
@@ -71,6 +232,7 @@ export default function FreelancerProfile() {
         const formattedOfferings = offeringsData.map((offering) => ({
           ...offering,
           category_name: offering.job_categories.name,
+          icon: offering.job_categories.icon,
         }))
 
         // Check real-time availability
@@ -89,22 +251,47 @@ export default function FreelancerProfile() {
           is_available_now: isAvailableNow,
         })
         
-        // If there are job offerings, select the first one by default
-        if (formattedOfferings.length > 0) {
-          setSelectedCategoryId(formattedOfferings[0].category_id)
-        }
+        // No automatic selection - user must choose a service
+        // if (formattedOfferings.length > 0) {
+        //   setSelectedCategoryId(formattedOfferings[0].category_id)
+        // }
 
-        // Fetch reviews
+        // Fetch total reviews count
+        const { count: totalReviewsCount } = await supabase
+          .from("reviews")
+          .select("*", { count: "exact", head: true })
+          .eq("reviewee_id", params.id)
+
+        setTotalReviews(totalReviewsCount || 0)
+
+        // Fetch reviews with service information (paginated)
+        const from = (currentPage - 1) * reviewsPerPage
+        const to = from + reviewsPerPage - 1
+
         const { data: reviewsData } = await supabase
           .from("reviews")
           .select(`
             *,
-            profiles!reviewer_id(first_name, last_name, avatar_url)
+            profiles!reviewer_id(first_name, last_name, avatar_url),
+            bookings!inner(
+              category_id,
+              job_categories(name)
+            )
           `)
           .eq("reviewee_id", params.id)
           .order("created_at", { ascending: false })
+          .range(from, to)
 
         setReviews(reviewsData || [])
+
+        // Fetch completed jobs count
+        const { count: completedJobsCount } = await supabase
+          .from("bookings")
+          .select("*", { count: "exact", head: true })
+          .eq("freelancer_id", params.id)
+          .eq("status", "completed")
+
+        setCompletedJobs(completedJobsCount || 0)
       } catch (error) {
         console.error("Error fetching freelancer:", error)
         toast.error(t("freelancer.id.error.failedToLoadProfile"))
@@ -115,7 +302,7 @@ export default function FreelancerProfile() {
     }
 
     fetchFreelancer()
-  }, [supabase, params.id, router])
+  }, [supabase, params.id, router, currentPage])
   
   const getSelectedOffering = () => {
     if (!freelancer || !selectedCategoryId) return null
@@ -123,11 +310,7 @@ export default function FreelancerProfile() {
   }
 
   if (loading) {
-    return (
-      <div className="container py-10 flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <FreelancerProfileSkeleton />
   }
 
   if (!freelancer) {
@@ -142,280 +325,434 @@ export default function FreelancerProfile() {
   const selectedOffering = getSelectedOffering()
 
   return (
-    <div className="container py-10">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Freelancer Info */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="relative h-40 w-40 rounded-lg overflow-hidden">
-              <Image
-                src={
-                  freelancer.avatar_url ||
-                  `/placeholder.svg?height=160&width=160&text=${freelancer.first_name || "Freelancer"}`
-                }
-                alt={`${freelancer.first_name} ${freelancer.last_name}`}
-                fill
-                className="object-cover"
-              />
-              {freelancer.is_available_now && (
-                <div className="absolute top-2 right-2">
-                  <Badge className="bg-green-500 hover:bg-green-600">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {t("freelancer.availableNow")}
+    <>
+    <OptimizedHeader />
+    <div className="min-h-screen w-full bg-[#f7f7f7]">
+      <div className="py-8 px-8 container">
+
+      {/* New Behance-style Layout */}
+      <div className="mx-auto">
+        {/* Hero Section with Banner */}
+        <div className="relative mb-8">
+          {/* Banner Background */}
+          <div 
+            className="h-64 rounded-2xl relative overflow-hidden"
+            style={{
+              background: getCoverTemplate((freelancer.metadata as any)?.coverTemplate)?.pattern || "linear-gradient(135deg, #1e293b 0%, #334155 50%, #64748b 100%)",
+              backgroundSize: "cover"
+            }}
+          >
+            <div className="absolute inset-0 opacity-20">
+              <div className="w-full h-full" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+              }}></div>
+            </div>
+          </div>
+          
+          {/* Profile Picture Overlay */}
+          <div className="absolute -bottom-16 left-8">
+            <div className="relative">
+              <div className="w-32 h-32 rounded-full border-8 border-white shadow-lg bg-white">
+                <div className="w-full h-full rounded-full overflow-hidden">
+                  <Image
+                    src={freelancer.avatar_url || `/placeholder.svg?height=128&width=128&text=${freelancer.first_name || "F"}`}
+                    alt={`${freelancer.first_name} ${freelancer.last_name}`}
+                    fill
+                    className="object-cover rounded-full"
+                  />
+                </div>
+              </div>
+              {freelancer.is_verified && (
+                <div className="absolute -bottom-1 -right-1">
+                  <Badge className="bg-[#33CC99] hover:bg-[#2BB88A] text-white font-light text-xs">
+                      <ShieldCheck className="h-3 w-3 mr-1" />
+                      Verified
                   </Badge>
                 </div>
               )}
             </div>
+          </div>
+        </div>
 
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold">
-                {freelancer.first_name} {freelancer.last_name}
-              </h1>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-20">
+          {/* Left Column - Profile Info */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto space-y-8 bg-white rounded-lg p-4">
+              {/* Profile Information */}
+              <div className="space-y-8">
+                <div className="space-y-4">
+                <h1 className="text-3xl font-bold tracking-tight">
+                  {freelancer.first_name} {freelancer.last_name}
+                </h1>
 
-              <div className="flex justify-between flex-col mt-2">
-                <div className="flex items-center">
-                  <Star className="h-5 w-5 fill-primary text-primary" />
-                  <span className="ml-1 font-medium">4.9</span>
-                  <span className="text-muted-foreground ml-1">({reviews.length} {t("freelancer.reviews")})</span>
+                {/* Status Badges */}
+                <div className="flex flex-wrap gap-2">
+                  {freelancer.is_available_now && (
+                    <Badge className="bg-green-500 hover:bg-green-600 text-white">
+                      <div className="w-2 h-2 bg-white rounded-full mr-1"></div>
+                      Available Now
+                    </Badge>
+                  )}
                 </div>
-                <div>
-                {freelancer.location && (
+
+                {/* Details */}
+                <div className="space-y-2 text-sm text-black">
                   <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-2 text-primary" />
-                  <span>
-                    {t("freelancer.serviceRadius")} {freelancer.service_radius} {t("freelancer.filters.milesAway")} {t("freelancer.filters.of")} {freelancer.location}
-                  </span>
+                    <CustomProfileIcon className="h-4 w-4 mr-2 text-black" />
+                    <span className="text-xs text-black">
+                      {freelancer.metadata && typeof freelancer.metadata === 'object' && 'role' in freelancer.metadata 
+                        ? freelancer.metadata.role as string 
+                        : 'Freelancer'
+                      }
+                    </span>
+                  </div>
+                  {freelancer.location && (
+                    <div className="flex items-center">
+                      <CustomMapIcon className="h-6 w-6 mr-2 text-black" />
+                      <span className="underline text-xs text-black">{freelancer.location}</span>
+                    </div>
+                  )}
                 </div>
-                )}
                 </div>
-              </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-              {freelancer.job_offerings.map((offering) => (
-                  <Badge
-                    key={offering.category_id}
-                    variant={selectedCategoryId === offering.category_id ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => setSelectedCategoryId(offering.category_id)}
-                  >
-                    {offering.category_name}
-                  </Badge>
-                ))}
+                {/* Action Buttons */}
+                  <div className="space-y-3">
+                    <Button className="w-full bg-[#33CC99] hover:bg-[#2BB88A] text-white">
+                  <CustomMessagesIcon className="h-4 w-4 mr-2 text-white" />
+                  Message
+                  </Button>
+                </div>
+
+                {/* Hire Section */}
+                {/* <Card>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold mb-3">Hire {freelancer.first_name}</h3>
+                    <div className="space-y-3">
+                      {freelancer.job_offerings.map((offering) => (
+                        <div 
+                          key={offering.category_id} 
+                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                            selectedCategoryId === offering.category_id 
+                              ? 'bg-primary/10 border-2 border-primary' 
+                              : 'bg-muted/50 hover:bg-muted/70'
+                          }`}
+                          onClick={() => setSelectedCategoryId(offering.category_id)}
+                        >                            
+                          <div>
+                            <div className="text-sm font-medium"> {offering.category_name}</div>
+                          </div>
+                          <div className="w-4 h-4">
+                            {selectedCategoryId === offering.category_id ? (
+                              <CheckCircle className="h-4 w-4 text-primary" />
+                            ) : (
+                              <span>→</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}       
+                    </div>
+                    <div className="flex items-center mt-3 text-sm text-muted-foreground">
+                      <Star className="h-4 w-4 mr-1 fill-yellow-400 text-yellow-400" />
+                      <span>{reviews.length} reviews ({completedJobs} completed jobs)</span>
+                    </div>
+                  </CardContent>
+                </Card> */}
+
+                <div className="flex flex-col justify-between space-y-4">
+                  <div className="flex flex-col mb-4">
+                    <span className="font-semibold text-black text-sm mb-2">ABOUT ME</span>
+                    <span className="text-black text-xs">{freelancer.bio}</span>
+                  </div>
+                  <div className="flex flex-col mb-4">
+                    <span className="font-semibold text-black text-sm mb-2 mr-2">MEMBER SINCE</span>
+                    <span className="text-black text-xs">{new Date(freelancer.created_at).toLocaleDateString('en-US', { 
+                       year: 'numeric', 
+                       month: 'long', 
+                       day: 'numeric' 
+                     })}</span>
+                   </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <Tabs defaultValue="about">
-            <TabsList>
-              <TabsTrigger value="about">{t("freelancer.about")}</TabsTrigger>
-              <TabsTrigger value="reviews">{t("freelancer.reviews")} ({reviews.length})</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="about" className="space-y-4 mt-4">
-              <div>
-                <h2 className="text-xl font-semibold mb-2">{t("freelancer.about")}</h2>
-                <p className="text-muted-foreground whitespace-pre-line">{freelancer.bio || t("freelancer.noBioProvided")}</p>
+          {/* Right Column - Main Content */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Navigation Tabs */}
+            <div className="border-b">
+              <div className="flex space-x-8">
+                <button 
+                  className={`pb-2 border-b-2 text-black text-sm font-medium transition-colors ${
+                    activeTab === 'services' 
+                      ? 'border-primary text-primary' 
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setActiveTab('services')}
+                >
+                  Services
+                </button>
+                <button 
+                  className={`pb-2 border-b-2 text-black text-sm font-medium transition-colors ${
+                    activeTab === 'reviews' 
+                      ? 'border-primary text-primary' 
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setActiveTab('reviews')}
+                >
+                  Reviews
+                </button>
               </div>
+            </div>
 
-              {/* {freelancer.latitude && freelancer.longitude && freelancer.service_radius && (
-                <div className="mt-4">
-                  <h2 className="text-xl font-semibold mb-2">{t("freelancer.serviceArea")}</h2>
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-2 text-primary" />
-                    <span>
-                      {t("freelancer.serviceArea")} {freelancer.service_radius} {t("freelancer.filters.milesAway")} {t("freelancer.filters.of")} {freelancer.location}
-                    </span>
-                  </div>
-                </div>
-              )} */}
-
-
-{/*               
-              {selectedOffering && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-2">{selectedOffering.category_name} {t("freelancer.services")}</h2>
-                  <div className="flex items-center mb-2">
-                    <p className="text-xl font-bold text-primary">€{selectedOffering.hourly_rate}/hour</p>
-                  </div>
-                  {selectedOffering.description && (
-                    <p className="text-muted-foreground">{selectedOffering.description}</p>
-                  )}
-                  {selectedOffering.experience_years && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {selectedOffering.experience_years} {t("freelancer.filters.yearsOfExperience")}
-                    </p>
-                  )}
-                </div>
-              )} */}
-
-              {/* <div>
-              <h2 className="text-xl font-semibold mb-2">Skills</h2>
-                <div className="flex flex-wrap gap-2">
-                  {freelancer.skills?.map((skill) => (
-                    <Badge key={skill} variant="secondary">
-                      {skill}
-                    </Badge>
-                  ))}
-                  {(!freelancer.skills || freelancer.skills.length === 0) && (
-                    <p className="text-muted-foreground">No skills listed.</p>
-                  )}
-                </div>
-              </div> */}
-
-              <div>
-              <h2 className="text-xl font-semibold mb-2">{t("freelancer.selectService")}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  {freelancer.job_offerings.map((offering) => (
-                    <Card key={offering.category_id} className="p-4">
-                      <CardContent>
-                        <h3 className="text-lg font-semibold">{offering.category_name}</h3>
-                        <p className="text-primary font-bold">€{offering.hourly_rate}/{t("freelancer.filters.hour")}</p>
-                        {offering.description && (
-                          <p className="text-muted-foreground mt-2">{offering.description}</p>
-                        )}
-                        {offering.experience_years && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {offering.experience_years} {t("freelancer.filters.yearsOfExperience")}
-                          </p>
-                        )}
-                        <Button
-                          variant={selectedCategoryId === offering.category_id ? "default" : "outline"}
-                          className="mt-4 w-full"
-                          onClick={() => setSelectedCategoryId(offering.category_id)}
-                        >
-                          {selectedCategoryId === offering.category_id ? t("freelancer.selected") : t("freelancer.select")}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                {/* {selectedOffering && (
-                  <p className="mt-2 font-medium text-primary">€{selectedOffering.hourly_rate}/hour</p>
-                )} */}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="reviews" className="space-y-4 mt-4">
-              {reviews.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">{t("freelancer.noReviewsYet")}</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <Card key={review.id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-4">
-                          <div className="relative h-10 w-10 rounded-full overflow-hidden">
-                            <Image
-                              src={review.profiles?.avatar_url || `/placeholder.svg?height=40&width=40`}
-                              alt={`${review.profiles?.first_name || "User"}`}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
+            {/* Services Tab */}
+            {activeTab === 'services' && (
+              <div className="space-y-6 bg-white rounded-lg p-8">
+                <h3 className="font-semibold mb-2 text-black text-lg">Hire {freelancer.first_name}</h3>
+                <div className="flex flex-wrap gap-2 mb-4">
+                          {freelancer.job_offerings.map((offering) => (
+                            <div 
+                              key={offering.category_id} 
+                              className={`flex items-center justify-between p-3 rounded-full cursor-pointer transition-all duration-200 ${
+                                selectedCategoryId === offering.category_id 
+                                  ? 'bg-[#0e2316] text-white rounded-br-none' 
+                                  : 'bg-[#33CC99] hover:bg-[#2BB88A] text-white'
+                              }`}
+                              onClick={() => setSelectedCategoryId(offering.category_id)}
+                            >                            
                               <div>
-                                <p className="font-medium">
-                                  {review.profiles?.first_name} {review.profiles?.last_name}
-                                </p>
-                                <div className="flex items-center mt-1">
-                                  {Array(5)
-                                    .fill(0)
-                                    .map((_, i) => (
+                                <div className="text-xs font-regular">{offering.category_name}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>  
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card>
+                      <CardContent className="p-6">
+                          
+
+
+                      {!showBookingForm ? (
+                        <div className="space-y-4">
+                          {selectedCategoryId ? (
+                            <div>
+                              <FreelancerAvailabilityCalendar
+                                freelancerId={params.id as string}
+                                categoryId={selectedCategoryId}
+                                onSelectDate={setSelectedDate}
+                              />
+                            </div>
+                          ) : (
+                            <div className="text-center py-8">
+                              <p className="text-black text-sm">{t("freelancer.selectServiceFirst")}</p>
+                            </div>
+                          )}
+
+                          <Button
+                            className="w-full bg-[#33CC99] hover:bg-[#2BB88A] text-white"
+                            disabled={!selectedDate || !selectedCategoryId}
+                            onClick={() => setShowBookingForm(true)}
+                          >
+                            {t("freelancer.continueToBooking")}
+                          </Button>
+                        </div>
+                      ) : (
+                        <BookingForm
+                          freelancer={freelancer}
+                          selectedDate={selectedDate}
+                          onBack={() => setShowBookingForm(false)}
+                          selectedCategoryId={selectedCategoryId}
+                        />
+                      )}
+                    </CardContent>
+                  </Card>
+                  <div>
+                    <div className="p-2 pt-0">
+                      {selectedOffering ? (
+                        <div className="space-y-1">
+                          <div className="p-4 border border-gray-200 rounded-lg">
+
+                            
+
+
+                            <div 
+                                 className="h-5 rounded-lg relative overflow-hidden mt-4 mb-4"
+                                 style={{
+                                  background: getCoverTemplate((freelancer.metadata as any)?.coverTemplate)?.pattern || "linear-gradient(135deg, #1e293b 0%, #334155 50%, #64748b 100%)",
+                                  backgroundSize: "cover"
+                                }}
+                            >
+                            <div className="absolute inset-0 opacity-20">
+                              <div className="w-full h-full" style={{
+                                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+                               }}></div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center mb-2">
+                              <CustomResponseIcon className="h-4 w-4 mr-2 text-[#33CC99]" />
+                              <h4 className="text-lg font-semibold">{selectedOffering.category_name}</h4>
+                            </div>
+                            <div className="flex items-baseline space-x-1 mb-2">
+                              <CustomPaymentsIcon className="h-4 w-4 mr-2 text-[#33CC99]" />
+                              <span className="text-sm font-bold text-black">€{selectedOffering.hourly_rate}</span>
+                              <span className="text-xs text-black">{t("freelancer.filters.hour")}</span>
+                            </div>
+                            {selectedOffering.description && (
+                              <div className="flex items-baseline space-x-1 mb-2">
+                              <CustomNoBookingsIcon className="h-4 w-4 mr-2 text-[#33CC99]" />
+                              <p className="text-xs font-light text-black">{selectedOffering.description}</p>
+                              </div>
+                            )}
+                            {selectedOffering.experience_years && (
+                              <div className="flex items-baseline space-x-1 mb-2">
+                                <CustomViewDetailsIcon className="h-4 w-4 mr-2 text-[#33CC99]" />
+                                <span className="text-xs text-black">{selectedOffering.experience_years} {t("freelancer.filters.yearsOfExperience")}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-black">No service selected</p>
+                          <p className="text-xs text-black mt-1">Choose a service from above to see details</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+                        {/* Reviews Tab */}
+            {activeTab === 'reviews' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-6">
+                  {reviews.length > 0 ? (
+                    <>
+                      {reviews.map((review) => (
+                        <Card key={review.id}>
+                          <CardContent className="p-6">
+                            <div className="flex items-start space-x-4">
+                              <div className="flex-shrink-0">
+                                <div className="w-10 h-10 rounded-full overflow-hidden relative">
+                                   <Image
+                                     src={review.profiles?.avatar_url || `/placeholder.svg?height=40&width=40&text=${review.profiles?.first_name?.charAt(0) || "U"}`}
+                                     alt={review.profiles?.first_name || "User"}
+                                     fill
+                                     className="rounded-full object-cover"
+                                   />
+                                </div>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <h4 className="font-medium">
+                                    {review.profiles?.first_name} {review.profiles?.last_name}
+                                  </h4>
+                                  <div className="flex items-center">
+                                    {[...Array(5)].map((_, i) => (
                                       <Star
                                         key={i}
                                         className={`h-4 w-4 ${
-                                          i < review.rating ? "fill-primary text-primary" : "text-muted-foreground"
+                                          i < review.rating
+                                            ? 'fill-yellow-400 text-yellow-400'
+                                            : 'text-gray-300'
                                         }`}
                                       />
                                     ))}
+                                  </div>
                                 </div>
+                                {review.bookings?.job_categories?.name && (
+                                  <div className="mb-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {review.bookings.job_categories.name}
+                                    </Badge>
+                                  </div>
+                                )}
+                                {review.comment && (
+                                  <p className="text-sm text-muted-foreground">{review.comment}</p>
+                                )}
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  {new Date(review.created_at).toLocaleDateString()}
+                                </p>
                               </div>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(review.created_at).toLocaleDateString()}
-                              </p>
                             </div>
-                            <p className="mt-2 text-muted-foreground">{review.comment}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      
+                      {/* Pagination Controls */}
+                      {totalReviews > reviewsPerPage && (
+                        <div className="flex items-center justify-between mt-6">
+                          <div className="text-sm text-muted-foreground">
+                            Showing {((currentPage - 1) * reviewsPerPage) + 1} to {Math.min(currentPage * reviewsPerPage, totalReviews)} of {totalReviews} reviews
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                              disabled={currentPage === 1}
+                            >
+                              Previous
+                            </Button>
+                            <span className="text-sm">
+                              Page {currentPage} of {Math.ceil(totalReviews / reviewsPerPage)}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalReviews / reviewsPerPage), prev + 1))}
+                              disabled={currentPage >= Math.ceil(totalReviews / reviewsPerPage)}
+                            >
+                              Next
+                            </Button>
                           </div>
                         </div>
+                      )}
+                    </>
+                  ) : (
+                    <Card>
+                      <CardContent className="p-6 text-center">
+                        <p className="text-muted-foreground">No reviews yet</p>
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Booking Section */}
-        <div className="md:col-span-1">
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-xl font-semibold mb-4">{t("freelancer.book")} {freelancer.first_name}</h2>
-
-              {!showBookingForm ? (
-                <div className="space-y-4">
-                    {freelancer.job_offerings.length > 0 && selectedOffering && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">{t("freelancer.selectedService")}:</p>
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold">{selectedOffering.category_name}</h3>
-                      </div>
-                    </div>
                   )}
-
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">{t("freelancer.selectDate")}:</p>
-                    <FreelancerAvailabilityCalendar
-                      freelancerId={params.id as string}
-                      onSelectDate={setSelectedDate}
-                    />
-                  </div>
-
-                  <Button
-                    className="w-full"
-                    disabled={!selectedDate || !selectedCategoryId}
-                    onClick={() => setShowBookingForm(true)}
-                  >
-                    {t("freelancer.continueToBooking")}
-                  </Button>
                 </div>
-              ) : (
-                <BookingForm
-                  freelancer={freelancer}
-                  selectedDate={selectedDate}
-                  onBack={() => setShowBookingForm(false)}
-                  selectedCategoryId={selectedCategoryId}
-                />
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="mt-4">
-            <CardContent className="p-6">
-              <h3 className="font-semibold mb-3">{t("freelancer.whyBookWithEinsatz")}</h3>
-              <ul className="space-y-2">
-                <li className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-primary mr-2 shrink-0" />
-                  <span className="text-sm">{t("freelancer.securePayments")}</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-primary mr-2 shrink-0" />
-                  <span className="text-sm">{t("freelancer.verifiedProfessionalsWithReviews")}</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-primary mr-2 shrink-0" />
-                  <span className="text-sm">{t("freelancer.customerSupport")}</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Persistent Availability Pop-up */}
+        {freelancer.is_available_now && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+            <div className="bg-black text-white rounded-lg px-4 py-3 flex items-center space-x-3 shadow-lg gap-12">
+              <div className="w-8 h-8 overflow-hidden relative">
+                <Image
+                  src={freelancer.avatar_url || `/placeholder.svg?height=32&width=32&text=${freelancer.first_name || "F"}`}
+                  alt={`${freelancer.first_name} ${freelancer.last_name}`}
+                  fill
+                  className="object-cover rounded-full"
+                />
+              </div>
+              <div>
+                <div className="font-medium">{freelancer.first_name} is available for hire</div>
+                {/* <div className="text-sm text-slate-300">Availability: Now</div> */}
+              </div>
+              <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
+                Hire {freelancer.first_name}
+              </Button>
+              {/* <button className="text-slate-400 hover:text-white">
+                <div className="w-4 h-4">×</div>
+              </button> */}
+            </div>
+          </div>
+        )}
       </div>
     </div>
+    </div>
+    </>
   )
 }
 

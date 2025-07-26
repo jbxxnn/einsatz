@@ -9,6 +9,7 @@ import { OptimizedSupabaseProvider } from "@/components/optimized-supabase-provi
 import { OptimizedUserProvider } from "@/components/optimized-user-provider"
 import { Suspense } from "react"
 import PerformanceMonitor from "@/components/performance-monitor"
+import { QueryProvider } from "@/components/query-provider"
 
 export const metadata = {
   title: "Einsatz - Instant Freelancer Booking",
@@ -41,15 +42,17 @@ export default function RootLayout({
       <body className={`${GeistSans.className} min-h-screen flex flex-col`}>
         <OptimizedSupabaseProvider>
           <OptimizedUserProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-              <OptimizedHeader />
-              <main className="flex-1">
-                <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>
-              </main>
-              <Footer />
-              <Toaster />
-              <PerformanceMonitor />
-            </ThemeProvider>
+            <QueryProvider>
+              <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+                {/* <OptimizedHeader /> */}
+                <main className="flex-1">
+                  <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>
+                </main>
+                {/* <Footer /> */}
+                <Toaster />
+                <PerformanceMonitor />
+              </ThemeProvider>
+            </QueryProvider>
           </OptimizedUserProvider>
         </OptimizedSupabaseProvider>
       </body>

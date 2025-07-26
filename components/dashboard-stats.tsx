@@ -2,52 +2,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useOptimizedUser } from "@/components/optimized-user-provider"
-import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
-import useSWR from "swr"
+import { useDashboardStats } from "@/hooks/use-dashboard-stats"
 import { Calendar, Clock, DollarSign } from "lucide-react"
 import { useTranslation } from "@/lib/i18n"
 
 export default function DashboardStats() {
   const { user } = useOptimizedUser()
-  const { supabase } = useOptimizedSupabase()
+  const { data: stats, isLoading } = useDashboardStats()
   const { t } = useTranslation()
-
-  // Fetch stats with SWR for caching and revalidation
-  const { data: stats, isLoading } = useSWR(
-    user ? "dashboard-stats" : null,
-    async () => {
-      // Fetch bookings count
-      const { count: bookingsCount } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .or(`client_id.eq.${user!.id},freelancer_id.eq.${user!.id}`)
-
-      // Fetch upcoming bookings count
-      const { count: upcomingCount } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .or(`client_id.eq.${user!.id},freelancer_id.eq.${user!.id}`)
-        .gt("start_time", new Date().toISOString())
-        .in("status", ["pending", "confirmed"])
-
-      // Fetch completed bookings count
-      const { count: completedCount } = await supabase
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .or(`client_id.eq.${user!.id},freelancer_id.eq.${user!.id}`)
-        .eq("status", "completed")
-
-      return {
-        bookingsCount: bookingsCount || 0,
-        upcomingCount: upcomingCount || 0,
-        completedCount: completedCount || 0,
-      }
-    },
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 60000, // 1 minute
-    },
-  )
 
   // Show skeleton while loading
   if (isLoading) {
@@ -79,7 +41,7 @@ export default function DashboardStats() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats?.bookingsCount || 0}</div>
+          <div className="text-2xl font-bold">{stats?.totalBookings || 0}</div>
         </CardContent>
       </Card>
 
@@ -91,7 +53,7 @@ export default function DashboardStats() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats?.upcomingCount || 0}</div>
+          <div className="text-2xl font-bold">{stats?.upcomingBookings || 0}</div>
         </CardContent>
       </Card>
 
@@ -103,7 +65,7 @@ export default function DashboardStats() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats?.completedCount || 0}</div>
+          <div className="text-2xl font-bold">{stats?.completedBookings || 0}</div>
         </CardContent>
       </Card>
     </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,22 +11,13 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useOptimizedSupabase } from "./optimized-supabase-provider"
-import { format, isAfter, isBefore, addWeeks, addMonths } from "date-fns"
-import { CalendarIcon, Clock, Plus, Trash2, RefreshCw, AlertCircle, CheckCircle, HelpCircle } from "lucide-react"
-import { toast } from "@/lib/toast"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { format, isAfter, addMonths } from "date-fns"
+import { CalendarIcon, Clock, Plus, Trash2, RefreshCw, AlertCircle, CheckCircle, HelpCircle, Dot, Loader } from "lucide-react"
 import { useTranslation } from "@/lib/i18n"
-
-type AvailabilityEntry = {
-  id?: string
-  freelancer_id: string
-  start_time: string
-  end_time: string
-  is_recurring: boolean
-  recurrence_pattern?: string | null
-  recurrence_end_date?: string | null
-  certainty_level: "guaranteed" | "tentative" | "unavailable"
-}
+import { useAvailabilityData, useAvailabilityMutation, useDeleteAvailability, type AvailabilityEntry } from "@/hooks/use-availability"
+import LoadingSpinner from "@/components/loading-spinner"
+import { cn } from "@/lib/utils"
 
 type AvailabilityCalendarProps = {
   freelancerId: string
@@ -34,13 +25,9 @@ type AvailabilityCalendarProps = {
 
 export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalendarProps) {
   const { t } = useTranslation()
-  const { supabase } = useOptimizedSupabase()
   const [date, setDate] = useState<Date>(new Date())
-  const [availability, setAvailability] = useState<AvailabilityEntry[]>([])
-  const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedEntry, setSelectedEntry] = useState<AvailabilityEntry | null>(null)
-  const [formData, setFormData] = useState<Partial<AvailabilityEntry>>({})
 
   // Form state
   const [startDate, setStartDate] = useState<Date>(new Date())
@@ -52,86 +39,10 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date | undefined>(addMonths(new Date(), 3))
   const [certaintyLevel, setCertaintyLevel] = useState<"guaranteed" | "tentative" | "unavailable">("guaranteed")
 
-  // Fetch availability data
-  useEffect(() => {
-    const fetchAvailability = async () => {
-      setLoading(true)
-      try {
-        const { data, error } = await supabase
-          .from("freelancer_availability")
-          .select("*")
-          .eq("freelancer_id", freelancerId)
-
-        if (error) throw error
-
-        setAvailability(data || [])
-      } catch (error) {
-        console.error("Error fetching availability:", error)
-        toast.error("Failed to load availability")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchAvailability()
-  }, [supabase, freelancerId, toast])
-
-  // Calculate dates with availability for the calendar
-  const datesWithAvailability = useMemo(() => {
-    const result = new Map<string, { date: Date; entries: AvailabilityEntry[] }>()
-
-    // Process one-time availability entries
-    availability.forEach((entry) => {
-      const startDateTime = new Date(entry.start_time)
-      const dateKey = format(startDateTime, "yyyy-MM-dd")
-
-      if (!result.has(dateKey)) {
-        result.set(dateKey, {
-          date: startDateTime,
-          entries: [],
-        })
-      }
-
-      result.get(dateKey)?.entries.push(entry)
-    })
-
-    // Process recurring entries
-    availability
-      .filter((entry) => entry.is_recurring)
-      .forEach((entry) => {
-        const startDateTime = new Date(entry.start_time)
-        const endDateTime = entry.recurrence_end_date ? new Date(entry.recurrence_end_date) : addMonths(new Date(), 6)
-
-        // Generate recurring dates based on pattern
-        let currentDate = addWeeks(new Date(startDateTime), 1) // Start from the next occurrence
-
-        while (isBefore(currentDate, endDateTime)) {
-          const dateKey = format(currentDate, "yyyy-MM-dd")
-
-          if (!result.has(dateKey)) {
-            result.set(dateKey, {
-              date: new Date(currentDate),
-              entries: [],
-            })
-          }
-
-          result.get(dateKey)?.entries.push(entry)
-
-          // Advance to next occurrence
-          if (entry.recurrence_pattern === "weekly") {
-            currentDate = addWeeks(currentDate, 1)
-          } else if (entry.recurrence_pattern === "biweekly") {
-            currentDate = addWeeks(currentDate, 2)
-          } else if (entry.recurrence_pattern === "monthly") {
-            currentDate = addMonths(currentDate, 1)
-          } else {
-            break // Unknown pattern
-          }
-        }
-      })
-
-    return result
-  }, [availability])
+  // React Query hooks
+  const { availability, datesWithAvailability, isLoading, error } = useAvailabilityData(freelancerId)
+  const saveMutation = useAvailabilityMutation()
+  const deleteMutation = useDeleteAvailability()
 
   // Get availability entries for selected date
   const selectedDateEntries = useMemo(() => {
@@ -139,8 +50,67 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
     return datesWithAvailability.get(dateKey)?.entries || []
   }, [date, datesWithAvailability])
 
+  // Enhanced calendar modifiers with better visual indicators
+  const calendarModifiers = useMemo(() => {
+    const modifiers: Record<string, (date: Date) => boolean> = {}
+    
+    datesWithAvailability.forEach((dateData, dateKey) => {
+      // Create modifier for each date with availability
+      modifiers[`date-${dateKey}`] = (date: Date) => {
+        return format(date, "yyyy-MM-dd") === dateKey
+      }
+      
+      // Create status-specific modifiers
+      const hasGuaranteed = dateData.entries.some((entry: any) => entry.certainty_level === "guaranteed")
+      const hasTentative = dateData.entries.some((entry: any) => entry.certainty_level === "tentative")
+      const hasUnavailable = dateData.entries.some((entry: any) => entry.certainty_level === "unavailable")
+      
+      if (hasGuaranteed) {
+        modifiers[`guaranteed-${dateKey}`] = (date: Date) => format(date, "yyyy-MM-dd") === dateKey
+      }
+      if (hasTentative) {
+        modifiers[`tentative-${dateKey}`] = (date: Date) => format(date, "yyyy-MM-dd") === dateKey
+      }
+      if (hasUnavailable) {
+        modifiers[`unavailable-${dateKey}`] = (date: Date) => format(date, "yyyy-MM-dd") === dateKey
+      }
+    })
+    
+    return modifiers
+  }, [datesWithAvailability])
+
+  // Enhanced calendar modifier class names with dots
+  const calendarModifierClassNames = useMemo(() => {
+    const classNames: Record<string, string> = {}
+    
+    datesWithAvailability.forEach((dateData, dateKey) => {
+      const hasGuaranteed = dateData.entries.some((entry: any) => entry.certainty_level === "guaranteed")
+      const hasTentative = dateData.entries.some((entry: any) => entry.certainty_level === "tentative")
+      const hasUnavailable = dateData.entries.some((entry: any) => entry.certainty_level === "unavailable")
+      
+      // Base class for dates with availability
+      let baseClass = "relative"
+      
+      // Add dot indicator based on status
+      if (hasGuaranteed) {
+        classNames[`guaranteed-${dateKey}`] = `${baseClass} after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-2 after:h-2 after:bg-green-500 after:rounded-full`
+      } else if (hasTentative) {
+        classNames[`tentative-${dateKey}`] = `${baseClass} after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-2 after:h-2 after:bg-amber-500 after:rounded-full`
+      } else if (hasUnavailable) {
+        classNames[`unavailable-${dateKey}`] = `${baseClass} after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:transform after:-translate-x-1/2 after:w-2 after:h-2 after:bg-gray-400 after:rounded-full`
+      }
+      
+      // Add event indicator dot for any availability
+      if (dateData.entries.length > 0) {
+        classNames[`date-${dateKey}`] = baseClass
+      }
+    })
+    
+    return classNames
+  }, [datesWithAvailability])
+
   // Reset form state
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setStartDate(new Date())
     setEndDate(new Date())
     setStartTime("09:00")
@@ -150,19 +120,18 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
     setRecurrenceEndDate(addMonths(new Date(), 3))
     setCertaintyLevel("guaranteed")
     setSelectedEntry(null)
-    setFormData({})
-  }
+  }, [])
 
   // Open dialog for adding new availability
-  const handleAddAvailability = () => {
+  const handleAddAvailability = useCallback(() => {
     resetForm()
     setStartDate(date)
     setEndDate(date)
     setIsDialogOpen(true)
-  }
+  }, [date, resetForm])
 
   // Open dialog for editing existing availability
-  const handleEditAvailability = (entry: AvailabilityEntry) => {
+  const handleEditAvailability = useCallback((entry: AvailabilityEntry) => {
     setSelectedEntry(entry)
     setIsRecurring(entry.is_recurring)
     setRecurrencePattern(entry.recurrence_pattern || "weekly")
@@ -178,30 +147,18 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
     setEndTime(format(endDateTime, "HH:mm"))
 
     setIsDialogOpen(true)
-  }
+  }, [])
 
   // Delete availability entry
-  const handleDeleteAvailability = async (entryId: string) => {
-    try {
-      const { error } = await supabase.from("freelancer_availability").delete().eq("id", entryId)
-
-      if (error) throw error
-
-      setAvailability((prev) => prev.filter((entry) => entry.id !== entryId))
-
-      toast.success("Availability deleted")
-    } catch (error) {
-      console.error("Error deleting availability:", error)
-      toast.error("Failed to delete availability")
-    }
-  }
+  const handleDeleteAvailability = useCallback(async (entryId: string) => {
+    deleteMutation.mutate({ freelancerId, entryId })
+  }, [deleteMutation, freelancerId])
 
   // Save availability entry
-  const handleSaveAvailability = async () => {
-    try {
+  const handleSaveAvailability = useCallback(async () => {
       // Validate form
       if (!startDate || !endDate || !startTime || !endTime) {
-        toast.error("Please fill in all required fields")
+      // Show validation error
         return
       }
 
@@ -216,7 +173,7 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
 
       // Validate time range
       if (isAfter(startDateTime, endDateTime)) {
-        toast.error("End time must be after start time")
+      // Show validation error
         return
       }
 
@@ -230,37 +187,22 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
         certainty_level: certaintyLevel,
       }
 
-      if (selectedEntry?.id) {
-        // Update existing entry
-        const { data, error } = await supabase
-          .from("freelancer_availability")
-          .update(availabilityData)
-          .eq("id", selectedEntry.id)
-          .select()
-
-        if (error) throw error
-
-        setAvailability((prev) => prev.map((entry) => (entry.id === selectedEntry.id ? { ...data[0] } : entry)))
-        toast.success("Availability updated")
-      } else {
-        // Create new entry
-        const { data, error } = await supabase.from("freelancer_availability").insert(availabilityData).select()
-
-        if (error) throw error
-
-        setAvailability((prev) => [...prev, ...data])
-        toast.success("Availability added")
-      }
+    saveMutation.mutate({
+      freelancerId,
+      availabilityData,
+      entryId: selectedEntry?.id
+    })
 
       setIsDialogOpen(false)
       resetForm()
-    } catch (error: any) {
-      toast.error(`Failed to save availability: ${error?.message || 'Unknown error'}`)
-    }
-  }
+  }, [
+    startDate, endDate, startTime, endTime, isRecurring, recurrencePattern, 
+    recurrenceEndDate, certaintyLevel, freelancerId, selectedEntry?.id, 
+    saveMutation, resetForm
+  ])
 
   // Get status for a specific date
-  const getDateStatus = (date: Date) => {
+  const getDateStatus = useCallback((date: Date) => {
     const dateKey = format(date, "yyyy-MM-dd")
     const dateData = datesWithAvailability.get(dateKey)
 
@@ -269,7 +211,7 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
     // Determine the highest priority status for the day
     let status = "unavailable"
 
-    dateData.entries.forEach((entry) => {
+    dateData.entries.forEach((entry: AvailabilityEntry) => {
       if (entry.certainty_level === "guaranteed") {
         status = "guaranteed"
       } else if (entry.certainty_level === "tentative" && status !== "guaranteed") {
@@ -278,55 +220,78 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
     })
 
     return status
+  }, [datesWithAvailability])
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-center items-center py-12">
+          <Loader className="h-8 w-8 text-muted-foreground animate-spin" />
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-center items-center py-12">
+            <div className="text-center">
+              <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+              <p className="text-red-600">{t("availability.error.failedToLoadAvailability")}</p>
+              <Button variant="outline" className="mt-2" onClick={() => window.location.reload()}>
+                {t("availability.error.retry")}
+              </Button>
+            </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          {/* <CardTitle>{t("availability.calendar.title")}</CardTitle> */}
-          {/* <CardDescription>{t("availability.calendar.description")}</CardDescription> */}
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-            <div>
+      <div>
+      
+          <div className="space-y-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-4">
               <Calendar
                 mode="single"
                 selected={date}
                 onSelect={(newDate) => newDate && setDate(newDate)}
-                className="rounded-md border"
-                modifiers={{
-                  guaranteed: (date) => getDateStatus(date) === "guaranteed",
-                  tentative: (date) => getDateStatus(date) === "tentative",
-                  unavailable: (date) => getDateStatus(date) === "unavailable",
-                }}
-                modifiersClassNames={{
-                  guaranteed: "guaranteed-day",
-                  tentative: "tentative-day",
-                  unavailable: "unavailable-day",
-                }}
+                className="w-full"
+                modifiers={calendarModifiers}
+                modifiersClassNames={calendarModifierClassNames}
+                
               />
 
-              <div className="mt-4 flex items-center gap-4">
+              <div className="p-4 rounded-lg">
+                <h4 className="font-medium text-xs mb-3">{t("availability.legend.title")}</h4>
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-green-500" />
-                  <span className="text-sm">{t("availability.status.guaranteed")}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="h-3 w-3 rounded-full bg-green-500 flex items-center justify-center">
+                    </div>
+                  <span className="text-xs">{t("availability.status.guaranteed")}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-amber-500" />
-                  <span className="text-sm">{t("availability.status.tentative")}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="h-3 w-3 rounded-full bg-amber-500 flex items-center justify-center">
+                    </div>
+                  <span className="text-xs">{t("availability.status.tentative")}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-gray-300" />
-                  <span className="text-sm">{t("availability.status.unavailable")}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="h-3 w-3 rounded-full bg-gray-400 flex items-center justify-center">
+                    </div>
+                  <span className="text-xs">{t("availability.status.unavailable")}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">{format(date, "EEEE, MMMM d, yyyy")}</h3>
-                <Button onClick={handleAddAvailability} size="sm">
+                <h3 className="text-sm font-medium text-black">{format(date, "EEEE, MMMM d, yyyy")}</h3>
+                <Button onClick={handleAddAvailability} size="sm" className="text-xs">
                   <Plus className="mr-1 h-4 w-4" />
                   {t("availability.actions.add")}
                 </Button>
@@ -334,28 +299,37 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
 
               {selectedDateEntries.length === 0 ? (
                 <div className="rounded-lg border border-dashed p-6 text-center">
-                  <p className="text-sm text-muted-foreground">{t("availability.noAvailability")}</p>
-                  <Button variant="outline" size="sm" className="mt-2" onClick={handleAddAvailability}>
+                  <p className="text-xs text-black">{t("availability.noAvailability")}</p>
+                  <Button variant="outline" size="sm" className="mt-2 text-xs" onClick={handleAddAvailability}>
                     {t("availability.actions.addAvailability")}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {selectedDateEntries.map((entry, index) => (
-                    <Card key={entry.id || index} className="overflow-hidden">
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("availability.table.time")}</TableHead>
+                        <TableHead>{t("availability.table.recurrence")}</TableHead>
+                        <TableHead>{t("availability.table.status")}</TableHead>
+                        <TableHead className="text-right">{t("availability.table.actions")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                  {selectedDateEntries.map((entry: AvailabilityEntry, index: number) => (
+                        <TableRow key={entry.id || index}>
+                          <TableCell>
                             <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">
+                              <Clock className="h-4 w-4 text-black" />
+                              <span className="font-medium text-black">
                                 {format(new Date(entry.start_time), "h:mm a")} -{" "}
                                 {format(new Date(entry.end_time), "h:mm a")}
                               </span>
                             </div>
-
-                            {entry.is_recurring && (
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          </TableCell>
+                          <TableCell>
+                            {entry.is_recurring ? (
+                              <div className="flex items-center gap-2 text-xs text-black">
                                 <RefreshCw className="h-3 w-3" />
                                 <span>
                                   {t("availability.recurrence.repeats", {
@@ -366,8 +340,11 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                                   })}
                                 </span>
                               </div>
+                            ) : (
+                              <span className="text-xs text-black">{t("availability.table.oneTime")}</span>
                             )}
-
+                          </TableCell>
+                          <TableCell>
                             <div className="flex items-center gap-2">
                               {entry.certainty_level === "guaranteed" ? (
                                 <CheckCircle className="h-4 w-4 text-green-500" />
@@ -376,11 +353,11 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                               ) : (
                                 <AlertCircle className="h-4 w-4 text-gray-400" />
                               )}
-                              <span className="text-sm capitalize">{t(`availability.status.${entry.certainty_level}`)}</span>
+                                <span className="text-xs capitalize">{t(`availability.status.${entry.certainty_level}`)}</span>
                             </div>
-                          </div>
-
-                          <div className="flex gap-1">
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-1 justify-end">
                             <Button variant="ghost" size="icon" onClick={() => handleEditAvailability(entry)}>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -402,21 +379,22 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                               variant="ghost"
                               size="icon"
                               onClick={() => entry.id && handleDeleteAvailability(entry.id)}
+                                disabled={deleteMutation.isPending}
                             >
-                              <Trash2 className="h-4 w-4 text-muted-foreground" />
+                              <Trash2 className="h-4 w-4 text-black" />
                             </Button>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                          </TableCell>
+                        </TableRow>
                   ))}
+                    </TableBody>
+                  </Table>
                 </div>
               )}
             </div>
           </div>
-        </CardContent>
-      </Card>
-
+          </div>
+          
       {/* Add/Edit Availability Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
@@ -438,7 +416,7 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                   <Label htmlFor="start-date">{t("availability.dialog.startDate")}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button id="start-date" variant="outline" className="w-full justify-start text-left font-normal">
+                      <Button id="start-date" variant="outline" className="w-full justify-start text-left font-normal text-xs bg-white text-black hover:bg-white">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {startDate ? format(startDate, "PPP") : t("availability.dialog.selectDate")}
                       </Button>
@@ -458,7 +436,7 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                   <Label htmlFor="end-date">{t("availability.dialog.endDate")}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button id="end-date" variant="outline" className="w-full justify-start text-left font-normal">
+                      <Button id="end-date" variant="outline" className="w-full justify-start text-left font-normal text-xs bg-white text-black hover:bg-white">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {endDate ? format(endDate, "PPP") : t("availability.dialog.selectDate")}
                       </Button>
@@ -478,19 +456,19 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="start-time">{t("availability.dialog.startTime")}</Label>
-                  <Input id="start-time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                  <Input id="start-time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="text-xs" />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="end-time">{t("availability.dialog.endTime")}</Label>
-                  <Input id="end-time" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+                  <Input id="end-time" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="text-xs" />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="certainty">{t("availability.dialog.status")}</Label>
                 <Select value={certaintyLevel} onValueChange={(value) => setCertaintyLevel(value as any)}>
-                  <SelectTrigger id="certainty">
+                  <SelectTrigger id="certainty" className="text-xs">
                     <SelectValue placeholder={t("availability.dialog.selectStatus")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -532,7 +510,7 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                   <div className="space-y-2">
                     <Label htmlFor="recurrence-pattern">{t("availability.dialog.repeatPattern")}</Label>
                     <Select value={recurrencePattern} onValueChange={setRecurrencePattern} disabled={!isRecurring}>
-                      <SelectTrigger id="recurrence-pattern">
+                      <SelectTrigger id="recurrence-pattern" className="text-xs">
                         <SelectValue placeholder={t("availability.dialog.selectPattern")} />
                       </SelectTrigger>
                       <SelectContent>
@@ -550,7 +528,7 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                         <Button
                           id="recurrence-end"
                           variant="outline"
-                          className="w-full justify-start text-left font-normal"
+                          className="w-full justify-start text-left font-normal text-xs"
                           disabled={!isRecurring}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -574,11 +552,21 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
           </Tabs>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="text-xs">
               {t("common.cancel")}
             </Button>
-            <Button onClick={handleSaveAvailability}>
-              {selectedEntry ? t("common.save") : t("common.save")}
+            <Button 
+              onClick={handleSaveAvailability}
+              disabled={saveMutation.isPending}
+              className="text-xs"
+            >
+              {saveMutation.isPending ? (
+                <>
+                  <Loader className="h-4 w-4 animate-spin" />
+                </>
+              ) : (
+                selectedEntry ? t("common.save") : t("common.save")
+              )}
             </Button>
           </div>
         </DialogContent>

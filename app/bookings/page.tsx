@@ -1,22 +1,103 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
+import { useOptimizedUser } from "@/components/optimized-user-provider"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { toast } from "@/lib/toast"
-import { Calendar, Clock, MapPin, CheckCircle, XCircle } from "lucide-react"
+import { Calendar, Clock, MapPin, CheckCircle, XCircle, User, Euro } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
-import LoadingSpinner from "@/components/loading-spinner"
-import SidebarNav from "@/components/sidebar-nav"
 import { useTranslation } from "@/lib/i18n"
 import FreelancerOnboardingProgress from "@/components/freelancer-onboarding-progress"
+import { 
+  SidebarProvider, 
+  Sidebar, 
+  SidebarInset
+} from "@/components/ui/sidebar"
+import ModernSidebarNav from "@/components/modern-sidebar-nav"
+import OptimizedHeader from "@/components/optimized-header"
+
+
+const CustomNoBookingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="50" 
+  height="50" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M21.08 8.58v6.84c0 1.12-.6 2.16-1.57 2.73l-5.94 3.43c-.97.56-2.17.56-3.15 0l-5.94-3.43a3.15 3.15 0 0 1-1.57-2.73V8.58c0-1.12.6-2.16 1.57-2.73l5.94-3.43c.97-.56 2.17-.56 3.15 0l5.94 3.43c.97.57 1.57 1.6 1.57 2.73Z" 
+    fill="currentColor">
+      </path>
+      <path d="M12 13.75c-.41 0-.75-.34-.75-.75V7.75c0-.41.34-.75.75-.75s.75.34.75.75V13c0 .41-.34.75-.75.75ZM12 17.249c-.13 0-.26-.03-.38-.08-.13-.05-.23-.12-.33-.21-.09-.1-.16-.21-.22-.33a.986.986 0 0 1-.07-.38c0-.26.1-.52.29-.71.1-.09.2-.16.33-.21.37-.16.81-.07 1.09.21.09.1.16.2.21.33.05.12.08.25.08.38s-.03.26-.08.38-.12.23-.21.33a.99.99 0 0 1-.71.29Z" 
+      fill="currentColor">
+        </path>
+        </svg>
+)
+
+const CustomMapIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="24" 
+  height="24" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M20.621 8.45c-1.05-4.62-5.08-6.7-8.62-6.7h-.01c-3.53 0-7.57 2.07-8.62 6.69-1.17 5.16 1.99 9.53 4.85 12.28a5.436 5.436 0 0 0 3.78 1.53c1.36 0 2.72-.51 3.77-1.53 2.86-2.75 6.02-7.11 4.85-12.27Z" 
+    fill="currentColor">
+      </path>
+      <path d="M12.002 13.46a3.15 3.15 0 1 0 0-6.3 3.15 3.15 0 0 0 0 6.3Z" 
+      fill="currentColor">
+        </path>
+        </svg>
+)
+
+const CustomCalendarIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="24" 
+  height="24" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path d="M16.75 3.56V2c0-.41-.34-.75-.75-.75s-.75.34-.75.75v1.5h-6.5V2c0-.41-.34-.75-.75-.75s-.75.34-.75.75v1.56c-2.7.25-4.01 1.86-4.21 4.25-.02.29.22.53.5.53h16.92c.29 0 .53-.25.5-.53-.2-2.39-1.51-4-4.21-4.25Z" 
+    fill="currentColor">
+      </path>
+      <path opacity=".4" d="M20 9.84c.55 0 1 .45 1 1V17c0 3-1.5 5-5 5H8c-3.5 0-5-2-5-5v-6.16c0-.55.45-1 1-1h16Z" 
+      fill="currentColor">
+        </path>
+        <path d="M8.5 14.999c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.28-.28.72-.37 1.09-.21.13.05.24.12.33.21.18.19.29.45.29.71 0 .26-.11.52-.29.71-.19.18-.45.29-.71.29ZM12 14.999c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.09-.09.2-.16.33-.21.37-.16.81-.07 1.09.21.18.19.29.45.29.71 0 .26-.11.52-.29.71l-.15.12c-.06.04-.12.07-.18.09-.06.03-.12.05-.18.06-.07.01-.13.02-.2.02ZM15.5 15c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.1-.09.2-.16.33-.21.18-.08.38-.1.58-.06.06.01.12.03.18.06.06.02.12.05.18.09l.15.12c.18.19.29.45.29.71 0 .26-.11.52-.29.71l-.15.12c-.06.04-.12.07-.18.09-.06.03-.12.05-.18.06-.07.01-.14.02-.2.02ZM8.5 18.5c-.13 0-.26-.03-.38-.08-.13-.05-.23-.12-.33-.21-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.1-.09.2-.16.33-.21.18-.08.38-.1.58-.06.06.01.12.03.18.06.06.02.12.05.18.09l.15.12c.18.19.29.45.29.71 0 .26-.11.52-.29.71-.05.04-.1.09-.15.12-.06.04-.12.07-.18.09-.06.03-.12.05-.18.06-.07.01-.13.02-.2.02ZM12 18.5c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.37-.37 1.05-.37 1.42 0 .18.19.29.45.29.71 0 .26-.11.52-.29.71-.19.18-.45.29-.71.29ZM15.5 18.5c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.37-.37 1.05-.37 1.42 0 .18.19.29.45.29.71 0 .26-.11.52-.29.71-.19.18-.45.29-.71.29Z" 
+        fill="currentColor">
+          </path>
+          </svg>
+)
+
+// Skeleton for immediate loading
+function BookingsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <div className="flex gap-4">
+          <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+          <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+        </div>
+        <div className="h-4 w-48 bg-muted rounded animate-pulse mt-2" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div className="h-[400px] w-full bg-muted rounded animate-pulse" />
+        <div className="h-[400px] w-full bg-muted rounded animate-pulse" />
+      </div>
+    </div>
+  )
+}
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -27,83 +108,41 @@ export default function BookingsPage() {
   const { t } = useTranslation()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
-  const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
+  const { profile, isLoading: isProfileLoading } = useOptimizedUser()
   const [bookings, setBookings] = useState<Booking[]>([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true)
-
+    if (!profile) return;
+    const fetchBookings = async () => {
       try {
-        // Get current user
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
-        if (!user) {
-          router.push("/login")
-          return
-        }
-
-        // Get profile
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single()
-
-        if (profileError) {
-          throw profileError
-        }
-
-        setProfile(profileData)
-
-        // Fetch bookings
         let query
-
-        if (profileData.user_type === "client") {
+        if (profile.user_type === "client") {
           query = supabase
             .from("bookings")
-            .select(`
-              *,
-              freelancer:freelancer_id(id, first_name, last_name, avatar_url, hourly_rate)
-            `)
-            .eq("client_id", user.id)
+            .select(`*,freelancer:freelancer_id(id, first_name, last_name, avatar_url, hourly_rate)`)
+            .eq("client_id", profile.id)
             .order("start_time", { ascending: false })
         } else {
           query = supabase
             .from("bookings")
-            .select(`
-              *,
-              client:client_id(id, first_name, last_name, avatar_url)
-            `)
-            .eq("freelancer_id", user.id)
+            .select(`*,client:client_id(id, first_name, last_name, avatar_url)`)
+            .eq("freelancer_id", profile.id)
             .order("start_time", { ascending: false })
         }
-
         const { data: bookingsData, error: bookingsError } = await query
-
-        if (bookingsError) {
-          throw bookingsError
-        }
-
+        if (bookingsError) throw bookingsError
         setBookings(bookingsData as Booking[])
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error("Error fetching bookings:", error)
         toast.error(t("bookings.error"))
-      } finally {
-        setLoading(false)
       }
     }
-
-    fetchData()
-  }, [supabase, router, toast])
+    fetchBookings()
+  }, [supabase, profile, t])
 
   const handleBookingAction = async (bookingId: string, action: "confirm" | "complete" | "cancel") => {
     try {
       let updateData = {}
-
       if (action === "confirm") {
         updateData = { status: "confirmed" }
       } else if (action === "complete") {
@@ -111,23 +150,16 @@ export default function BookingsPage() {
       } else if (action === "cancel") {
         updateData = { status: "cancelled" }
       }
-
       const { error } = await supabase.from("bookings").update(updateData).eq("id", bookingId)
-
-      if (error) {
-        throw error
-      }
-
-      // Update local state
+      if (error) throw error
       setBookings(bookings.map((booking) => (booking.id === bookingId ? { ...booking, ...updateData } : booking)))
-
       toast.success(t("bookings.success"))
     } catch (error: any) {
       toast.error(error.message || t("bookings.error"))
     }
   }
 
-  const getStatusBadge = (status: string, paymentMethod = "online") => {
+  const getStatusBadge = (status: string, paymentMethod: string | null = "online") => {
     switch (status) {
       case "pending":
         return (
@@ -185,11 +217,24 @@ export default function BookingsPage() {
     }
   }
 
-  if (loading) {
+  if (isProfileLoading) {
     return (
-      <div className="container py-10 flex justify-center items-center min-h-[50vh]">
-        <LoadingSpinner />
-      </div>
+      <SidebarProvider className="w-full">
+        <div className="flex min-h-screen bg-muted/30 w-full">
+          <Sidebar>
+            {/* Show minimal sidebar during loading */}
+            <div className="p-4">
+              <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+            </div>
+          </Sidebar>
+          <SidebarInset className="w-full">
+            <OptimizedHeader />
+            <div className="p-6">
+              <BookingsSkeleton />
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     )
   }
 
@@ -203,294 +248,321 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="bg-muted/30 min-h-screen">
-      <div className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <SidebarNav profile={profile} />
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
-            {profile.user_type === "freelancer" && (
-              <FreelancerOnboardingProgress profile={profile} />
-            )}
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">{t("bookings.title")}</h1>
-              {profile.user_type === "client" && (
-                <Link href="/freelancers">
-                  <Button>{t("bookings.bookFreelancer")}</Button>
-                </Link>
-              )}
-            </div>
-
-            <Tabs defaultValue="upcoming">
-              <div className="flex justify-between items-center mb-4">
-                <TabsList>
-                  <TabsTrigger value="upcoming">{t("bookings.upcoming")}</TabsTrigger>
-                  <TabsTrigger value="past">{t("bookings.past")}</TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="upcoming" className="space-y-4">
-                {bookings.filter(
-                  (b) => new Date(b.start_time) > new Date() && ["pending", "confirmed"].includes(b.status),
-                ).length === 0 ? (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <div className="relative w-24 h-24 mb-6">
-                        <Image
-                          src="/illustrations/calendar.svg"
-                          alt="Calendar illustration"
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                      <h3 className="text-xl font-medium mb-2">{t("bookings.noUpcomingBookings")}</h3>
-                      <p className="text-muted-foreground text-center max-w-md mb-6">
-                        {profile.user_type === "client"
-                          ? t("bookings.noUpcomingBookingsClient")
-                          : t("bookings.noUpcomingBookingsFreelancer")}
-                      </p>
-                      {profile.user_type === "client" ? (
-                        <Link href="/freelancers">
-                          <Button size="lg" className="gap-2">
-                            <Calendar className="h-5 w-5" />
-                            {t("bookings.findFreelancers")}
-                          </Button>
-                        </Link>
-                      ) : (
-                        <Link href="/profile">
-                          <Button size="lg" className="gap-2">
-                            <Calendar className="h-5 w-5" />
-                            {t("bookings.updateProfile")}
-                          </Button>
-                        </Link>
-                      )}
-                    </CardContent>
-                  </Card>
-                ) : (
-                  bookings
-                    .filter((b) => new Date(b.start_time) > new Date() && ["pending", "confirmed"].includes(b.status))
-                    .map((booking) => (
-                      <Card key={booking.id}>
-                        <CardContent className="p-6">
-                          <div className="flex flex-col md:flex-row gap-4">
-                            <div className="md:w-1/4">
-                              <div className="relative h-20 w-20 rounded-lg overflow-hidden">
-                                <Image
-                                  src={
-                                    profile.user_type === "client"
-                                      ? booking.freelancer?.avatar_url || `/placeholder.svg?height=80&width=80`
-                                      : booking.client?.avatar_url || `/placeholder.svg?height=80&width=80`
-                                  }
-                                  alt="Profile"
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="md:w-3/4">
-                              <div className="flex flex-col md:flex-row md:justify-between md:items-start">
-                                <div>
-                                  <h3 className="text-lg font-semibold">
-                                    {profile.user_type === "client"
-                                      ? `Booking with ${booking.freelancer?.first_name} ${booking.freelancer?.last_name}`
-                                      : `Booking from ${booking.client?.first_name} ${booking.client?.last_name}`}
-                                  </h3>
-
-                                  <div className="flex items-center mt-1">
-                                    {getStatusBadge(booking.status, booking.payment_method || 'online')}
+    <SidebarProvider className="w-full">
+    <div className="flex min-h-screen bg-muted/30 w-full">
+      <Sidebar>
+        {profile && <ModernSidebarNav profile={profile} />}
+      </Sidebar>
+      <SidebarInset className="w-full">
+        <OptimizedHeader />
+        <div className="lg:col-span-3 space-y-6 p-6 pb-20 bg-[#f7f7f7] h-full">
+          {profile.user_type === "freelancer" && (
+            <FreelancerOnboardingProgress profile={profile} />
+          )}
+          <Tabs defaultValue="upcoming" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+              <TabsTrigger value="past">Past</TabsTrigger>
+            </TabsList>
+            <TabsContent value="upcoming" className="space-y-4">
+              {bookings.filter(
+                (b) => new Date(b.start_time) > new Date() && ["pending", "confirmed"].includes(b.status),
+              ).length === 0 ? (
+                <div className="bg-background rounded-lg overflow-hidden">
+                  <div className="p-6 flex flex-col items-center justify-center">
+                      <CustomNoBookingsIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg text-black font-medium mb-2">No upcoming bookings</h3>
+                    <p className="text-black text-xs text-center max-w-md mb-4">
+                      {profile.user_type === "client"
+                        ? "You don't have any upcoming bookings. Book a freelancer to get started."
+                        : "You don't have any upcoming jobs. Update your profile to attract more clients."}
+                    </p>
+                    {profile.user_type === "client" ? (
+                      <Link href="/freelancers">
+                        <Button>Find Freelancers</Button>
+                      </Link>
+                    ) : (
+                      <Link href="/profile">
+                        <Button>Update Profile</Button>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-background rounded-lg overflow-hidden">
+                  <div className="p-6">
+                    <h2 className="text-lg text-black font-semibold mb-1">Upcoming Bookings</h2>
+                  </div>
+                  <div className="p-6">
+                    <Table>
+                      <TableHeader>
+                        <TableRow >
+                          <TableHead className="text-xs text-black">Client/Freelancer</TableHead>
+                          <TableHead className="text-xs text-black">Date & Time</TableHead>
+                          <TableHead className="text-xs text-black">Location</TableHead>
+                          <TableHead className="text-xs text-black">Status</TableHead>
+                          <TableHead className="text-xs text-black">Amount</TableHead>
+                          <TableHead className="text-right text-xs text-black">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {bookings
+                          .filter((b) => new Date(b.start_time) > new Date() && ["pending", "confirmed"].includes(b.status))
+                          .map((booking) => (
+                            <TableRow 
+                            key={booking.id}
+                            onClick={() => router.push(`/bookings/${booking.id}`)}
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            >
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="relative h-10 w-10 rounded-full overflow-hidden">
+                                    <Image
+                                      src={
+                                        profile.user_type === "client"
+                                          ? booking.freelancer?.avatar_url || `/placeholder.svg?height=40&width=40`
+                                          : booking.client?.avatar_url || `/placeholder.svg?height=40&width=40`
+                                      }
+                                      alt="Profile"
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-xs text-black">
+                                      {profile.user_type === "client"
+                                        ? `${booking.freelancer?.first_name} ${booking.freelancer?.last_name}`
+                                        : `${booking.client?.first_name} ${booking.client?.last_name}`}
+                                    </p>
+                                    <p className="text-xs text-black">
+                                      {profile.user_type === "client" ? "Freelancer" : "Client"}
+                                    </p>
                                   </div>
                                 </div>
-
-                                <div className="mt-2 md:mt-0">
-                                  {booking.total_amount > 0 && (
-                                    <p className="font-semibold text-right">€{booking.total_amount.toFixed(2)}</p>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="mt-4 space-y-2">
-                                <div className="flex items-center text-sm">
-                                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                                  <span>{format(new Date(booking.start_time), "EEEE, MMMM d, yyyy")}</span>
-                                </div>
-
-                                <div className="flex items-center text-sm">
-                                  <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                                  <span>
-                                    {format(new Date(booking.start_time), "h:mm a")} -{" "}
-                                    {format(new Date(booking.end_time), "h:mm a")}
-                                  </span>
-                                </div>
-
-                                {booking.location && (
-                                  <div className="flex items-center text-sm">
-                                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                                    <span>{booking.location}</span>
+                              </TableCell>
+                              <TableCell>
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <CustomCalendarIcon className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium text-xs text-black">
+                                      {format(new Date(booking.start_time), "MMM d, yyyy")}
+                                    </span>
                                   </div>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-xs text-black">
+                                      {format(new Date(booking.start_time), "h:mm a")} - {format(new Date(booking.end_time), "h:mm a")}
+                                    </span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {booking.location ? (
+                                  <div className="flex items-center gap-2">
+                                    <CustomMapIcon className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-xs text-black">{booking.location}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">Not specified</span>
                                 )}
-                              </div>
-
-                              <div className="mt-4 flex flex-wrap gap-2">
-                                <Link href={`/bookings/${booking.id}`}>
-                                  <Button size="sm" variant="outline">
-                                    {t("bookings.viewDetails")}
-                                  </Button>
-                                </Link>
-
-                                {profile.user_type === "client" && booking.status === "pending" && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-500"
-                                    onClick={() => handleBookingAction(booking.id, "cancel")}
-                                  >
-                                    <XCircle className="h-4 w-4 mr-1" />
-                                    {t("bookings.cancel")}
-                                  </Button>
+                              </TableCell>
+                              <TableCell>
+                                {getStatusBadge(booking.status, booking.payment_method)}
+                              </TableCell>
+                              <TableCell>
+                                {booking.total_amount > 0 ? (
+                                  <div className="flex items-center gap-2">
+                                    <Euro className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium text-xs text-black">€{booking.total_amount.toFixed(2)}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">Not set</span>
                                 )}
-
-                                {profile.user_type === "freelancer" && booking.status === "pending" && (
-                                  <>
-                                    <Button size="sm" onClick={() => handleBookingAction(booking.id, "confirm")}>
-                                      <CheckCircle className="h-4 w-4 mr-1" />
-                                      {t("bookings.accept")}
-                                    </Button>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex gap-2 justify-end">
+                                  {profile.user_type === "client" && booking.status === "pending" && (
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="text-red-500"
+                                      className="text-red-500 hover:text-red-600"
                                       onClick={() => handleBookingAction(booking.id, "cancel")}
                                     >
                                       <XCircle className="h-4 w-4 mr-1" />
-                                      {t("bookings.decline")}
+                                      Cancel
                                     </Button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                )}
-              </TabsContent>
+                                  )}
 
-              <TabsContent value="past" className="space-y-4">
-                {bookings.filter(
-                  (b) =>
-                    new Date(b.start_time) < new Date() || ["completed", "cancelled", "disputed"].includes(b.status),
-                ).length === 0 ? (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <div className="relative w-24 h-24 mb-6">
-                        <Image
-                          src="/illustrations/history.svg"
-                          alt="History illustration"
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                      <h3 className="text-xl font-medium mb-2">{t("bookings.noPastBookings")}</h3>
-                      <p className="text-muted-foreground text-center max-w-md">
-                        {profile.user_type === "client"
-                          ? t("bookings.pastBookingsClient")
-                          : t("bookings.pastBookingsFreelancer")}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  bookings
-                    .filter(
-                      (b) =>
-                        new Date(b.start_time) < new Date() ||
-                        ["completed", "cancelled", "disputed"].includes(b.status),
-                    )
-                    .map((booking) => (
-                      <Card key={booking.id}>
-                        <CardContent className="p-6">
-                          <div className="flex flex-col md:flex-row gap-4">
-                            <div className="md:w-1/4">
-                              <div className="relative h-20 w-20 rounded-lg overflow-hidden">
-                                <Image
-                                  src={
-                                    profile.user_type === "client"
-                                      ? booking.freelancer?.avatar_url || `/placeholder.svg?height=80&width=80`
-                                      : booking.client?.avatar_url || `/placeholder.svg?height=80&width=80`
-                                  }
-                                  alt="Profile"
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            </div>
+                                  {profile.user_type === "freelancer" && booking.status === "pending" && (
+                                    <>
+                                      <Button size="sm" onClick={() => handleBookingAction(booking.id, "confirm")}>
+                                        <CheckCircle className="h-4 w-4 mr-1" />
+                                        Accept
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-red-500 hover:text-red-600"
+                                        onClick={() => handleBookingAction(booking.id, "cancel")}
+                                      >
+                                        <XCircle className="h-4 w-4 mr-1" />
+                                        Decline
+                                      </Button>
+                                    </>
+                                  )}
 
-                            <div className="md:w-3/4">
-                              <div className="flex flex-col md:flex-row md:justify-between md:items-start">
-                                <div>
-                                  <h3 className="text-lg font-semibold">
-                                    {profile.user_type === "client"
-                                      ? `${t("bookings.bookingWith")} ${booking.freelancer?.first_name} ${booking.freelancer?.last_name}`
-                                      : `${t("bookings.bookingFrom")} ${booking.client?.first_name} ${booking.client?.last_name}`}
-                                  </h3>
-
-                                  <div className="flex items-center mt-1">
-                                    {getStatusBadge(booking.status, booking.payment_method || 'online')}
-                                  </div>
-                                </div>
-
-                                <div className="mt-2 md:mt-0">
-                                  {booking.total_amount > 0 && (
-                                    <p className="font-semibold text-right">€{booking.total_amount.toFixed(2)}</p>
+                                  {booking.status === "confirmed" && (
+                                    <Link href={`/bookings/${booking.id}`}>
+                                      <Button size="sm" variant="outline">
+                                        View Details
+                                      </Button>
+                                    </Link>
                                   )}
                                 </div>
-                              </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
 
-                              <div className="mt-4 space-y-2">
-                                <div className="flex items-center text-sm">
-                                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                                  <span>{format(new Date(booking.start_time), "EEEE, MMMM d, yyyy")}</span>
+            <TabsContent value="past" className="space-y-4">
+              {bookings.filter(
+                (b) =>
+                  new Date(b.start_time) < new Date() || ["completed", "cancelled", "disputed"].includes(b.status),
+              ).length === 0 ? (
+                <div className="bg-background rounded-lg overflow-hidden">
+                  <div className="p-6 flex flex-col items-center justify-center">
+                    <CustomNoBookingsIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg text-black font-medium mb-2">No past bookings</h3>
+                    <p className="text-black text-xs text-center max-w-md mb-4">Your past bookings will appear here.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-background rounded-lg overflow-hidden">
+                  <div className="p-6">
+                    <h2 className="text-lg text-black font-semibold mb-1">Past Bookings</h2>
+                  </div>
+                  <div className="p-6">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs text-black">Client/Freelancer</TableHead>
+                          <TableHead className="text-xs text-black">Date & Time</TableHead>
+                          <TableHead className="text-xs text-black">Location</TableHead>
+                          <TableHead className="text-xs text-black">Status</TableHead>
+                          <TableHead className="text-xs text-black">Amount</TableHead>
+                          <TableHead className="text-right text-xs text-black">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {bookings
+                          .filter(
+                            (b) =>
+                              new Date(b.start_time) < new Date() ||
+                              ["completed", "cancelled", "disputed"].includes(b.status),
+                          )
+                          .map((booking) => (
+                            <TableRow key={booking.id}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="relative h-10 w-10 rounded-full overflow-hidden">
+                                    <Image
+                                      src={
+                                        profile.user_type === "client"
+                                          ? booking.freelancer?.avatar_url || `/placeholder.svg?height=40&width=40`
+                                          : booking.client?.avatar_url || `/placeholder.svg?height=40&width=40`
+                                      }
+                                      alt="Profile"
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-xs text-black">
+                                      {profile.user_type === "client"
+                                        ? `${booking.freelancer?.first_name} ${booking.freelancer?.last_name}`
+                                        : `${booking.client?.first_name} ${booking.client?.last_name}`}
+                                    </p>
+                                    <p className="text-xs text-black">
+                                      {profile.user_type === "client" ? "Freelancer" : "Client"}
+                                    </p>
+                                  </div>
                                 </div>
-
-                                <div className="flex items-center text-sm">
-                                  <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                                  <span>
-                                    {format(new Date(booking.start_time), "h:mm a")} -{" "}
-                                    {format(new Date(booking.end_time), "h:mm a")}
-                                  </span>
+                              </TableCell>
+                              <TableCell>
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <CustomCalendarIcon className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium text-xs text-black">
+                                      {format(new Date(booking.start_time), "MMM d, yyyy")}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-xs text-black">
+                                      {format(new Date(booking.start_time), "h:mm a")} - {format(new Date(booking.end_time), "h:mm a")}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-
-                              <div className="mt-4 flex flex-wrap gap-2">
-                                <Link href={`/bookings/${booking.id}`}>
-                                  <Button size="sm" variant="outline">
-                                    {t("bookings.viewDetails")}
-                                  </Button>
-                                </Link>
-
-                                {profile.user_type === "client" && booking.status === "confirmed" && (
-                                  <Button size="sm" onClick={() => handleBookingAction(booking.id, "complete")}>
-                                    <CheckCircle className="h-4 w-4 mr-1" />
-                                    {t("bookings.markAsCompleted")}
-                                  </Button>
+                              </TableCell>
+                              <TableCell>
+                                {booking.location ? (
+                                  <div className="flex items-center gap-2">
+                                    <CustomMapIcon className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-xs text-black">{booking.location}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-black">Not specified</span>
                                 )}
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
+                              </TableCell>
+                              <TableCell>
+                                {getStatusBadge(booking.status, booking.payment_method)}
+                              </TableCell>
+                              <TableCell>
+                                {booking.total_amount > 0 ? (
+                                  <div className="flex items-center gap-2">
+                                    <Euro className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium text-xs text-black">€{booking.total_amount.toFixed(2)}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-black">Not set</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex gap-2 justify-end">
+                                  {booking.status === "completed" && (
+                                    <Link href={`/bookings/${booking.id}`}>
+                                      <Button size="sm" variant="outline">
+                                        View Details
+                                      </Button>
+                                    </Link>
+                                  )}
+
+                                  {profile.user_type === "client" && booking.status === "confirmed" && (
+                                    <Button size="sm" onClick={() => handleBookingAction(booking.id, "complete")}>
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Mark as Completed
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
-      </div>
+      </SidebarInset>
     </div>
+    </SidebarProvider>
   )
 }
 

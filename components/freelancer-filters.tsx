@@ -203,14 +203,14 @@ export default function FreelancerFilters() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("freelancer.filters.title")}</CardTitle>
+        <CardTitle className="text-lg text-black font-bold">{t("freelancer.filters.title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Wildcard Only Switch */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label>{t("freelancer.filters.wildcardSearch")}</Label>
-            <p className="text-sm text-muted-foreground">
+            <Label className="text-sm text-black font-bold">{t("freelancer.filters.wildcardSearch")}</Label>
+            <p className="text-xs text-black">
             {t("freelancer.filters.wildcardSearchDescription")}
             </p>
           </div>
@@ -224,7 +224,7 @@ export default function FreelancerFilters() {
         {showWildcardOnly && (
           <div className="pl-4 border-l-2 border-muted">
             <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">{t("freelancer.filters.selectWildcardCategories")}</Label>
+              <Label className="text-sm text-black font-bold">{t("freelancer.filters.selectWildcardCategories")}</Label>
               <WildcardFilter selectedWildcards={selectedWildcards} onChange={handleWildcardChange} />
             </div>
           </div>
@@ -237,7 +237,7 @@ export default function FreelancerFilters() {
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <Search className="h-4 w-4" />
-              <Label>{t("freelancer.filters.search")}</Label>
+              <Label className="text-xs text-black font-bold">{t("freelancer.filters.search")}</Label>
             </div>
             {openSections.search ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
@@ -257,7 +257,7 @@ export default function FreelancerFilters() {
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <MapPin className="h-4 w-4" />
-              <Label>{t("freelancer.filters.location")}</Label>
+              <Label className="text-xs text-black font-bold">{t("freelancer.filters.location")}</Label>
             </div>
             {openSections.location ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
@@ -280,7 +280,7 @@ export default function FreelancerFilters() {
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <Euro className="h-4 w-4" />
-              <Label>{t("freelancer.filters.priceRange")}</Label>
+              <Label className="text-xs text-black font-bold">{t("freelancer.filters.priceRange")}</Label>
             </div>
             {openSections.price ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
@@ -310,7 +310,7 @@ export default function FreelancerFilters() {
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <Tag className="h-4 w-4" />
-              <Label>{t("freelancer.filters.categories")}</Label>
+              <Label className="text-xs text-black font-bold">{t("freelancer.filters.categories")}</Label>
             </div>
             {openSections.categories ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>
@@ -338,7 +338,7 @@ export default function FreelancerFilters() {
                     </Label>
                   </div>
                 ))}
-                {categories?.length === 0 && <p className="text-sm text-muted-foreground">{t("freelancer.filters.noCategoriesAvailable")}</p>}
+                {categories?.length === 0 && <p className="text-xs text-black">{t("freelancer.filters.noCategoriesAvailable")}</p>}
               </div>
             )}
           </CollapsibleContent>

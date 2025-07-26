@@ -148,18 +148,18 @@ export default function WildcardCategoriesForm({ profile }: WildcardCategoriesFo
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("profile.wildcardCategories.title")}</CardTitle>
-        <CardDescription>{t("profile.wildcardCategories.description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="bg-background rounded-lg overflow-hidden">
+      <div className="p-6">
+        <h2 className="text-lg font-semibold mb-1">{t("profile.wildcardCategories.title")}</h2>
+        <p className="text-xs text-black">{t("profile.wildcardCategories.description")}</p>
+      </div>
+      <div className="p-6">
         <div className="space-y-6">
           {/* Master Switch with Tooltip */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Label>{t("profile.wildcardCategories.enableWildcard")}</Label>
+                <Label className="text-xs text-black">{t("profile.wildcardCategories.enableWildcard")}</Label>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
@@ -171,7 +171,7 @@ export default function WildcardCategoriesForm({ profile }: WildcardCategoriesFo
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-black">
                 {t("profile.wildcardCategories.enableWildcardDescription")}
               </p>
             </div>
@@ -187,7 +187,7 @@ export default function WildcardCategoriesForm({ profile }: WildcardCategoriesFo
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>{t("profile.wildcardCategories.selectCategories")}</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-black">
                     {t("profile.wildcardCategories.selectCategoriesDescription")}
                   </p>
                 </div>
@@ -216,8 +216,8 @@ export default function WildcardCategoriesForm({ profile }: WildcardCategoriesFo
                             <Icon className="h-5 w-5" />
                           </div>
                           <div className="space-y-1">
-                            <h4 className="font-medium leading-none">{t(`profile.wildcardCategories.categories.${category.id}.label`)}</h4>
-                            <p className="text-sm text-muted-foreground">{t(`profile.wildcardCategories.categories.${category.id}.description`)}</p>
+                            <h4 className="font-medium leading-none text-xs text-black">{t(`profile.wildcardCategories.categories.${category.id}.label`)}</h4>
+                            <p className="text-xs text-black">{t(`profile.wildcardCategories.categories.${category.id}.description`)}</p>
                           </div>
                         </div>
                       </button>
@@ -228,11 +228,11 @@ export default function WildcardCategoriesForm({ profile }: WildcardCategoriesFo
             </>
           )}
 
-          <Button onClick={handleSave} disabled={isLoading} className="mt-4">
+          <Button onClick={handleSave} disabled={isLoading} className="mt-4 rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none">
             {isLoading ? t("profile.wildcardCategories.saving") : t("profile.wildcardCategories.saveChanges")}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

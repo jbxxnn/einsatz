@@ -69,12 +69,12 @@ export default function JobCategorySelector({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-between"
+            className="w-full justify-between bg-transparent text-black hover:bg-transparent hover:text-black border border-brand-green"
             disabled={loading}
           >
             {selectedCategories.length > 0 ? (
               multiple ? (
-                <div className="flex flex-wrap gap-1 max-w-[90%] overflow-hidden">
+                <div className="flex flex-wrap gap-1 max-w-2xl overflow-hidden">
                   {getSelectedCategoryNames().map((name) => (
                     <Badge key={name} variant="secondary">
                       {name}
@@ -90,7 +90,7 @@ export default function JobCategorySelector({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0">
+        <PopoverContent className="w-[400px] p-0">
           <Command>
             <CommandInput placeholder="Search categories..." />
             <CommandList>

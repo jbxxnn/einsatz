@@ -1,0 +1,489 @@
+[
+  {
+    "id": 1,
+    "question": "Is de opdracht door de freelancer op eigen initiatief aangenomen, zonder verplichting of inroostering door de opdrachtgever?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer heeft de opdracht op eigen initiatief aangenomen.",
+      "Nee, de opdrachtgever heeft de freelancer ingeroosterd."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 10
+    }
+  },
+  {
+    "id": 2,
+    "question": "Was er vrijheid voor de freelancer om de opdracht te weigeren of om eigen werktijden te bepalen?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer heeft de vrijheid om de opdracht te weigeren.",
+      "Nee, de freelancer wordt verwacht de opdracht aan te nemen en kan deze in de praktijk niet zonder consequenties weigeren."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 10
+    }
+  },
+  {
+    "id": 3,
+    "question": "Wordt de opdracht uitgevoerd zonder inhoudelijke aansturing of bemoeienis van de opdrachtgever?",
+    "audience": "client",
+    "options": [
+      "De opdrachtgever geeft instructies tijdens de uitvoering van de opdracht.",
+      "De opdrachtgever geeft instructies na de uitvoering van de opdracht.",
+      "De opdrachtgever controleert de opdracht achteraf op het proces.",
+      "De opdrachtgever controleert de opdracht achteraf op het resultaat."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 8,
+      "3": 5,
+      "4": 0
+    }
+  },
+  {
+    "id": 4,
+    "question": "Is de opdracht zodanig gespecificeerd dat deze volledig zelfstandig door de freelancer uitgevoerd kan worden?",
+    "audience": "both",
+    "options": [
+      "De opdracht is gespecificeerd als resultaatverplichting.",
+      "De opdracht bevat een functieomschrijving.",
+      "De opdracht is onduidelijk, maar de freelancer is ervaren.",
+      "De opdracht betreft een inspanningsverplichting zonder concreet resultaat."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 5,
+      "3": 8,
+      "4": 10
+    }
+  },
+  {
+    "id": 5,
+    "question": "Kan de beloning van de freelancer beïnvloed worden door efficiënter te werken?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer verdient meer bij efficiënter werken.",
+      "Ja, de freelancer verdient minder bij efficiënter werken.",
+      "Nee, de beloning blijft gelijk ongeacht de efficiëntie."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 5,
+      "3": 10
+    }
+  },
+  {
+    "id": 6,
+    "question": "Wie draagt de kosten voor herstelwerkzaamheden of extra werkuren?",
+    "audience": "client",
+    "options": [
+      "De freelancer draagt de kosten.",
+      "De freelancer draagt de kosten, maar vergoeding is soms bespreekbaar.",
+      "De opdrachtgever draagt alle kosten."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 5,
+      "3": 10
+    }
+  },
+  {
+    "id": 7,
+    "question": "Sluit de opdracht aan bij de ervaring en kennis van de freelancer?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, veel ervaring.",
+      "Ja, beperkte ervaring (<3 jaar).",
+      "Nee, weinig of geen ervaring."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 5,
+      "3": 10
+    }
+  },
+  {
+    "id": 8,
+    "question": "Heeft de freelancer de afgelopen 6 maanden opleidingen gevolgd die door de opdrachtgever zijn betaald?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, verplicht en gericht op uitvoering van de opdracht.",
+      "Ja, verplicht en gericht op algemene kennis en vaardigheden.",
+      "Nee, de freelancer betaalde zelf voor een opleiding.",
+      "Nee, geen opleiding gevolgd."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 5,
+      "3": 0,
+      "4": 0
+    }
+  },
+  {
+    "id": 9,
+    "question": "Heeft de freelancer de afgelopen 6 maanden deelgenomen aan personeelsactiviteiten bij de opdrachtgever?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer heeft een personeelsactiviteit bijgewoond.",
+      "Nee, de freelancer heeft geen personeelsactiviteit bijgewoond."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 0
+    }
+  },
+  {
+    "id": 10,
+    "question": "Heeft de freelancer de afgelopen 6 maanden deelgenomen aan een persoonlijk ontwikkeltraject van de opdrachtgever?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer heeft deelgenomen aan een ontwikkeltraject.",
+      "Nee, de freelancer heeft niet deelgenomen."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 0
+    }
+  },
+  {
+    "id": 11,
+    "question": "Heeft de freelancer vergaderingen bijgewoond die niet direct betrekking hadden op de opdracht?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, een vergadering gericht op de opdracht.",
+      "Ja, een vergadering gericht op de organisatie.",
+      "Nee, geen vergadering bijgewoond."
+    ],
+    "score_mapping": {
+      "1": 5,
+      "2": 10,
+      "3": 0
+    }
+  },
+  {
+    "id": 12,
+    "question": "Is de freelancer de afgelopen 6 maanden financieel afhankelijk geweest van deze opdrachtgever voor het levensonderhoud?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, deze opdracht was nodig om te voorzien in het levensonderhoud.",
+      "Ja, maar een andere opdracht werd afgewezen.",
+      "Nee, deze opdracht was niet nodig voor het levensonderhoud."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 5,
+      "3": 0
+    }
+  },
+  {
+    "id": 13,
+    "question": "Kan de freelancer bij beëindiging van de opdracht de komende 6 maanden in de dagelijkse kosten voorzien?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, voldoende reserves, opdracht niet nodig.",
+      "Ja, tijdelijk zonder opdracht, maar wel afhankelijk op termijn.",
+      "Nee, freelancer is afhankelijk van deze opdracht of de volgende."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 5,
+      "3": 10
+    }
+  },
+  {
+    "id": 14,
+    "question": "Wie bepaalt de hoogte van het uurtarief?",
+    "audience": "both",
+    "options": [
+      "De freelancer bepaalt het tarief.",
+      "De opdrachtgever bepaalt het tarief.",
+      "Het tarief wordt in overleg vastgesteld."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 10,
+      "3": 5
+    }
+  },
+  {
+    "id": 15,
+    "question": "Ontvangt de freelancer een compensatie van de opdrachtgever voor de kosten die de zelfstandige in zijn bedrijfsvoering maakt?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de opdrachtgever biedt een opslag of er zijn geen kosten.",
+      "Nee, de freelancer betaalt zelf de kosten."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 0
+    }
+  },
+  {
+    "id": 16,
+    "question": "Ontvangt de freelancer een vergoeding van de opdrachtgever als er door ziekte niet gewerkt kan worden?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, afspraken met opdrachtgever over ziekteverlof.",
+      "Nee, de freelancer heeft zelf iets geregeld."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 0
+    }
+  },
+  {
+    "id": 17,
+    "question": "Ontvangt de freelancer een vergoeding van de opdrachtgever bij verlof?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, opdrachtgever biedt vergoeding voor verlof.",
+      "Ja, vaste prijs ongeacht verlof.",
+      "Nee, overleg met opdrachtgever, geen vergoeding.",
+      "Nee, bij zelf gekozen verlof geen vergoeding."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 0,
+      "3": 5,
+      "4": 5
+    }
+  },
+  {
+    "id": 18,
+    "question": "Heeft de freelancer meerdere opdrachtgevers waarvoor in de afgelopen 6 maanden gewerkt is?",
+    "audience": "freelancer",
+    "options": [
+      "Nee, één opdrachtgever.",
+      "Ja, twee opdrachtgevers.",
+      "Ja, drie of meer opdrachtgevers."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 5,
+      "3": 0
+    }
+  },
+  {
+    "id": 19,
+    "question": "Sluit de opdracht aan bij de kernactiviteiten van de opdrachtgever?",
+    "audience": "client",
+    "options": [
+      "Ja, volledig onderdeel van kernactiviteit.",
+      "Ja, maar ondersteunend.",
+      "Nee, geen onderdeel van kernactiviteit."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 5,
+      "3": 0
+    }
+  },
+  {
+    "id": 20,
+    "question": "Zijn er medewerkers in loondienst bij de opdrachtgever die vergelijkbare werkzaamheden uitvoeren?",
+    "audience": "client",
+    "options": [
+      "Ja, dezelfde werkzaamheden.",
+      "Ja, maar met duidelijke verschillen.",
+      "Nee, geen werknemers met vergelijkbare werkzaamheden."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 5,
+      "3": 0
+    }
+  },
+  {
+    "id": 21,
+    "question": "Heeft de opdrachtgever de freelancer via een selectieprocedure gekozen vanwege de specifieke kennis en vaardigheden?",
+    "audience": "client",
+    "options": [
+      "Ja, gekozen op basis van specifieke kennis.",
+      "Nee, iedereen kon geselecteerd worden."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 10
+    }
+  },
+  {
+    "id": 22,
+    "question": "Kunnen de partijen waarmee de freelancer werkt duidelijk zien of de freelancer als zelfstandige of als werknemer functioneert?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, zichtbaar als zelfstandige.",
+      "Nee, niet zichtbaar als zelfstandige."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 10
+    }
+  },
+  {
+    "id": 23,
+    "question": "Wordt de freelancer ter beschikking gesteld door bijvoorbeeld een uitzend-, uitleen- of payrollbureau?",
+    "audience": "client",
+    "options": [
+      "Ja, de freelancer is ter beschikking gesteld door een uitzend-, uitleen- of payrollbureau.",
+      "Nee, de freelancer werkt via bemiddeling bij de opdrachtgever.",
+      "Nee, de freelancer werkt direct bij de opdrachtgever."
+    ],
+    "score_mapping": {
+      "1": 10,
+      "2": 0,
+      "3": 0
+    }
+  },
+  {
+    "id": 24,
+    "question": "Vermeldt het online profiel van de freelancer (zoals LinkedIn) dat deze als zelfstandige werkt?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer heeft op een online profiel vermeld dat deze als zelfstandige werkt.",
+      "Nee, het online profiel vermeldt dat deze werkt bij de opdrachtgever.",
+      "Nee, de freelancer heeft geen online profiel waarop de werkrelatie wordt genoemd."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 5,
+      "3": 5
+    }
+  },
+  {
+    "id": 25,
+    "question": "Heeft de opdrachtgever de freelancer ingehuurd vanwege specifieke kennis en vaardigheden?",
+    "audience": "client",
+    "options": [
+      "Ja, vanwege specialistische kennis en vaardigheden.",
+      "Nee, niet vanwege specialistische kennis en vaardigheden."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 10
+    }
+  },
+  {
+    "id": 26,
+    "question": "Maakt de freelancer gebruik van een eigen investeringen?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, significante eigen investeringen.",
+      "Ja, maar beperkt of verwaarloosbaar.",
+      "Nee, opdrachtgever voorziet in apparatuur/middelen."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 5,
+      "3": 10
+    }
+  },
+  {
+    "id": 27,
+    "question": "Is de omvang van de opdracht kleiner dan 16 uur per week?",
+    "audience": "client",
+    "options": [
+      "Ja, kleiner dan 16 uur per week.",
+      "Nee, groter dan 16 uur per week."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 10
+    }
+  },
+  {
+    "id": 28,
+    "question": "Wat is het uurtarief van de persoon die de opdracht uitvoert?",
+    "audience": "freelancer",
+    "options": [
+      "Hoger dan 33 euro.",
+      "Lager dan 33 euro, maar hoger dan 150% minimumloon.",
+      "Lager dan 150% van het minimumloon."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 5,
+      "3": 10
+    }
+  },
+  {
+    "id": 29,
+    "question": "Heeft de freelancer de afgelopen 6 maanden maatregelen genomen tegen late betaling of faillissement bij de opdrachtgever?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, gebruik van factoring.",
+      "Nee, geen maatregelen.",
+      "Nee, maar wel goede afspraken over betaling/risico."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 10,
+      "3": 5
+    }
+  },
+  {
+    "id": 30,
+    "question": "Heeft de freelancer een aansprakelijkheidsverzekering afgesloten?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, aansprakelijkheidsverzekering afgesloten.",
+      "Nee, geen verzekering afgesloten."
+    ],
+    "score_mapping": {
+      "1": 0,
+      "2": 10
+    }
+  },
+  {
+    "id": 31,
+    "question": "Is de freelancer met andere zelfstandigen ergens lid van om de belangen te vertegenwoordigen?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer is lid van een schenkkring of een belangenorganisatie voor zelfstandigen.",
+      "Nee, de freelancer heeft geen lidmaatschap bij / met andere zelfstandigen."
+    ],
+    "score_mapping": {}
+  },
+  {
+    "id": 32,
+    "question": "Heeft de freelancer een arbeidsongeschiktheidsverzekering (AOV) afgesloten?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer heeft een arbeidsongeschiktheidsverzekering (AOV) afgesloten.",
+      "Nee, de freelancer heeft geen arbeidsongeschiktheidsverzekering (AOV) afgesloten.",
+      "Nee, de freelancer heeft een alternatief gekozen voor de AOV."
+    ],
+    "score_mapping": {}
+  },
+  {
+    "id": 33,
+    "question": "Weet de freelancer dat er geen aanspraak gemaakt kan worden op ontslagbescherming?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer is zich bewust dat deze geen ontslagbescherming geniet.",
+      "Nee, er is geen bewijs waarin de freelancer aangeeft bewust te zijn van het risico bij ontslag."
+    ],
+    "score_mapping": {}
+  },
+  {
+    "id": 34,
+    "question": "Weet de freelancer dat er geen aanspraak gemaakt kan worden op een werkloosheid uitkering?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer is zich bewust dat deze geen uitkering bij werkloosheid geniet.",
+      "Nee, er is geen bewijs waarin de freelancer aangeeft bewust te zijn van het risico bij werkloosheid."
+    ],
+    "score_mapping": {}
+  },
+  {
+    "id": 35,
+    "question": "Weet de freelancer dat er geen aanspraak gemaakt kan worden op ziekteverlof of ziekengeld?",
+    "audience": "freelancer",
+    "options": [
+      "Ja, de freelancer is zich bewust dat deze geen vergoeding bij verlof of verzuim geniet.",
+      "Nee, er is geen bewijs waarin de freelancer aangeeft bewust te zijn van het risico bij verlof of verzuim."
+    ],
+    "score_mapping": {}
+  }
+]

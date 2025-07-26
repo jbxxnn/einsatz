@@ -1,4 +1,5 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+// import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { calculateDistance } from "@/lib/geocoding"
@@ -22,13 +23,19 @@ export async function GET(request: Request) {
   const wildcards = url.searchParams.get("wildcards")?.split(",").filter(Boolean) || []
   const wildcardOnly = url.searchParams.get("wildcardOnly") === "true"
 
+  // Pagination parameters
+  const page = parseInt(url.searchParams.get("page") || "1")
+  const limit = parseInt(url.searchParams.get("limit") || "12")
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+
   // Location parameters
   const latitude = url.searchParams.get("latitude")
   const longitude = url.searchParams.get("longitude")
   const radius = url.searchParams.get("radius") || "10" // Default 10 km
 
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  const cookieStore = await cookies()
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
 
   try {
     let query = supabase
@@ -41,6 +48,7 @@ export async function GET(request: Request) {
         )
       `)
       .eq("user_type", "freelancer")
+      .range(from, to)
 
     // Apply search filter
     if (searchTerm) {
@@ -61,30 +69,55 @@ export async function GET(request: Request) {
       throw error
     }
 
-    // Process the data to include availability and filter by categories
-    let processedFreelancers = await Promise.all(
-      (profilesData || []).map(async (profile) => {
+    if (!profilesData || profilesData.length === 0) {
+      return NextResponse.json({
+        freelancers: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          hasMore: false
+        }
+      })
+    }
+
+    // Get all freelancer IDs for batched queries
+    const freelancerIds = profilesData.map(profile => profile.id)
+
+    // Batch query for availability data
+    const { data: availabilityData } = await supabase
+      .from("real_time_availability")
+      .select("freelancer_id")
+      .in("freelancer_id", freelancerIds)
+      .eq("is_available_now", true)
+
+    // Batch query for completed bookings
+    const { data: completedBookingsData } = await supabase
+      .from("bookings")
+      .select("freelancer_id")
+      .in("freelancer_id", freelancerIds)
+      .eq("status", "completed")
+
+    // Create lookup maps for O(1) access
+    const availabilityMap = new Set(availabilityData?.map(a => a.freelancer_id) || [])
+    const bookingsMap = new Map()
+    completedBookingsData?.forEach(booking => {
+      bookingsMap.set(booking.freelancer_id, (bookingsMap.get(booking.freelancer_id) || 0) + 1)
+    })
+
+    // Process the data efficiently
+    let processedFreelancers = profilesData.map((profile) => {
         // Format job offerings
         const formattedOfferings = profile.job_offerings.map((offering: any) => ({
           ...offering,
           category_name: offering.job_categories.name,
         }))
 
-        // Check real-time availability
-        const { data: availabilityData } = await supabase
-          .from("real_time_availability")
-          .select("*")
-          .eq("freelancer_id", profile.id)
-          .eq("is_available_now", true)
+      // Check availability from map
+      const isAvailableNow = availabilityMap.has(profile.id)
 
-        const isAvailableNow = availabilityData && availabilityData.length > 0
-
-        // Check for completed bookings
-        const { data: completedBookings } = await supabase
-          .from("bookings")
-          .select("id")
-          .eq("freelancer_id", profile.id)
-          .eq("status", "completed")
+      // Get completed bookings count from map
+      const completedBookingsCount = bookingsMap.get(profile.id) || 0
 
         // Calculate distance if coordinates are available
         let distance = null
@@ -102,10 +135,9 @@ export async function GET(request: Request) {
           job_offerings: formattedOfferings,
           is_available_now: isAvailableNow,
           distance: distance,
-          completed_bookings: completedBookings?.length || 0
+        completed_bookings: completedBookingsCount
         }
-      }),
-    )
+    })
 
     // Filter by selected categories if any
     if (categories.length > 0) {
@@ -171,6 +203,12 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       freelancers: processedFreelancers,
+      pagination: {
+        page,
+        limit,
+        total: processedFreelancers.length,
+        hasMore: processedFreelancers.length === limit
+      }
     })
   } catch (error) {
     console.error("Error fetching freelancers:", error)
