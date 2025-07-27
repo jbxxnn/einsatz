@@ -145,24 +145,24 @@ export default function Home() {
       </section>
 
       {/* About Us Section */}
-      <section className="w-full py-20 bg-white">
+      {/* <section className="w-full py-20 bg-white">
         <div className="container mx-auto px-8">
           <div className="flex flex-col lg:flex-row items-center gap-16">
-            {/* Left Column */}
+            // Left Column
             <div className="flex-1 space-y-8">
-              {/* Section Label */}
+              // Section Label
               <div className="text-sm uppercase tracking-wider text-[#33CC99] font-semibold">
                 What We Do
               </div>
               
-              {/* Main Headline */}
+              // Main Headline
               <h2 className="text-4xl lg:text-5xl font-bold leading-tight text-gray-900">
                 Change the way world
                 <br />
                 connects with talent
               </h2>
               
-              {/* Team Photo Placeholder */}
+              // Team Photo Placeholder
               <div className="w-full h-64 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center">
                 <div className="text-center text-gray-500">
                   <div className="w-16 h-16 bg-[#33CC99] rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -175,9 +175,9 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Column */}
+            // Right Column
             <div className="flex-1 space-y-8 justify-center items-center">
-              {/* Description Text */}
+              // Description Text
               <div className="space-y-6 text-gray-700 leading-relaxed">
                 <p className="text-lg">
                   We're building the platform infrastructure to make freelance work easy to find, 
@@ -193,8 +193,8 @@ export default function Home() {
                 </p>
               </div>
               
-              {/* Statistics */}
-              {/* <div className="flex gap-12 pt-8">
+              // Statistics
+              <div className="flex gap-12 pt-8">
                 <div className="text-center">
                   <div className="text-4xl font-bold text-gray-900 mb-2">500+</div>
                   <div className="text-sm text-gray-600">Active freelancers</div>
@@ -203,16 +203,16 @@ export default function Home() {
                   <div className="text-4xl font-bold text-gray-900 mb-2">2y+</div>
                   <div className="text-sm text-gray-600">Years in operation</div>
                 </div>
-              </div> */}
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
-      {/* Our Team Section */}
-      <section className="w-full py-20 bg-gray-50">
+        {/* // Our Team Section */}
+      {/* <section className="w-full py-20 bg-gray-50">
         <div className="container mx-auto px-8">
-          {/* Section Header */}
+          // Section Header
           <div className="text-center mb-16">
             <div className="text-sm uppercase tracking-wider text-[#33CC99] font-semibold mb-4">
               Our Freelancers
@@ -225,7 +225,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Freelancers Grid */}
+          // Freelancers Grid
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
             {isLoading ? (
               // Loading skeletons
@@ -252,7 +252,7 @@ export default function Home() {
             ) : (
               freelancers.slice(0, 12).map((freelancer: any) => (
                 <div key={freelancer.id} className="text-center">
-                  {/* Profile Image */}
+                  // Profile Image
                   <div className="w-48 h-48 mx-auto mb-4 rounded-lg overflow-hidden">
                     <Avatar className="w-full h-full">
                       <AvatarImage 
@@ -265,17 +265,17 @@ export default function Home() {
                     </Avatar>
                   </div>
                   
-                  {/* Name */}
+                  // Name
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
                     {freelancer.first_name} {freelancer.last_name}
                   </h3>
                   
-                  {/* Role - Show first job category or default */}
+                  // Role - Show first job category or default
                   <p className="text-gray-600 mb-4">
                     {freelancer.job_offerings?.[0]?.category_name || 'Freelancer'}
                   </p>
                   
-                  {/* Contact Links */}
+                  // Contact Links
                   <div className="flex items-center justify-center gap-2 text-sm">
                     <a href={`mailto:${freelancer.email}`} className="text-gray-700 hover:text-[#33CC99] underline">EMAIL</a>
                     <div className="w-1 h-1 bg-[#33CC99] rounded-full"></div>
@@ -288,9 +288,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Banner */}
+      // CTA Banner
       <section className="w-full py-16 bg-[#1A302B] relative overflow-hidden">
-        {/* Background Pattern */}
+        Background Pattern
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
             backgroundImage: `repeating-linear-gradient(45deg, #33CC99, #33CC99 2px, transparent 2px, transparent 8px)`,
@@ -300,7 +300,7 @@ export default function Home() {
         
         <div className="container mx-auto px-8 relative z-10">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-            {/* Left Content */}
+            Left Content
             <div className="flex items-center gap-6">
               <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-[#1A302B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -313,7 +313,7 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Right Button */}
+            // Right Button
             <Link href="/register?type=freelancer">
               <Button size="lg" className="bg-white text-[#1A302B] hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-lg">
                 Join Now
@@ -321,14 +321,14 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
 
-      {/* Why Choose Einsatz Section */}
-      <section className="w-full py-20 bg-white">
+      {/* // Why Choose Einsatz Section */}
+      {/* <section className="w-full py-20 bg-white">
         <div className="container mx-auto px-8">
-          {/* Header Area */}
+          // Header Area
           <div className="flex flex-col lg:flex-row items-start gap-12 mb-16">
-            {/* Left Side - Title */}
+            // Left Side - Title
             <div className="flex-1">
               <div className="text-sm uppercase tracking-wider text-[#33CC99] font-semibold mb-4">
                 Why Choose Einsatz
@@ -340,7 +340,7 @@ export default function Home() {
               </h2>
             </div>
             
-            {/* Right Side - Description */}
+            // Right Side - Description
             <div className="flex-1">
               <p className="text-lg text-gray-600 leading-relaxed">
                 We provide a comprehensive freelance platform that prioritizes security, 
@@ -349,29 +349,29 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Feature Cards */}
+          // Feature Cards
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Card 1 - Direct Booking */}
+            // Card 1 - Direct Booking
             <div className="bg-white border border-gray-200 rounded-lg p-8 hover:shadow-lg transition-shadow">
-              {/* Icon */}
+              // Icon
               <div className="w-12 h-12 mx-auto mb-6 flex items-center justify-center">
                 <svg className="w-8 h-8 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
               
-              {/* Title */}
+              // Title
               <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">
                 Direct Booking
               </h3>
               
-              {/* Description */}
+              // Description
               <p className="text-gray-600 text-center mb-6">
                 Skip the middleman and connect directly with skilled freelancers. 
                 Our streamlined booking process ensures quick, efficient project initiation.
               </p>
               
-              {/* Action Button */}
+              // Action Button
               <div className="flex justify-center">
                 <button 
                   className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
@@ -384,27 +384,27 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Card 2 - Security within the DBA Act */}
+            // Card 2 - Security within the DBA Act
             <div className="bg-white border border-gray-200 rounded-lg p-8 hover:shadow-lg transition-shadow">
-              {/* Icon */}
+              // Icon
               <div className="w-12 h-12 mx-auto mb-6 flex items-center justify-center">
                 <svg className="w-8 h-8 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
               
-              {/* Title */}
+              // Title
               <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">
                 Security within the DBA Act
               </h3>
               
-              {/* Description */}
+              // Description
               <p className="text-gray-600 text-center mb-6">
                 Full compliance with the Dutch Business Act (DBA) ensures legal protection 
                 and secure transactions for all parties involved in freelance work.
               </p>
               
-              {/* Action Button */}
+              // Action Button
               <div className="flex justify-center">
                 <button 
                   className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
@@ -417,30 +417,30 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Card 3 - Secure Platform */}
+            // Card 3 - Secure Platform
             <div className="bg-[#f8f9fa] border border-[#33CC99] rounded-lg p-8 hover:shadow-lg transition-shadow relative">
-              {/* Special corner accent */}
+              // Special corner accent
               <div className="absolute top-0 right-0 w-8 h-8 bg-[#33CC99] rounded-bl-lg"></div>
               
-              {/* Icon */}
+              // Icon
               <div className="w-12 h-12 mx-auto mb-6 flex items-center justify-center">
                 <svg className="w-8 h-8 text-[#33CC99]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
               
-              {/* Title */}
+              // Title
               <h3 className="text-xl font-bold text-[#33CC99] mb-4 text-center">
                 Secure Platform
               </h3>
               
-              {/* Description */}
+              // Description
               <p className="text-[#1A302B] text-center mb-6">
                 Advanced security measures protect your data and transactions. 
                 Our platform ensures safe, reliable connections between freelancers and clients.
               </p>
               
-              {/* Action Button */}
+              // Action Button
               <div className="flex justify-center">
                 <button 
                   className="w-10 h-10 bg-[#33CC99] rounded-full flex items-center justify-center hover:bg-[#2BB88A] transition-colors"
@@ -454,7 +454,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer className="w-full bg-gray-50 border-t border-gray-200">
