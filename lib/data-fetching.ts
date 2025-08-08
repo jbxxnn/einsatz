@@ -93,6 +93,16 @@ export function useCategories() {
   })
 }
 
+// Hook for fetching subcategories by category ID
+export function useSubcategories(categoryId: string | null) {
+  const url = categoryId ? `/api/subcategories?categoryId=${categoryId}` : null
+  
+  return useSWR(url, fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 300000, // 5 minutes - subcategories don't change often
+  })
+}
+
 // Hook for fetching user's bookings
 export function useBookings(status?: string) {
   const url = status ? `/api/bookings?status=${status}` : "/api/bookings"

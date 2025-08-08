@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { LocationInput } from "@/components/location-input"
-import { useCategories, debounce } from "@/lib/data-fetching"
+import { useCategories, useSubcategories, debounce } from "@/lib/data-fetching"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Database } from "@/lib/database.types"
 import WildcardFilter, { type WildcardCategory } from "@/components/wildcard-filter"
@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch"
 import { useTranslation } from "@/lib/i18n"
 
 type Category = Database["public"]["Tables"]["job_categories"]["Row"]
+type Subcategory = Database["public"]["Tables"]["job_subcategories"]["Row"]
 
 export default function FreelancerFilters() {
   const router = useRouter()
@@ -30,6 +31,7 @@ export default function FreelancerFilters() {
   const currentMinPrice = searchParams.get("minPrice") || "0"
   const currentMaxPrice = searchParams.get("maxPrice") || "200"
   const currentCategories = searchParams.get("categories")?.split(",").filter(Boolean) || []
+  const currentSubcategories = searchParams.get("subcategories")?.split(",").filter(Boolean) || []
   const currentAvailableNow = searchParams.get("availableNow") === "true"
   const currentLocation = searchParams.get("location") || ""
   const currentLatitude = searchParams.get("latitude") || ""
@@ -41,6 +43,7 @@ export default function FreelancerFilters() {
   const [search, setSearch] = useState(currentSearch)
   const [priceRange, setPriceRange] = useState([Number.parseInt(currentMinPrice), Number.parseInt(currentMaxPrice)])
   const [selectedCategories, setSelectedCategories] = useState<string[]>(currentCategories)
+  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>(currentSubcategories)
   const [availableNow, setAvailableNow] = useState(currentAvailableNow)
   const [location, setLocation] = useState(currentLocation || "Kampen, Overijssel")
   const [coordinates, setCoordinates] = useState<{
@@ -78,6 +81,11 @@ export default function FreelancerFilters() {
 
   // Fetch categories using SWR
   const { data: categories, isLoading: categoriesLoading } = useCategories()
+  
+  // Fetch subcategories for selected categories
+  const { data: subcategories, isLoading: subcategoriesLoading } = useSubcategories(
+    selectedCategories.length === 1 ? selectedCategories[0] : null
+  )
 
   // Update URL with filters (debounced)
   const updateFilters = debounce(() => {
@@ -99,6 +107,13 @@ export default function FreelancerFilters() {
       params.set("categories", selectedCategories.join(","))
     } else {
       params.delete("categories")
+    }
+
+    // Update subcategories
+    if (selectedSubcategories.length > 0) {
+      params.set("subcategories", selectedSubcategories.join(","))
+    } else {
+      params.delete("subcategories")
     }
 
     // Update available now
@@ -142,12 +157,28 @@ export default function FreelancerFilters() {
   // Update filters when form values change
   useEffect(() => {
     updateFilters()
-  }, [search, priceRange, selectedCategories, availableNow, location, coordinates, radius, selectedWildcards, showWildcardOnly])
+  }, [search, priceRange, selectedCategories, selectedSubcategories, availableNow, location, coordinates, radius, selectedWildcards, showWildcardOnly])
 
   // Handle category selection
   const toggleCategory = (categoryId: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryId) ? prev.filter((id) => id !== categoryId) : [...prev, categoryId],
+    setSelectedCategories((prev) => {
+      const newCategories = prev.includes(categoryId) 
+        ? prev.filter((id) => id !== categoryId) 
+        : [...prev, categoryId]
+      
+      // Clear subcategories if multiple categories are selected
+      if (newCategories.length !== 1) {
+        setSelectedSubcategories([])
+      }
+      
+      return newCategories
+    })
+  }
+
+  // Handle subcategory selection
+  const toggleSubcategory = (subcategoryId: string) => {
+    setSelectedSubcategories((prev) =>
+      prev.includes(subcategoryId) ? prev.filter((id) => id !== subcategoryId) : [...prev, subcategoryId],
     )
   }
 
@@ -192,6 +223,7 @@ export default function FreelancerFilters() {
     setSearch("")
     setPriceRange([0, 200])
     setSelectedCategories([])
+    setSelectedSubcategories([])
     setAvailableNow(false)
     setLocation("")
     setCoordinates(null)
@@ -317,17 +349,56 @@ export default function FreelancerFilters() {
                 ))}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {categories?.map((category: Category) => (
-                  <div key={category.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`category-${category.id}`}
-                      checked={selectedCategories.includes(category.id)}
-                      onCheckedChange={() => toggleCategory(category.id)}
-                    />
-                    <Label htmlFor={`category-${category.id}`} className="text-sm font-normal cursor-pointer">
-                      {category.name}
-                    </Label>
+                  <div key={category.id} className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`category-${category.id}`}
+                        checked={selectedCategories.includes(category.id)}
+                        onCheckedChange={() => toggleCategory(category.id)}
+                      />
+                      <Label htmlFor={`category-${category.id}`} className="text-sm font-normal cursor-pointer">
+                        {category.name}
+                      </Label>
+                    </div>
+                    
+                    {/* Show subcategories if this category is selected and it's the only selected category */}
+                    {selectedCategories.includes(category.id) && 
+                     selectedCategories.length === 1 && 
+                     subcategories && 
+                     subcategories.length > 0 && (
+                      <div className="ml-6 space-y-2">
+                        <Label className="text-xs text-gray-600 font-medium">
+                          {t("freelancer.filters.subcategories") || "Subcategories"}
+                        </Label>
+                        {subcategoriesLoading ? (
+                          <div className="space-y-1">
+                            {[1, 2, 3].map((i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <Skeleton className="h-3 w-3" />
+                                <Skeleton className="h-3 w-20" />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {subcategories.map((subcategory: Subcategory) => (
+                              <div key={subcategory.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`subcategory-${subcategory.id}`}
+                                  checked={selectedSubcategories.includes(subcategory.id)}
+                                  onCheckedChange={() => toggleSubcategory(subcategory.id)}
+                                />
+                                <Label htmlFor={`subcategory-${subcategory.id}`} className="text-xs font-normal cursor-pointer text-gray-700">
+                                  {subcategory.name}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
                 {categories?.length === 0 && <p className="text-xs text-black">{t("freelancer.filters.noCategoriesAvailable")}</p>}

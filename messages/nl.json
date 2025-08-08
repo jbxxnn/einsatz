@@ -131,6 +131,7 @@
       "wildcardSearch": "Wildcard zoeken",
       "wildcardSearchDescription": "Zoek freelancers op basis van bredere vaardigheden dan specifieke vaardigheden.",
       "selectWildcardCategories": "Selecteer wildcard categorieën",
+      "subcategories": "Subcategorieën",
       "noCategoriesAvailable": "Geen categorieën beschikbaar",
       "search": "Zoeken",
       "searchPlaceholder": "Zoek freelancers...",
@@ -201,6 +202,14 @@
     "results": {
       "found": "{count} freelancers gevonden",
       "none": "Geen freelancers gevonden"
+    },
+    "empty": {
+      "title": "Geen freelancers gevonden",
+      "description": "Probeer je filters of zoekcriteria aan te passen om meer freelancers te vinden."
+    },
+    "error": {
+      "title": "Fout bij het laden van freelancers",
+      "description": "Er was een probleem bij het laden van de freelancer lijst. Probeer het opnieuw."
     }
   },
   "pagination": {

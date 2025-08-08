@@ -14,6 +14,7 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
 interface UseFreelancersParams {
   category?: string
   subcategory?: string
+  subcategories?: string[]
   location?: string
   rating?: string
   availability?: string

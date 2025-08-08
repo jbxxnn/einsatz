@@ -19,8 +19,13 @@ export async function GET(request: Request) {
   const skills = url.searchParams.get("skills")?.split(",").filter(Boolean) || []
   const categories = url.searchParams.get("categories")?.split(",").filter(Boolean) || []
   const availableNow = url.searchParams.get("availableNow") === "true"
-  const subcategory = url.searchParams.get("subcategory")
+  const subcategoriesParam = url.searchParams.get("subcategories")
+  const subcategories = subcategoriesParam ? subcategoriesParam.split(",").filter(Boolean) : []
   const wildcards = url.searchParams.get("wildcards")?.split(",").filter(Boolean) || []
+  
+
+  
+
   const wildcardOnly = url.searchParams.get("wildcardOnly") === "true"
 
   // Pagination parameters
@@ -148,11 +153,14 @@ export async function GET(request: Request) {
       )
     }
 
-    // Filter by subcategory if specified
-    if (subcategory) {
-      processedFreelancers = processedFreelancers.filter((freelancer) =>
-        freelancer.job_offerings.some((offering: JobOffering) => offering.subcategory_id === subcategory),
-      )
+    // Filter by subcategories if specified
+    if (subcategories.length > 0) {
+      processedFreelancers = processedFreelancers.filter((freelancer) => {
+        // A freelancer must have at least one job offering that matches the selected subcategory
+        return freelancer.job_offerings.some((offering: JobOffering) => {
+          return subcategories.includes(offering.subcategory_id)
+        })
+      })
     }
 
     // Filter by available now if selected

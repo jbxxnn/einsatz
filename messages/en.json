@@ -131,6 +131,7 @@
       "wildcardSearch": "Wildcard Search",
       "wildcardSearchDescription": "Find freelancers based on broader skill categories rather than specific skills.",
       "selectWildcardCategories": "Select Wildcard Categories",
+      "subcategories": "Subcategories",
       "noCategoriesAvailable": "No categories available",
       "search": "Search",
       "searchPlaceholder": "Search freelancers...",
@@ -201,6 +202,14 @@
     "results": {
       "found": "Found {count} freelancers",
       "none": "No freelancers found"
+    },
+    "empty": {
+      "title": "No freelancers found",
+      "description": "Try adjusting your filters or search criteria to find more freelancers."
+    },
+    "error": {
+      "title": "Error loading freelancers",
+      "description": "There was a problem loading the freelancer list. Please try again."
     }
   },
   "pagination": {

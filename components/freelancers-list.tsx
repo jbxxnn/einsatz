@@ -40,6 +40,7 @@ export default function FreelancersList() {
   const filters = {
     search: searchParams.get("search") || undefined,
     categories: searchParams.get("categories")?.split(",").filter(Boolean) || undefined,
+    subcategories: searchParams.get("subcategories")?.split(",").filter(Boolean) || undefined,
     minPrice: searchParams.get("minPrice") || undefined,
     maxPrice: searchParams.get("maxPrice") || undefined,
     availableNow: searchParams.get("availableNow") === "true",
