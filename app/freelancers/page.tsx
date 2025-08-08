@@ -129,7 +129,7 @@ export default function FreelancersPage() {
     <>
     <OptimizedHeader />
     <div className="min-h-screen w-full bg-[#f7f7f7]">
-      <div className="py-8 px-8 container">
+      <div className="py-8 px-8 pb-16 container">
         <div className="space-y-6">
           {/* Header Section */}
           <div className="mb-4">
@@ -142,7 +142,7 @@ export default function FreelancersPage() {
          
 
           {/* Main Content */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16 w-full">
             {/* Filters Sidebar */}
             <div className="md:col-span-1">
               {/* <Card> */}

@@ -44,7 +44,8 @@ export async function GET(request: Request) {
         *,
         job_offerings:freelancer_job_offerings!freelancer_job_offerings_freelancer_id_fkey(
           *,
-          job_categories(id, name)
+          job_categories(id, name),
+          job_subcategories(id, name)
         )
       `)
       .eq("user_type", "freelancer")
@@ -111,6 +112,7 @@ export async function GET(request: Request) {
         const formattedOfferings = profile.job_offerings.map((offering: any) => ({
           ...offering,
           category_name: offering.job_categories.name,
+          subcategory_name: offering.job_subcategories?.name,
         }))
 
       // Check availability from map

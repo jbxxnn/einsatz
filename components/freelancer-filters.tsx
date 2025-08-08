@@ -201,13 +201,13 @@ export default function FreelancerFilters() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg text-black font-bold">{t("freelancer.filters.title")}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <div className="bg-[transparent] border-none">
+      <div>
+        <h1 className="text-lg text-black font-bold p-2">{t("freelancer.filters.title")}</h1>
+      </div>
+      <div className="space-y-6">
         {/* Wildcard Only Switch */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200">
           <div className="space-y-0.5">
             <Label className="text-sm text-black font-bold">{t("freelancer.filters.wildcardSearch")}</Label>
             <p className="text-xs text-black">
@@ -222,7 +222,7 @@ export default function FreelancerFilters() {
 
         {/* Wildcard Categories - Only shown when wildcard search is enabled */}
         {showWildcardOnly && (
-          <div className="pl-4 border-l-2 border-muted">
+          <div className="pl-4 bg-white rounded-lg p-4 border border-gray-200">
             <div className="space-y-2">
               <Label className="text-sm text-black font-bold">{t("freelancer.filters.selectWildcardCategories")}</Label>
               <WildcardFilter selectedWildcards={selectedWildcards} onChange={handleWildcardChange} />
@@ -230,11 +230,9 @@ export default function FreelancerFilters() {
           </div>
         )}
 
-        <Separator />
-
         {/* Search Section */}
-        <Collapsible open={openSections.search} onOpenChange={() => toggleSection("search")}>
-          <CollapsibleTrigger className="flex w-full items-center justify-between">
+        <Collapsible open={openSections.search} onOpenChange={() => toggleSection("search")} className="bg-white rounded-lg p-4 border border-gray-200">
+          <CollapsibleTrigger className="flex w-full items-center justify-between ">
             <div className="flex items-center space-x-2">
               <Search className="h-4 w-4" />
               <Label className="text-xs text-black font-bold">{t("freelancer.filters.search")}</Label>
@@ -250,10 +248,8 @@ export default function FreelancerFilters() {
           </CollapsibleContent>
         </Collapsible>
 
-        <Separator />
-
         {/* Location Section */}
-        <Collapsible open={openSections.location} onOpenChange={() => toggleSection("location")}>
+        <Collapsible open={openSections.location} onOpenChange={() => toggleSection("location")} className="bg-white rounded-lg p-4 border border-gray-200">
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <MapPin className="h-4 w-4" />
@@ -273,10 +269,8 @@ export default function FreelancerFilters() {
           </CollapsibleContent>
         </Collapsible>
 
-        <Separator />
-
         {/* Price Range Section */}
-        <Collapsible open={openSections.price} onOpenChange={() => toggleSection("price")}>
+        <Collapsible open={openSections.price} onOpenChange={() => toggleSection("price")} className="bg-white rounded-lg p-4 border border-gray-200">
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <Euro className="h-4 w-4" />
@@ -303,10 +297,8 @@ export default function FreelancerFilters() {
           </CollapsibleContent>
         </Collapsible>
 
-        <Separator />
-
         {/* Categories Section */}
-        <Collapsible open={openSections.categories} onOpenChange={() => toggleSection("categories")}>
+        <Collapsible open={openSections.categories} onOpenChange={() => toggleSection("categories")} className="bg-white rounded-lg p-4 border border-gray-200">
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center space-x-2">
               <Tag className="h-4 w-4" />
@@ -344,8 +336,6 @@ export default function FreelancerFilters() {
           </CollapsibleContent>
         </Collapsible>
 
-        <Separator />
-
         {/* Available Now
         <div className="flex items-center space-x-2">
           <Checkbox
@@ -362,7 +352,7 @@ export default function FreelancerFilters() {
         <Button className="w-full" onClick={resetFilters}>
           {t("freelancer.filters.resetFilters")}
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

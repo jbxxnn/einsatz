@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { MapPin, Star, CheckCircle, AlertCircle, RefreshCw, BadgeCheck, ChevronLeft, ChevronRight } from "lucide-react"
+import { MapPin, Star, CheckCircle, AlertCircle, RefreshCw, BadgeCheck, ChevronLeft, ChevronRight, Zap } from "lucide-react"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
@@ -17,6 +17,7 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
   job_offerings?: Array<{
     id: string
     category_name: string
+    subcategory_name?: string
   }>
   rating?: number
   distance?: number
@@ -180,7 +181,7 @@ export default function FreelancersList() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-4">
         {/* Freelancers list */}
       {freelancers.map((freelancer: Freelancer) => (
         <FreelancerCard key={freelancer.id} freelancer={freelancer} />
@@ -275,68 +276,84 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
   return (
     <Card className="transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:scale-[1.01] rounded-xl">
       <a href={`/freelancers/${freelancer.id}`}>
-        <CardContent className="h-full flex items-center justify-between pt-6 px-4">
-          <div className="flex flex-col md:flex-row gap-6 items-center">
-            <div>
-          <Avatar className="h-16 w-16">
-            <AvatarImage
-              src={freelancer.avatar_url || "/placeholder.svg"}
-              alt={`${freelancer.first_name} ${freelancer.last_name}`}
-            />
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-               <h3 className="text-md font-medium group-hover:text-primary transition-colors text-black">
+              <CardContent className="h-full flex flex-col justify-between pt-6 px-4">
+                    <div className="flex flex-col md:flex-row gap-6 justify-between items-start">
+            <div className="w-1/6">
+             <Avatar className="h-32 w-32 rounded-md">
+              <AvatarImage 
+                src={freelancer.avatar_url || "/placeholder.svg"}
+                alt={`${freelancer.first_name} ${freelancer.last_name}`}
+              />
+              <AvatarFallback>{initials}</AvatarFallback>
+             </Avatar>
+              </div>
+              <div className="w-5/6">
+              <div className="flex gap-2 mb-1 flex-col ">
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const rating = freelancer.rating || 0;
+                      const isFilled = star <= rating;
+                      const isHalfFilled = star > rating && star - rating < 1;
+                      
+                      return (
+                        <Star 
+                          key={star}
+                          className={`h-4 w-4 ${
+                            isFilled 
+                              ? 'fill-yellow-400 text-yellow-400' 
+                              : isHalfFilled 
+                                ? 'fill-yellow-400/50 text-yellow-400' 
+                                : 'text-gray-300'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <span className="text-xs font-medium ml-1">{freelancer.completed_bookings || "0"} {t("freelancer.completedJobs") || "jobs"}</span>
+                </div>
+               <h3 className="text-md font-bold font-sans group-hover:text-primary transition-colors text-black">
                     {freelancer.first_name} {freelancer.last_name}
                   </h3>
-                  {freelancer.is_verified && (
+                  {/* {freelancer.is_verified && (
                     <BadgeCheck className="h-3 w-3 mr-1 text-green-500" />
-                  )}
+                  )} */}
               </div>
               <div className="flex items-center gap-2 mb-6">
-               <div className="text-xs">€{freelancer.hourly_rate}/hr</div>
-                 <MapPin className="h-3 w-3 ml-2 text-black" />
-                               <span className="border-b border-gray-400 text-xs" style={{ borderStyle: 'dashed', borderWidth: '0 0 1px 0', borderImage: 'repeating-linear-gradient(to right, #9ca3af 0, #9ca3af 4px, transparent 4px, transparent 8px) 1' }}>
-                 {freelancer.location && (
-                   <TooltipProvider>
-                     <Tooltip>
-                       <TooltipTrigger asChild>
-                         <span className="cursor-help text-xs">
-                           {freelancer.location.length > 10 
-                             ? `${freelancer.location.substring(0, 10)}...` 
-                             : freelancer.location}
-                         </span>
-                       </TooltipTrigger>
-                       <TooltipContent>
-                         <p>{freelancer.location}</p>
-                       </TooltipContent>
-                     </Tooltip>
-                   </TooltipProvider>
-                 )}
-               </span>
+               {/* <div className="text-xs">€{freelancer.hourly_rate}/hr</div> */}
+              <MapPin className="h-3 w-3 text-black" />
+               <div className="text-xs" style={{ borderStyle: 'dashed', borderWidth: '0 0 1px 0', borderImage: 'repeating-linear-gradient(to right, #9ca3af 0, #9ca3af 4px, transparent 4px, transparent 8px) 1' }}>{freelancer.location}</div>
                </div>
-              <div className="flex items-center gap-2">
-                  {freelancer.job_offerings?.map((offering) => (
-                    <TooltipProvider key={offering.id}>
+              <div className="flex gap-2">
+                {freelancer.job_offerings?.map((offering) => (
+                  <div key={offering.id} className="flex flex-col gap-1">
+                    <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Badge 
-                            className={`text-xs cursor-help rounded-br-md border transition-colors ${getCategoryColor(offering.category_name)}`}
+                            className={`text-xs cursor-help flex flex-col items-start justify-center rounded-md border transition-colors ${getCategoryColor(offering.category_name)}`}
                           >
-                            {offering.category_name.length > 5 
-                              ? `${offering.category_name.substring(0, 5)}...` 
+                            {offering.category_name.length > 105 
+                              ? `${offering.category_name.substring(0, 105)}...` 
                               : offering.category_name}
+
+                    {offering.subcategory_name && (
+                      <div className="ml-2">
+                        <span className="text-xs text-gray-600 font-light">
+                          {offering.subcategory_name}
+                        </span>
+                      </div>
+                    )}
                           </Badge>
                         </TooltipTrigger>
-                        <TooltipContent>
+                        {/* <TooltipContent>
                           <p>{offering.category_name}</p>
-                        </TooltipContent>
+                        </TooltipContent> */}
                       </Tooltip>
                     </TooltipProvider>
-                  ))}
-                </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
           {/* <div className="flex flex-col md:flex-row gap-4"> */}
@@ -405,8 +422,28 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                 )}
           </div> */}
             {/* </div> */}
-          {/* </div> */}
-      </CardContent>
+                    {/* </div> */}
+          <div className="flex justify-between bg-gray-50 border border-gray-200 rounded-md p-2 gap-2 mt-4">
+         <div className="flex gap-2"> 
+          {freelancer.is_verified && (
+                  <Badge variant="secondary" className="bg-green-50 text-green-700 border border-green-200 hover:bg-green-100">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    {t("freelancer.verified")}
+                  </Badge>
+                )}
+                {freelancer.wildcard_enabled && (
+                  <Badge variant="secondary" className="bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100">
+                    <Zap className="h-3 w-3 mr-1" />
+                    {t("freelancer.wildcard") || "Wildcard"}
+                  </Badge>
+                )}
+                </div>
+                <div className="flex gap-4 items-center">
+                  <p className="text-xs text-gray-600 font-medium">{t("freelancer.rateStart") || "Rate starts at"}</p>
+                <div className="text-lg font-bold">€{freelancer.hourly_rate}/hr</div>
+                </div>
+          </div>
+        </CardContent>
       </a>
     </Card>
   )

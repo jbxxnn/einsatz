@@ -156,6 +156,9 @@
       "yearsOfExperience": "jaren ervaring"
     },
     "verified": "Geverifieerd",
+    "wildcard": "Wildcard",
+    "rateStart": "Tarief vanaf",
+    "completedJobs": "klussen",
     "message": "Bericht",
     "topRated": "Top Beoordeeld",
     "fastResponse": "Snelle Reactie",

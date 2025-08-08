@@ -210,7 +210,7 @@ export default function Home() {
       </section> */}
 
         {/* // Our Team Section */}
-      {/* <section className="w-full py-20 bg-gray-50">
+      <section className="w-full py-20 bg-gray-50">
         <div className="container mx-auto px-8">
           // Section Header
           <div className="text-center mb-16">
@@ -289,7 +289,7 @@ export default function Home() {
       </section>
 
       // CTA Banner
-      <section className="w-full py-16 bg-[#1A302B] relative overflow-hidden">
+    {/*   <section className="w-full py-16 bg-[#1A302B] relative overflow-hidden">
         Background Pattern
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{

@@ -156,6 +156,9 @@
       "yearsOfExperience": "years of experience"
     },
     "verified": "Verified",
+    "wildcard": "Wildcard",
+    "rateStart": "Rate starts at",
+    "completedJobs": "jobs",
     "message": "Message",
     "topRated": "Top Rated",
     "fastResponse": "Fast Response",
