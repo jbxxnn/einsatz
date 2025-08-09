@@ -113,12 +113,20 @@ export async function GET(request: Request) {
 
     // Process the data efficiently
     let processedFreelancers = profilesData.map((profile) => {
-        // Format job offerings
-        const formattedOfferings = profile.job_offerings.map((offering: any) => ({
-          ...offering,
-          category_name: offering.job_categories.name,
-          subcategory_name: offering.job_subcategories?.name,
-        }))
+        // Format job offerings and sort by display_order
+        const formattedOfferings = profile.job_offerings
+          .sort((a: any, b: any) => {
+            // Sort by display_order, with nulls last
+            if (a.display_order === null && b.display_order === null) return 0
+            if (a.display_order === null) return 1
+            if (b.display_order === null) return -1
+            return a.display_order - b.display_order
+          })
+          .map((offering: any) => ({
+            ...offering,
+            category_name: offering.job_categories.name,
+            subcategory_name: offering.job_subcategories?.name,
+          }))
 
       // Check availability from map
       const isAvailableNow = availabilityMap.has(profile.id)

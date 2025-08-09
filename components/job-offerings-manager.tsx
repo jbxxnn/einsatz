@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/lib/toast"
-import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Shield, Loader } from "lucide-react"
+import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Shield, Loader, GripVertical } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -20,6 +20,25 @@ import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 import LoadingSpinner from "@/components/loading-spinner"
 import { useTranslation } from "@/lib/i18n"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import {
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"]
 type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"]
@@ -32,11 +51,83 @@ interface JobOfferingsManagerProps {
 // Maximum number of job offerings allowed
 const MAX_JOB_OFFERINGS = 3
 
+// Sortable table row component
+function SortableTableRow({ 
+  offering, 
+  onDelete, 
+  onDbaClick 
+}: { 
+  offering: JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }
+  onDelete: (id: string) => void
+  onDbaClick: (categoryId: string, categoryName: string) => void
+}) {
+  const { t } = useTranslation()
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: offering.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <TableRow 
+      ref={setNodeRef} 
+      style={style} 
+      className="text-xs text-black cursor-move"
+    >
+      <TableCell className="font-medium">
+        <div className="flex items-center gap-2">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+          >
+            <GripVertical className="h-4 w-4 text-gray-400" />
+          </div>
+          {offering.category_name}
+        </div>
+      </TableCell>
+      <TableCell>
+        {offering.subcategory_name || "-"}
+      </TableCell>
+      <TableCell>
+        €{offering.hourly_rate}/hour
+      </TableCell>
+      <TableCell>
+        {offering.experience_years ? `${offering.experience_years} ${offering.experience_years === 1 ? "year" : "years"}` : "-"}
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex gap-2 justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onDbaClick(offering.category_id, offering.category_name)}
+          >
+            <Shield className="h-4 w-4 mr-2" />
+            DBA
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => onDelete(offering.id)}>
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  )
+}
+
 export default function JobOfferingsManager({ freelancerId }: JobOfferingsManagerProps) { 
   const { t } = useTranslation()
   const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
-  const [offerings, setOfferings] = useState<(JobOffering & { category_name: string; subcategory_name?: string })[]>([])
+  const [offerings, setOfferings] = useState<(JobOffering & { category_name: string; subcategory_name?: string; display_order?: number })[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null)
   const [hourlyRate, setHourlyRate] = useState("")
@@ -48,6 +139,14 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [dbaDialogOpen, setDbaDialogOpen] = useState(false)
   const [selectedDbaCategoryId, setSelectedDbaCategoryId] = useState<string | null>(null)
   const [selectedDbaCategoryName, setSelectedDbaCategoryName] = useState<string>("")
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   useEffect(() => {
     const fetchOfferings = async () => {
@@ -66,6 +165,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
             )
           `)
           .eq("freelancer_id", freelancerId)
+          .order("display_order", { ascending: true, nullsFirst: false })
           .order("created_at", { ascending: false })
 
         if (error) throw error
@@ -127,6 +227,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           description: description,
           experience_years: experienceYears ? Number.parseFloat(experienceYears) : null,
           is_available_now: false,
+          display_order: offerings.length + 1,
         })
         .select(`
           *,
@@ -185,6 +286,39 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
     }
   }
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (active.id !== over?.id) {
+      const oldIndex = offerings.findIndex((offering) => offering.id === active.id)
+      const newIndex = offerings.findIndex((offering) => offering.id === over?.id)
+
+      const newOfferings = arrayMove(offerings, oldIndex, newIndex)
+      setOfferings(newOfferings)
+
+      // Update the display order in the database
+      try {
+        // Update each offering individually to avoid potential upsert issues
+        for (let i = 0; i < newOfferings.length; i++) {
+          const { error } = await supabase
+            .from("freelancer_job_offerings")
+            .update({ display_order: i + 1 })
+            .eq("id", newOfferings[i].id)
+
+          if (error) {
+            console.error("Error updating offering:", newOfferings[i].id, error)
+            throw error
+          }
+        }
+
+        toast.success(t("jobOfferings.orderUpdated") || "Job offerings order updated")
+      } catch (error) {
+        console.error("Error updating job offerings order:", error)
+        toast.error(t("jobOfferings.orderUpdateError") || "Failed to update order")
+      }
+    }
+  }
+
   const openAvailabilityDialog = (categoryId: string) => {
     setSelectedOfferingCategoryId(categoryId)
     setAvailabilityDialogOpen(true)
@@ -216,54 +350,42 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
             </div>
           ) : (
             <div className="space-y-4">
-              <Table>
-                <TableHeader>
-                  <TableRow className="text-xs text-black">
-                    <TableHead>{t("jobOfferings.category")}</TableHead>
-                    <TableHead>{t("jobOfferings.subcategory")}</TableHead>
-                    <TableHead>{t("jobOfferings.hourlyRate")}</TableHead>
-                    <TableHead>{t("jobOfferings.experienceYears")}</TableHead>
-                    <TableHead className="text-right">{t("jobOfferings.actions")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {offerings.map((offering) => (
-                    <TableRow key={offering.id} className="text-xs text-black">
-                      <TableCell className="font-medium">
-                        {offering.category_name}
-                      </TableCell>
-                      <TableCell>
-                        {offering.subcategory_name || "-"}
-                      </TableCell>
-                      <TableCell>
-                        €{offering.hourly_rate}/hour
-                      </TableCell>
-                      <TableCell>
-                        {offering.experience_years ? `${offering.experience_years} ${offering.experience_years === 1 ? "year" : "years"}` : "-"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setSelectedDbaCategoryId(offering.category_id)
-                              setSelectedDbaCategoryName(offering.category_name)
-                              setDbaDialogOpen(true)
-                            }}
-                          >
-                            <Shield className="h-4 w-4 mr-2" />
-                            DBA
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteOffering(offering.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow className="text-xs text-black">
+                      <TableHead>{t("jobOfferings.category")}</TableHead>
+                      <TableHead>{t("jobOfferings.subcategory")}</TableHead>
+                      <TableHead>{t("jobOfferings.hourlyRate")}</TableHead>
+                      <TableHead>{t("jobOfferings.experienceYears")}</TableHead>
+                      <TableHead className="text-right">{t("jobOfferings.actions")}</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <SortableContext
+                    items={offerings.map(offering => offering.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <TableBody>
+                      {offerings.map((offering) => (
+                        <SortableTableRow
+                          key={offering.id}
+                          offering={offering}
+                          onDelete={handleDeleteOffering}
+                          onDbaClick={(categoryId, categoryName) => {
+                            setSelectedDbaCategoryId(categoryId)
+                            setSelectedDbaCategoryName(categoryName)
+                            setDbaDialogOpen(true)
+                          }}
+                        />
+                      ))}
+                    </TableBody>
+                  </SortableContext>
+                </Table>
+              </DndContext>
               
               <div className="mt-[20px]">
                 <Link href="/profile/availability">

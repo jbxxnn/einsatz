@@ -351,6 +351,7 @@ export interface Database {
           description: string | null
           experience_years: number | null
           metadata: Json | null
+          display_order: number | null
           created_at: string
           updated_at: string
         }
@@ -358,6 +359,21 @@ export interface Database {
           id?: string
           freelancer_id: string
           category_id: string
+          subcategory_id?: string | null
+          hourly_rate?: number | null
+          fixed_rate?: number | null
+          is_available_now?: boolean
+          description?: string | null
+          experience_years?: number | null
+          metadata?: Json | null
+          display_order?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          freelancer_id?: string
+          category_id?: string
           subcategory_id?: string | null
           hourly_rate?: number | null
           fixed_rate?: number | null
@@ -379,6 +395,7 @@ export interface Database {
           description?: string | null
           experience_years?: number | null
           metadata?: Json | null
+          display_order?: number | null
           created_at?: string
           updated_at?: string
         }

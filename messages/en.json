@@ -795,7 +795,9 @@
     },
     "jobOfferings": {
       "title": "Job Offerings",
-      "description": "Create services you want to offer"
+      "description": "Create services you want to offer",
+      "orderUpdated": "Job offerings order updated",
+      "orderUpdateError": "Failed to update order"
     },
     "availability": {
       "title": "Availability",

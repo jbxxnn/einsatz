@@ -798,7 +798,9 @@
     },
     "jobOfferings": {
       "title": "Dienstenaanbod",
-      "description": "Maak diensten die je aanbiedt"
+      "description": "Maak diensten die je aanbiedt",
+      "orderUpdated": "Job offerings volgorde bijgewerkt",
+      "orderUpdateError": "Fout bij het bijwerken van de volgorde"
     },
     "availability": {
       "title": "Beschikbaarheid",
