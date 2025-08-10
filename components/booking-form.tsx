@@ -19,9 +19,11 @@ import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle
 import { format, addDays } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
-import DBAClientQuestionnaire from "./dba-client-questionnaire"
+import DBAQuestionnaireV2 from "./dba-questionnaire-v2"
+import DBADisputeResolver from "./dba-dispute-resolver"
 import DBAReportDisplay from "./dba-report-display"
 import DBAWaiverModal from "./dba-waiver-modal"
+import DBAWarningDialog from "./dba-warning-dialog"
 import { useDBAReport } from "@/hooks/use-dba-report"
 import { useDBAWaiver } from "@/hooks/use-dba-waiver"
 
@@ -57,7 +59,7 @@ type AvailabilityBlock = {
 }
 
 type DBAAnswer = {
-  question_id: string
+  question_group_id: string
   answer_value: string
 }
 
@@ -94,6 +96,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [dbaReport, setDbaReport] = useState<any>(null)
   const [showWaiverModal, setShowWaiverModal] = useState(false)
   const [waiverCreated, setWaiverCreated] = useState(false)
+  const [disputes, setDisputes] = useState<any[]>([])
+  const [disputesResolved, setDisputesResolved] = useState(false)
+  const [freelancerDBAStatus, setFreelancerDBAStatus] = useState<any>(null)
+  const [checkingFreelancerDBA, setCheckingFreelancerDBA] = useState(false)
+  const [showDBAWarning, setShowDBAWarning] = useState(false)
+  const [dbaWarningType, setDbaWarningType] = useState<'no_dba'>('no_dba')
   const { t } = useTranslation()
   const { generateReport } = useDBAReport()
   const { hasWaiver } = useDBAWaiver()
@@ -420,7 +428,39 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       setBookingId(data[0].id)
       setClientId(user.id)
-      setCurrentStep('dba')
+      
+      // Check freelancer DBA status before proceeding to DBA step
+      const dbaStatus = await checkFreelancerDBAStatus()
+      
+      console.log('🔍 [Booking Form] DBA Status Check Results:', {
+        dbaStatus,
+        selectedCategoryId,
+        freelancerId: freelancer.id
+      })
+      
+      if (dbaStatus) {
+        console.log('🔍 [Booking Form] DBA Logic:', {
+          status: dbaStatus.status,
+          hasDBA: dbaStatus.has_dba
+        })
+        
+        if (dbaStatus.status === 'no_dba') {
+          // No DBA at all - show warning dialog
+          console.log('🔍 [Booking Form] Showing no_dba warning')
+          setDbaWarningType('no_dba')
+          setShowDBAWarning(true)
+          return // Don't proceed until user responds to dialog
+        } else {
+          // Has V2 DBA - proceed normally
+          console.log('🔍 [Booking Form] Proceeding to DBA step (V2 ready)')
+          setCurrentStep('dba')
+        }
+      } else {
+        // No DBA status - proceed normally (fallback)
+        console.log('🔍 [Booking Form] Proceeding to DBA step (no status)')
+        setCurrentStep('dba')
+      }
+      
       toast.success(t("bookingform.bookingCreated"))
     } catch (error: any) {
       toast.error(error.message || t("bookingform.somethingWentWrong"))
@@ -433,19 +473,66 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     setDbaAnswers(answers)
     setDbaCompleted(true)
     
-    // Generate DBA report
+    // Generate DBA report (V2)
     if (bookingId && clientId && selectedCategoryId) {
       try {
-        const report = await generateReport({
-          bookingId,
-          freelancerId: freelancer.id,
-          clientId,
-          jobCategoryId: selectedCategoryId
+        const apiEndpoint = '/api/dba/reports/generate'
+        
+        const response = await fetch(apiEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId,
+            freelancerId: freelancer.id,
+            clientId,
+            jobCategoryId: selectedCategoryId
+          })
         })
         
-        if (report) {
-          setDbaReport(report)
-          toast.success(`Compliance score: ${report.score}% - Risk level: ${report.risk_level}`)
+        const data = await response.json()
+        
+        if (!response.ok) {
+          // Handle no freelancer DBA scenario
+          if (data.has_freelancer_dba === false) {
+            toast.warning(data.message || "Freelancer has not completed DBA assessment")
+            
+            // Show risk warning and allow proceeding anyway
+            const proceed = confirm(
+              `⚠️ DBA Risk Warning\n\n${data.message}\n\nWould you like to proceed with the booking anyway?\n\n• Click "OK" to continue at your own risk\n• Click "Cancel" to contact the freelancer first`
+            )
+            
+            if (proceed) {
+              setDbaReport({ 
+                score: 0, 
+                risk_level: 'high_risk', 
+                no_freelancer_dba: true,
+                message: 'Booking created without DBA assessment - High risk'
+              })
+              setDbaCompleted(true)
+              setCurrentStep('payment')
+              toast.info("Proceeding without DBA assessment - High risk booking")
+            } else {
+              setCurrentStep('details')
+              toast.info("Contact the freelancer to complete their DBA assessment first")
+            }
+            return
+          } else {
+            throw new Error(data.error || 'Failed to generate DBA report')
+          }
+        }
+        
+        if (data.report) {
+          setDbaReport(data.report)
+          
+          // Handle V2 disputes if any
+          if (data.disputes?.length > 0) {
+            setDisputes(data.disputes)
+            setDisputesResolved(false)
+            toast.warning(`DBA report generated with ${data.disputes.length} dispute(s) requiring attention`)
+          } else {
+            setDisputesResolved(true)
+            toast.success(`Compliance score: ${data.report.score}% - Risk level: ${data.report.risk_level}`)
+          }
         }
       } catch (error) {
         console.error('Failed to generate DBA report:', error)
@@ -453,11 +540,51 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       }
     }
     
-    setCurrentStep('payment')
+    // Only proceed to payment if no disputes or disputes are resolved
+    if (!disputesResolved || disputes.length === 0) {
+      setCurrentStep('payment')
+    }
   }
 
   const handleDBASave = (answers: DBAAnswer[]) => {
     setDbaAnswers(answers)
+  }
+
+  const checkFreelancerDBAStatus = async () => {
+    if (!selectedCategoryId) return null
+    
+    console.log('🔍 [Booking Form] Starting DBA status check for:', {
+      freelancerId: freelancer.id,
+      jobCategoryId: selectedCategoryId
+    })
+    
+    setCheckingFreelancerDBA(true)
+    try {
+      const response = await fetch('/api/dba/check-freelancer-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          freelancerId: freelancer.id,
+          jobCategoryId: selectedCategoryId
+        })
+      })
+      
+      console.log('🔍 [Booking Form] DBA status API response:', {
+        status: response.status,
+        ok: response.ok
+      })
+      
+      const data = await response.json()
+      console.log('🔍 [Booking Form] DBA status API data:', data)
+      
+      setFreelancerDBAStatus(data)
+      return data
+    } catch (error) {
+      console.error('🚨 [Booking Form] Failed to check freelancer DBA status:', error)
+      return null
+    } finally {
+      setCheckingFreelancerDBA(false)
+    }
   }
 
   const handleWaiverCreated = () => {
@@ -465,6 +592,27 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     setDbaCompleted(true)
     // Skip to payment step after waiver
     setCurrentStep('payment')
+  }
+
+  const handleDBAWarningProceed = () => {
+    setShowDBAWarning(false)
+    
+    // No DBA - proceed with high risk warning
+    setDbaReport({ 
+      score: 0, 
+      risk_level: 'high_risk', 
+      no_freelancer_dba: true,
+      message: 'Booking created without DBA assessment - High risk'
+    })
+    setDbaCompleted(true)
+    setCurrentStep('payment')
+    toast.warning("Proceeding without DBA assessment - High risk booking")
+  }
+
+  const handleDBAWarningCancel = () => {
+    setShowDBAWarning(false)
+    toast.info("Contact the freelancer to complete their DBA assessment first")
+    // Stay on current step (details)
   }
 
   const checkForExistingWaiver = async () => {
@@ -483,6 +631,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       checkForExistingWaiver()
     }
   }, [bookingId])
+
+
 
   const handleSelectSuggestedDate = () => {
     if (suggestedDate) {
@@ -792,13 +942,27 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       {/* DBA Questionnaire */}
       {bookingId && clientId && !waiverCreated && (
-        <DBAClientQuestionnaire
-          bookingId={bookingId}
-          clientId={clientId}
-          freelancerId={freelancer.id}
-          onComplete={handleDBAComplete}
-          onSave={handleDBASave}
-        />
+        <>
+          <DBAQuestionnaireV2
+            userType="client"
+            bookingId={bookingId}
+            clientId={clientId}
+            freelancerId={freelancer.id}
+            jobCategoryId={selectedCategoryId || undefined}
+            onComplete={handleDBAComplete as any}
+            onSave={handleDBASave as any}
+          />
+          
+          {/* V2 Dispute Resolution */}
+          {disputes.length > 0 && !disputesResolved && (
+            <DBADisputeResolver
+              userType="client"
+              bookingId={bookingId}
+              disputes={disputes}
+              // onResolved={() => setDisputesResolved(true)}
+            />
+          )}
+        </>
       )}
 
       {/* Waiver Status */}
@@ -959,6 +1123,15 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         onClose={() => setShowWaiverModal(false)}
         bookingId={bookingId || ''}
         onWaiverCreated={handleWaiverCreated}
+      />
+
+      <DBAWarningDialog
+        isOpen={showDBAWarning}
+        onClose={() => setShowDBAWarning(false)}
+        onProceed={handleDBAWarningProceed}
+        onCancel={handleDBAWarningCancel}
+        type={dbaWarningType}
+        freelancerName={freelancer.first_name || 'The freelancer'}
       />
     </div>
   )

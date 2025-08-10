@@ -8,14 +8,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/lib/toast"
-import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Shield, Loader, GripVertical } from "lucide-react"
+import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Shield, Loader, GripVertical, CheckCircle, Clock, AlertTriangle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import JobCategorySelector from "@/components/job-category-selector"
 import JobSubcategorySelector from "@/components/job-subcategory-selector"
 import AvailabilityCalendar from "@/components/availability-calendar"
-import DBAFreelancerQuestionnaire from "@/components/dba-freelancer-questionnaire"
+import DBAQuestionnaireV2 from "@/components/dba-questionnaire-v2"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 import LoadingSpinner from "@/components/loading-spinner"
@@ -55,11 +55,15 @@ const MAX_JOB_OFFERINGS = 3
 function SortableTableRow({ 
   offering, 
   onDelete, 
-  onDbaClick 
+  onDbaClick,
+  dbaStatus,
+  loadingDbaStatus
 }: { 
   offering: JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }
   onDelete: (id: string) => void
   onDbaClick: (categoryId: string, categoryName: string) => void
+  dbaStatus?: DBAStatus
+  loadingDbaStatus: boolean
 }) {
   const { t } = useTranslation()
   const {
@@ -105,14 +109,36 @@ function SortableTableRow({
         {offering.experience_years ? `${offering.experience_years} ${offering.experience_years === 1 ? "year" : "years"}` : "-"}
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end items-center">
+          {loadingDbaStatus ? (
+            <div className="flex items-center gap-2">
+              <Loader className="h-4 w-4 animate-spin" />
+              <span className="text-xs text-gray-500">Checking...</span>
+            </div>
+          ) : dbaStatus ? (
+            <div className="flex items-center gap-2">
+              {dbaStatus.status === 'v2_complete' && (
+                <div className="flex items-center gap-1 text-green-600">
+                  <CheckCircle className="h-4 w-4" />
+                  <span className="text-xs">V2 Complete</span>
+                </div>
+              )}
+              {dbaStatus.status === 'not_started' && (
+                <div className="flex items-center gap-1 text-gray-500">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-xs">Not Started</span>
+                </div>
+              )}
+            </div>
+          ) : null}
+          
           <Button 
-            variant="outline" 
+            variant={dbaStatus?.status === 'v2_complete' ? "secondary" : "outline"}
             size="sm" 
             onClick={() => onDbaClick(offering.category_id, offering.category_name)}
           >
             <Shield className="h-4 w-4 mr-2" />
-            DBA
+            {dbaStatus?.status === 'v2_complete' ? 'Update DBA' : 'Start DBA'}
           </Button>
           <Button variant="ghost" size="icon" onClick={() => onDelete(offering.id)}>
             <Trash2 className="h-4 w-4 text-destructive" />
@@ -121,6 +147,13 @@ function SortableTableRow({
       </TableCell>
     </TableRow>
   )
+}
+
+type DBAStatus = {
+  category_id: string
+  has_v2: boolean
+  v2_answers_count: number
+  status: 'v2_complete' | 'not_started'
 }
 
 export default function JobOfferingsManager({ freelancerId }: JobOfferingsManagerProps) { 
@@ -139,6 +172,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [dbaDialogOpen, setDbaDialogOpen] = useState(false)
   const [selectedDbaCategoryId, setSelectedDbaCategoryId] = useState<string | null>(null)
   const [selectedDbaCategoryName, setSelectedDbaCategoryName] = useState<string>("")
+  const [dbaStatuses, setDbaStatuses] = useState<DBAStatus[]>([])
+  const [loadingDbaStatus, setLoadingDbaStatus] = useState(false)
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -147,6 +182,40 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  const fetchDBAStatuses = async (categoryIds: string[]) => {
+    if (categoryIds.length === 0) return
+
+    setLoadingDbaStatus(true)
+    try {
+      const statusPromises = categoryIds.map(async (categoryId) => {
+        // Check V2 answers
+        const { data: v2Answers } = await supabase
+          .from('dba_freelancer_answers')
+          .select('id')
+          .eq('freelancer_id', freelancerId)
+          .eq('job_category_id', categoryId)
+          .not('question_group_id', 'is', null)
+
+        const hasV2 = v2Answers && v2Answers.length > 0
+        const v2Count = v2Answers?.length || 0
+
+        return {
+          category_id: categoryId,
+          has_v2: hasV2,
+          v2_answers_count: v2Count,
+          status: hasV2 ? 'v2_complete' : 'not_started'
+        } as DBAStatus
+      })
+
+      const statuses = await Promise.all(statusPromises)
+      setDbaStatuses(statuses)
+    } catch (error) {
+      console.error("Error fetching DBA statuses:", error)
+    } finally {
+      setLoadingDbaStatus(false)
+    }
+  }
 
   useEffect(() => {
     const fetchOfferings = async () => {
@@ -177,6 +246,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         }))
 
         setOfferings(formattedOfferings)
+
+        // Fetch DBA statuses for all categories
+        const categoryIds = formattedOfferings.map(o => o.category_id)
+        await fetchDBAStatuses(categoryIds)
       } catch (error) {
         console.error("Error fetching job offerings:", error)
         toast.error(t("jobOfferings.cardLoadOfferingsError"))
@@ -370,18 +443,23 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                     strategy={verticalListSortingStrategy}
                   >
                     <TableBody>
-                      {offerings.map((offering) => (
-                        <SortableTableRow
-                          key={offering.id}
-                          offering={offering}
-                          onDelete={handleDeleteOffering}
-                          onDbaClick={(categoryId, categoryName) => {
-                            setSelectedDbaCategoryId(categoryId)
-                            setSelectedDbaCategoryName(categoryName)
-                            setDbaDialogOpen(true)
-                          }}
-                        />
-                      ))}
+                      {offerings.map((offering) => {
+                        const dbaStatus = dbaStatuses.find(status => status.category_id === offering.category_id)
+                        return (
+                          <SortableTableRow
+                            key={offering.id}
+                            offering={offering}
+                            onDelete={handleDeleteOffering}
+                            onDbaClick={(categoryId, categoryName) => {
+                              setSelectedDbaCategoryId(categoryId)
+                              setSelectedDbaCategoryName(categoryName)
+                              setDbaDialogOpen(true)
+                            }}
+                            dbaStatus={dbaStatus}
+                            loadingDbaStatus={loadingDbaStatus}
+                          />
+                        )
+                      })}
                     </TableBody>
                   </SortableContext>
                 </Table>
@@ -507,22 +585,32 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         </DialogContent>
       </Dialog>
 
-      {/* DBA Questionnaire Dialog */}
+      {/* DBA V2 Questionnaire Dialog */}
       <Dialog open={dbaDialogOpen} onOpenChange={setDbaDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t("dba.freelancer.title")}</DialogTitle>
+            <DialogTitle>
+              DBA Assessment V2 - {selectedDbaCategoryName}
+            </DialogTitle>
           </DialogHeader>
           {selectedDbaCategoryId && selectedDbaCategoryName && (
-            <DBAFreelancerQuestionnaire
+            <DBAQuestionnaireV2
+              userType="freelancer"
+              freelancerId={freelancerId}
+              clientId="" // Not needed for freelancer DBA
               jobCategoryId={selectedDbaCategoryId}
-              jobCategoryName={selectedDbaCategoryName}
-              onComplete={() => {
+              onComplete={async () => {
                 setDbaDialogOpen(false)
-                toast.success(t("dba.answers.saved"))
+                toast.success("DBA V2 assessment completed successfully!")
+                
+                // Refresh DBA status for this category
+                await fetchDBAStatuses([selectedDbaCategoryId])
               }}
-              onSave={() => {
-                toast.success(t("dba.answers.saved"))
+              onSave={async () => {
+                toast.success("DBA V2 answers saved!")
+                
+                // Refresh DBA status for this category
+                await fetchDBAStatuses([selectedDbaCategoryId])
               }}
             />
           )}

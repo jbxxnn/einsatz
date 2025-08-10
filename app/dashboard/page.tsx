@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation"
 // import LoadingSpinner from "@/components/loading-spinner"
 import { useTranslation } from "@/lib/i18n"
 import FreelancerOnboardingProgress from "@/components/freelancer-onboarding-progress"
+
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -1120,9 +1121,9 @@ export default function DashboardPage() {
         <SidebarInset className="w-full">
           <OptimizedHeader />
           <div className="flex flex-col gap-6 p-6 pb-20 bg-[#f7f7f7] h-full">
-      {profile.user_type === "freelancer" && (
-        <FreelancerOnboardingProgress profile={profile} />
-      )}
+                    {profile.user_type === "freelancer" && (
+                <FreelancerOnboardingProgress profile={profile} />
+              )}
 
                         {/* Enhanced Dashboard Header */}
             <DashboardHeader profile={profile} />

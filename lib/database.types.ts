@@ -112,6 +112,10 @@ export interface Database {
           title: string
           description: string | null
           status: "pending" | "confirmed" | "completed" | "cancelled" | "disputed"
+          booking_status: "pending_payment" | "payment_completed" | "pending_freelancer_review" | "dispute_resolution" | "pending_acceptance" | "active" | "completed" | "cancelled" | null
+          has_dba_disputes: boolean | null
+          dba_disputes_resolved: boolean | null
+          dispute_resolution_deadline: string | null
           start_time: string
           end_time: string
           location: string | null
@@ -131,6 +135,10 @@ export interface Database {
           title: string
           description?: string | null
           status?: "pending" | "confirmed" | "completed" | "cancelled" | "disputed"
+          booking_status?: "pending_payment" | "payment_completed" | "pending_freelancer_review" | "dispute_resolution" | "pending_acceptance" | "active" | "completed" | "cancelled" | null
+          has_dba_disputes?: boolean | null
+          dba_disputes_resolved?: boolean | null
+          dispute_resolution_deadline?: string | null
           start_time: string
           end_time: string
           location?: string | null
@@ -150,6 +158,10 @@ export interface Database {
           title?: string
           description?: string | null
           status?: "pending" | "confirmed" | "completed" | "cancelled" | "disputed"
+          booking_status?: "pending_payment" | "payment_completed" | "pending_freelancer_review" | "dispute_resolution" | "pending_acceptance" | "active" | "completed" | "cancelled" | null
+          has_dba_disputes?: boolean | null
+          dba_disputes_resolved?: boolean | null
+          dispute_resolution_deadline?: string | null
           start_time?: string
           end_time?: string
           location?: string | null
@@ -759,6 +771,141 @@ export interface Database {
           freelancer_id?: string
           job_offering_id?: string
           use_global_availability?: boolean
+        }
+      }
+      dba_question_disputes: {
+        Row: {
+          id: string
+          booking_id: string
+          question_group_id: string
+          freelancer_answer: string
+          client_answer: string
+          dispute_severity: 'minor' | 'moderate' | 'critical'
+          resolution_status: 'pending' | 'negotiating' | 'resolved' | 'accepted_difference'
+          resolved_answer: string | null
+          resolution_method: 'freelancer_accepted' | 'client_accepted' | 'negotiated' | 'agreed_difference' | null
+          resolved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          question_group_id: string
+          freelancer_answer: string
+          client_answer: string
+          dispute_severity: 'minor' | 'moderate' | 'critical'
+          resolution_status?: 'pending' | 'negotiating' | 'resolved' | 'accepted_difference'
+          resolved_answer?: string | null
+          resolution_method?: 'freelancer_accepted' | 'client_accepted' | 'negotiated' | 'agreed_difference' | null
+          resolved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          question_group_id?: string
+          freelancer_answer?: string
+          client_answer?: string
+          dispute_severity?: 'minor' | 'moderate' | 'critical'
+          resolution_status?: 'pending' | 'negotiating' | 'resolved' | 'accepted_difference'
+          resolved_answer?: string | null
+          resolution_method?: 'freelancer_accepted' | 'client_accepted' | 'negotiated' | 'agreed_difference' | null
+          resolved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      dba_dispute_messages: {
+        Row: {
+          id: string
+          dispute_id: string
+          booking_id: string
+          sender_type: 'client' | 'freelancer'
+          sender_id: string
+          message_type: 'text' | 'answer_proposal' | 'acceptance' | 'rejection'
+          message_content: string
+          proposed_answer: string | null
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          dispute_id: string
+          booking_id: string
+          sender_type: 'client' | 'freelancer'
+          sender_id: string
+          message_type?: 'text' | 'answer_proposal' | 'acceptance' | 'rejection'
+          message_content: string
+          proposed_answer?: string | null
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          dispute_id?: string
+          booking_id?: string
+          sender_type?: 'client' | 'freelancer'
+          sender_id?: string
+          message_type?: 'text' | 'answer_proposal' | 'acceptance' | 'rejection'
+          message_content?: string
+          proposed_answer?: string | null
+          is_read?: boolean
+          created_at?: string
+        }
+      }
+      dba_booking_dispute_summary: {
+        Row: {
+          id: string
+          booking_id: string
+          total_disputes: number
+          critical_disputes: number
+          moderate_disputes: number
+          minor_disputes: number
+          resolved_disputes: number
+          resolution_progress: number
+          all_disputes_resolved: boolean
+          client_acknowledged: boolean
+          freelancer_acknowledged: boolean
+          resolution_started_at: string | null
+          resolution_completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          total_disputes?: number
+          critical_disputes?: number
+          moderate_disputes?: number
+          minor_disputes?: number
+          resolved_disputes?: number
+          resolution_progress?: number
+          all_disputes_resolved?: boolean
+          client_acknowledged?: boolean
+          freelancer_acknowledged?: boolean
+          resolution_started_at?: string | null
+          resolution_completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          total_disputes?: number
+          critical_disputes?: number
+          moderate_disputes?: number
+          minor_disputes?: number
+          resolved_disputes?: number
+          resolution_progress?: number
+          all_disputes_resolved?: boolean
+          client_acknowledged?: boolean
+          freelancer_acknowledged?: boolean
+          resolution_started_at?: string | null
+          resolution_completed_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
     }
