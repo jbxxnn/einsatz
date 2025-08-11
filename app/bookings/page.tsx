@@ -259,11 +259,11 @@ export default function BookingsPage() {
           {profile.user_type === "freelancer" && (
             <FreelancerOnboardingProgress profile={profile} />
           )}
-          <Tabs defaultValue="upcoming" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-              <TabsTrigger value="past">Past</TabsTrigger>
-            </TabsList>
+                      <Tabs defaultValue="upcoming" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="upcoming">{t("bookings.upcoming")}</TabsTrigger>
+                <TabsTrigger value="past">{t("bookings.past")}</TabsTrigger>
+              </TabsList>
             <TabsContent value="upcoming" className="space-y-4">
               {bookings.filter(
                 (b) => new Date(b.start_time) > new Date() && ["pending", "confirmed"].includes(b.status),
@@ -271,19 +271,19 @@ export default function BookingsPage() {
                 <div className="bg-background rounded-lg overflow-hidden">
                   <div className="p-6 flex flex-col items-center justify-center">
                       <CustomNoBookingsIcon className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg text-black font-medium mb-2">No upcoming bookings</h3>
+                    <h3 className="text-lg text-black font-medium mb-2">{t("bookings.noUpcomingBookings")}</h3>
                     <p className="text-black text-xs text-center max-w-md mb-4">
                       {profile.user_type === "client"
-                        ? "You don't have any upcoming bookings. Book a freelancer to get started."
-                        : "You don't have any upcoming jobs. Update your profile to attract more clients."}
+                        ? t("bookings.noUpcomingBookingsDescription")
+                        : t("bookings.noUpcomingBookingsFreelancer")}
                     </p>
                     {profile.user_type === "client" ? (
                       <Link href="/freelancers">
-                        <Button>Find Freelancers</Button>
+                        <Button>{t("bookings.findFreelancers")}</Button>
                       </Link>
                     ) : (
                       <Link href="/profile">
-                        <Button>Update Profile</Button>
+                        <Button>{t("bookings.updateProfile")}</Button>
                       </Link>
                     )}
                   </div>
@@ -291,18 +291,18 @@ export default function BookingsPage() {
               ) : (
                 <div className="bg-background rounded-lg overflow-hidden">
                   <div className="p-6">
-                    <h2 className="text-lg text-black font-semibold mb-1">Upcoming Bookings</h2>
+                    <h2 className="text-lg text-black font-semibold mb-1">{t("bookings.upcomingBookings")}</h2>
                   </div>
                   <div className="p-6">
                     <Table>
                       <TableHeader>
                         <TableRow >
-                          <TableHead className="text-xs text-black">Client/Freelancer</TableHead>
-                          <TableHead className="text-xs text-black">Date & Time</TableHead>
-                          <TableHead className="text-xs text-black">Location</TableHead>
-                          <TableHead className="text-xs text-black">Status</TableHead>
-                          <TableHead className="text-xs text-black">Amount</TableHead>
-                          <TableHead className="text-right text-xs text-black">Actions</TableHead>
+                          <TableHead className="text-xs text-black">{profile.user_type === "client" ? t("bookings.freelancer") : t("bookings.client")}</TableHead>
+                          <TableHead className="text-xs text-black">{t("bookings.dateTime")}</TableHead>
+                          <TableHead className="text-xs text-black">{t("bookings.location")}</TableHead>
+                          <TableHead className="text-xs text-black">{t("bookings.status")}</TableHead>
+                          <TableHead className="text-xs text-black">{t("bookings.amount")}</TableHead>
+                          <TableHead className="text-right text-xs text-black">{t("bookings.actions")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -335,7 +335,7 @@ export default function BookingsPage() {
                                         : `${booking.client?.first_name} ${booking.client?.last_name}`}
                                     </p>
                                     <p className="text-xs text-black">
-                                      {profile.user_type === "client" ? "Freelancer" : "Client"}
+                                      {profile.user_type === "client" ? t("bookings.freelancer") : t("bookings.client")}
                                     </p>
                                   </div>
                                 </div>
@@ -363,7 +363,7 @@ export default function BookingsPage() {
                                     <span className="text-xs text-black">{booking.location}</span>
                                   </div>
                                 ) : (
-                                  <span className="text-sm text-muted-foreground">Not specified</span>
+                                  <span className="text-sm text-muted-foreground">{t("bookings.notSpecified")}</span>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -376,7 +376,7 @@ export default function BookingsPage() {
                                     <span className="font-medium text-xs text-black">€{booking.total_amount.toFixed(2)}</span>
                                   </div>
                                 ) : (
-                                  <span className="text-sm text-muted-foreground">Not set</span>
+                                  <span className="text-sm text-muted-foreground">{t("bookings.notSet")}</span>
                                 )}
                               </TableCell>
                               <TableCell className="text-right">
@@ -389,7 +389,7 @@ export default function BookingsPage() {
                                       onClick={() => handleBookingAction(booking.id, "cancel")}
                                     >
                                       <XCircle className="h-4 w-4 mr-1" />
-                                      Cancel
+                                      {t("bookings.cancel")}
                                     </Button>
                                   )}
 
@@ -397,7 +397,7 @@ export default function BookingsPage() {
                                     <>
                                       <Button size="sm" onClick={() => handleBookingAction(booking.id, "confirm")}>
                                         <CheckCircle className="h-4 w-4 mr-1" />
-                                        Accept
+                                        {t("bookings.accept")}
                                       </Button>
                                       <Button
                                         variant="outline"
@@ -405,8 +405,8 @@ export default function BookingsPage() {
                                         className="text-red-500 hover:text-red-600"
                                         onClick={() => handleBookingAction(booking.id, "cancel")}
                                       >
-                                        <XCircle className="h-4 w-4 mr-1" />
-                                        Decline
+                                                                              <XCircle className="h-4 w-4 mr-1" />
+                                      {t("bookings.decline")}
                                       </Button>
                                     </>
                                   )}
@@ -414,7 +414,7 @@ export default function BookingsPage() {
                                   {booking.status === "confirmed" && (
                                     <Link href={`/bookings/${booking.id}`}>
                                       <Button size="sm" variant="outline">
-                                        View Details
+                                        {t("bookings.viewDetails")}
                                       </Button>
                                     </Link>
                                   )}
@@ -437,25 +437,25 @@ export default function BookingsPage() {
                 <div className="bg-background rounded-lg overflow-hidden">
                   <div className="p-6 flex flex-col items-center justify-center">
                     <CustomNoBookingsIcon className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg text-black font-medium mb-2">No past bookings</h3>
-                    <p className="text-black text-xs text-center max-w-md mb-4">Your past bookings will appear here.</p>
+                    <h3 className="text-lg text-black font-medium mb-2">{t("bookings.noPastBookings")}</h3>
+                    <p className="text-black text-xs text-center max-w-md mb-4">{t("bookings.noPastBookingsDescription")}</p>
                   </div>
                 </div>
               ) : (
                 <div className="bg-background rounded-lg overflow-hidden">
                   <div className="p-6">
-                    <h2 className="text-lg text-black font-semibold mb-1">Past Bookings</h2>
+                    <h2 className="text-lg text-black font-semibold mb-1">{t("bookings.pastBookings")}</h2>
                   </div>
                   <div className="p-6">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="text-xs text-black">Client/Freelancer</TableHead>
-                          <TableHead className="text-xs text-black">Date & Time</TableHead>
-                          <TableHead className="text-xs text-black">Location</TableHead>
-                          <TableHead className="text-xs text-black">Status</TableHead>
-                          <TableHead className="text-xs text-black">Amount</TableHead>
-                          <TableHead className="text-right text-xs text-black">Actions</TableHead>
+                          <TableHead className="text-xs text-black">{profile.user_type === "client" ? t("bookings.freelancer") : t("bookings.client")}</TableHead>
+                          <TableHead className="text-xs text-black">{t("bookings.dateTime")}</TableHead>
+                          <TableHead className="text-xs text-black">{t("bookings.location")}</TableHead>
+                          <TableHead className="text-xs text-black">{t("bookings.status")}</TableHead>
+                          <TableHead className="text-xs text-black">{t("bookings.amount")}</TableHead>
+                          <TableHead className="text-right text-xs text-black">{t("bookings.actions")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -488,7 +488,7 @@ export default function BookingsPage() {
                                         : `${booking.client?.first_name} ${booking.client?.last_name}`}
                                     </p>
                                     <p className="text-xs text-black">
-                                      {profile.user_type === "client" ? "Freelancer" : "Client"}
+                                      {profile.user_type === "client" ? t("bookings.freelancer") : t("bookings.client")}
                                     </p>
                                   </div>
                                 </div>
@@ -516,7 +516,7 @@ export default function BookingsPage() {
                                     <span className="text-xs text-black">{booking.location}</span>
                                   </div>
                                 ) : (
-                                  <span className="text-xs text-black">Not specified</span>
+                                  <span className="text-xs text-black">{t("bookings.notSpecified")}</span>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -529,7 +529,7 @@ export default function BookingsPage() {
                                     <span className="font-medium text-xs text-black">€{booking.total_amount.toFixed(2)}</span>
                                   </div>
                                 ) : (
-                                  <span className="text-xs text-black">Not set</span>
+                                  <span className="text-xs text-black">{t("bookings.notSet")}</span>
                                 )}
                               </TableCell>
                               <TableCell className="text-right">
@@ -537,7 +537,7 @@ export default function BookingsPage() {
                                   {booking.status === "completed" && (
                                     <Link href={`/bookings/${booking.id}`}>
                                       <Button size="sm" variant="outline">
-                                        View Details
+                                        {t("bookings.viewDetails")}
                                       </Button>
                                     </Link>
                                   )}
@@ -545,7 +545,7 @@ export default function BookingsPage() {
                                   {profile.user_type === "client" && booking.status === "confirmed" && (
                                     <Button size="sm" onClick={() => handleBookingAction(booking.id, "complete")}>
                                       <CheckCircle className="h-4 w-4 mr-1" />
-                                      Mark as Completed
+                                      {t("bookings.markAsCompleted")}
                                     </Button>
                                   )}
                                 </div>

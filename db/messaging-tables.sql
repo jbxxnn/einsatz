@@ -49,3 +49,4 @@ CREATE TRIGGER update_messages_updated_at
   FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 
+

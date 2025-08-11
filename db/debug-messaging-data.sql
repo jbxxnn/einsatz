@@ -57,3 +57,4 @@ LEFT JOIN profiles p ON cp.profile_id = p.id
 WHERE p.id IS NULL;
 
 
+

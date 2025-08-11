@@ -531,7 +531,7 @@ export default function BookingDetailsPage() {
                               status: "confirmed",
                             } as Booking)
 
-                            toast.success("Payment marked as received")
+                            toast.success(t("booking.id.paymentMarkedAsReceived"))
                           } catch (error: any) {
                             toast.error(error.message || t("booking.id.error"))
                           }
