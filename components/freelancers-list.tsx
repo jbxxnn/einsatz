@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { MapPin, Star, CheckCircle, AlertCircle, RefreshCw, BadgeCheck, ChevronLeft, ChevronRight, Zap } from "lucide-react"
+import { MapPin, Star, CheckCircle, AlertCircle, RefreshCw, BadgeCheck, ChevronLeft, ChevronRight, Zap, MessageCircle } from "lucide-react"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
@@ -444,6 +444,16 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                 <div className="text-lg font-bold">€{freelancer.hourly_rate}/hr</div>
                 </div>
           </div>
+          
+          {/* Message Button */}
+          {/* <div className="flex justify-center mt-3">
+            <Link href={`/freelancers/${freelancer.id}`}>
+              <Button size="sm" variant="outline" className="w-full">
+                <MessageCircle className="h-4 w-4 mr-2" />
+                {t("freelancer.message") || "Message"}
+              </Button>
+            </Link>
+          </div> */}
         </CardContent>
       </a>
     </Card>

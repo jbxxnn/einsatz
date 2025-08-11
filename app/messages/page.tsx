@@ -180,7 +180,7 @@ export default function MessagesPage() {
           </Sidebar>
           
           <SidebarInset className="w-full">
-            <OptimizedHeader />
+            {/* <OptimizedHeader /> */}
             <div className="p-6">
               <MessagesSkeleton />
             </div>
@@ -208,7 +208,7 @@ export default function MessagesPage() {
 
         {/* Main Content */}
         <SidebarInset className="w-full">
-          <OptimizedHeader />
+          {/* <OptimizedHeader /> */}
           <div className="flex h-screen bg-[#f7f7f7]">
             {/* Left Column - Conversations List */}
             <div className="w-80 border-r bg-white flex flex-col">

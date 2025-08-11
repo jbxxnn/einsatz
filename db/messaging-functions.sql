@@ -218,3 +218,4 @@ GRANT SELECT, INSERT, UPDATE ON conversations TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON messages TO authenticated;
 GRANT SELECT, INSERT ON conversation_participants TO authenticated;
 
+

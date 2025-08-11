@@ -115,7 +115,7 @@ export default function ConversationsList({ onConversationSelect, selectedConver
       }
     } else {
       // Fallback to navigation if no callback provided
-      router.push(`/messages/${conversationId}`)
+      router.push(`/messages?conversation=${conversationId}`)
     }
   }
 

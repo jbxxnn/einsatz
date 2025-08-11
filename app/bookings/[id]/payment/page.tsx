@@ -27,6 +27,7 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
+  const [conversationId, setConversationId] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -61,6 +62,31 @@ export default function PaymentPage() {
         // If already paid, show success
         if (data.payment_status === "paid") {
           setPaymentSuccess(true)
+        }
+        
+        // Fetch or create conversation for this booking
+        let { data: conversationData } = await supabase
+          .from("conversations")
+          .select("id")
+          .eq("booking_id", params.id)
+          .single()
+        
+        if (!conversationData) {
+          // Create conversation if it doesn't exist
+          const { data: newConversationData } = await supabase
+            .rpc('create_or_get_conversation', {
+              p_user_id: user.id,
+              p_recipient_id: data.freelancer_id,
+              p_booking_id: params.id
+            })
+          
+          if (newConversationData) {
+            conversationData = { id: newConversationData.conversation_id }
+          }
+        }
+        
+        if (conversationData) {
+          setConversationId(conversationData.id)
         }
       }
 
@@ -222,8 +248,10 @@ export default function PaymentPage() {
                         <p className="text-sm text-muted-foreground">
                           {t("payments.useOurMessagingSystemToCoordinatePaymentDetailsWithTheFreelancer")}
                         </p>
-                        <Button variant="outline" className="mt-2" asChild>
-                          <Link href={`/messages?freelancerId=${booking.freelancer_id}`}>{t("payments.messageFreelancer")}</Link>
+                        <Button variant="outline" className="mt-2" asChild disabled={!conversationId}>
+                          <Link href={conversationId ? `/messages?conversation=${conversationId}` : `/messages`}>
+                            {conversationId ? t("payments.messageFreelancer") : t("loading")}
+                          </Link>
                         </Button>
                       </div>
     

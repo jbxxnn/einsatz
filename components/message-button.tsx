@@ -52,7 +52,7 @@ export default function MessageButton({ bookingId, clientId, freelancerId }: Mes
       }
 
       // Navigate to the conversation
-      router.push(`/messages/${data.conversationId}`)
+      router.push(`/messages?conversation=${data.conversationId}`)
       toast.success("Message sent successfully")
     } catch (error: any) {
       console.error("Error creating conversation:", error)

@@ -78,3 +78,4 @@ GRANT EXECUTE ON FUNCTION create_or_get_conversation(UUID, UUID, UUID) TO authen
 GRANT EXECUTE ON FUNCTION add_message(UUID, UUID, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_user_conversations(UUID) TO authenticated;
 
+

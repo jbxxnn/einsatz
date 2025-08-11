@@ -188,7 +188,7 @@ function UserDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-8 w-8 rounded-full">
             <AvatarImage src={profile?.avatar_url || ""} alt={profile?.first_name || "User"} />
             <AvatarFallback>{getInitials()}</AvatarFallback>
           </Avatar>

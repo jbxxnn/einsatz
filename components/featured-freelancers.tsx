@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Star, MapPin } from "lucide-react"
+import { Star, MapPin, MessageCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
@@ -155,9 +155,17 @@ export default function FeaturedFreelancers() {
               </div>
               <div className="flex justify-between items-center pt-4">
                 <p className="font-semibold">€{freelancer.hourly_rate}/hour</p>
-                <Link href={`/freelancers/${freelancer.id}`}>
-                  <Button size="sm">View Profile</Button>
-                </Link>
+                <div className="flex gap-2">
+                  <Link href={`/freelancers/${freelancer.id}`}>
+                    <Button size="sm" variant="outline">View Profile</Button>
+                  </Link>
+                  <Link href={`/freelancers/${freelancer.id}`}>
+                    <Button size="sm">
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Message
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </Card>

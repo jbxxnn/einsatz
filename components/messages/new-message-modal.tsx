@@ -117,7 +117,7 @@ export default function NewMessageModal({ isOpen, onClose }: NewMessageModalProp
       
       // Close modal and navigate to the conversation
       onClose()
-      router.push(`/messages/${conversationId}`)
+      router.push(`/messages?conversation=${conversationId}`)
       
     } catch (error) {
       console.error('Error starting conversation:', error)

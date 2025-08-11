@@ -17,6 +17,7 @@ import { useTranslation } from "@/lib/i18n"
 import { getCoverTemplate } from "@/lib/cover-templates"
 import OptimizedHeader from "@/components/optimized-header"
 import { Skeleton } from "@/components/ui/skeleton"
+import Link from "next/link"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"] & {
@@ -192,6 +193,7 @@ export default function FreelancerProfile() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalReviews, setTotalReviews] = useState(0)
   const reviewsPerPage = 20
+  const [conversationId, setConversationId] = useState<string | null>(null)
 
   // Clear selected date when category changes
   useEffect(() => {
@@ -264,6 +266,25 @@ export default function FreelancerProfile() {
 
         setTotalReviews(totalReviewsCount || 0)
 
+        // Fetch or create conversation for this freelancer
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          // Always create or get conversation using the RPC function
+          const { data: conversationData } = await supabase
+            .rpc('create_or_get_conversation', {
+              p_user_id: user.id,
+              p_recipient_id: params.id,
+              p_booking_id: null
+            })
+          
+          if (conversationData && conversationData.conversation_id) {
+            console.log('Conversation created/found:', conversationData.conversation_id)
+            setConversationId(conversationData.conversation_id)
+          } else {
+            console.log('No conversation data received:', conversationData)
+          }
+        }
+        
         // Fetch reviews with service information (paginated)
         const from = (currentPage - 1) * reviewsPerPage
         const to = from + reviewsPerPage - 1
@@ -414,50 +435,28 @@ export default function FreelancerProfile() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Message Button */}
+              <div className="flex justify-center mt-4">
+                <div className="w-full">
+                  <Link href={conversationId ? `/messages?conversation=${conversationId}` : `/messages`}>
+                    <Button 
+                      variant="outline" 
+                      className="w-full bg-[#33CC99] hover:bg-[#2BB88A] text-white"
+                      disabled={!conversationId}
+                    >
+                      <CustomMessagesIcon className="h-4 w-4 mr-2" />
+                      {conversationId ? "Message Freelancer" : "Loading..."}
+                    </Button>
+                  </Link>
                 </div>
+              </div>
 
                 {/* Action Buttons */}
-                  <div className="space-y-3">
-                    <Button className="w-full bg-[#33CC99] hover:bg-[#2BB88A] text-white">
-                  <CustomMessagesIcon className="h-4 w-4 mr-2 text-white" />
-                  Message
-                  </Button>
-                </div>
+               
 
-                {/* Hire Section */}
-                {/* <Card>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold mb-3">Hire {freelancer.first_name}</h3>
-                    <div className="space-y-3">
-                      {freelancer.job_offerings.map((offering) => (
-                        <div 
-                          key={offering.category_id} 
-                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                            selectedCategoryId === offering.category_id 
-                              ? 'bg-primary/10 border-2 border-primary' 
-                              : 'bg-muted/50 hover:bg-muted/70'
-                          }`}
-                          onClick={() => setSelectedCategoryId(offering.category_id)}
-                        >                            
-                          <div>
-                            <div className="text-sm font-medium"> {offering.category_name}</div>
-                          </div>
-                          <div className="w-4 h-4">
-                            {selectedCategoryId === offering.category_id ? (
-                              <CheckCircle className="h-4 w-4 text-primary" />
-                            ) : (
-                              <span>→</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}       
-                    </div>
-                    <div className="flex items-center mt-3 text-sm text-muted-foreground">
-                      <Star className="h-4 w-4 mr-1 fill-yellow-400 text-yellow-400" />
-                      <span>{reviews.length} reviews ({completedJobs} completed jobs)</span>
-                    </div>
-                  </CardContent>
-                </Card> */}
+            
 
                 <div className="flex flex-col justify-between space-y-4">
                   <div className="flex flex-col mb-4">

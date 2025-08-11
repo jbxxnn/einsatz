@@ -145,6 +145,7 @@ export default function BookingDetailsPage() {
   const [submittingReview, setSubmittingReview] = useState(false)
   const [hasReviewed, setHasReviewed] = useState(false)
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
+  const [conversationId, setConversationId] = useState<string | null>(null)
   useEffect(() => {
     const fetchBooking = async () => {
       setLoading(true)
@@ -196,6 +197,32 @@ export default function BookingDetailsPage() {
         .eq("id", user.id)
         .single()
       setProfile(profileData)
+      
+      // Fetch or create conversation for this booking
+      let { data: conversationData } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("booking_id", params.id)
+        .single()
+      
+      if (!conversationData) {
+        // Create conversation if it doesn't exist
+        const { data: newConversationData } = await supabase
+          .rpc('create_or_get_conversation', {
+            p_user_id: user.id,
+            p_recipient_id: data.client_id === user.id ? data.freelancer_id : data.client_id,
+            p_booking_id: params.id
+          })
+        
+        if (newConversationData) {
+          conversationData = { id: newConversationData.conversation_id }
+        }
+      }
+      
+      if (conversationData) {
+        setConversationId(conversationData.id)
+      }
+      
       setLoading(false)
     }
     fetchBooking()
@@ -653,10 +680,16 @@ export default function BookingDetailsPage() {
               <CardTitle>{t("booking.id.actions")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full justify-start">
+              <Link href={conversationId ? `/messages?conversation=${conversationId}` : `/messages`}>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                disabled={!conversationId}
+              >
                 <CustomMessagesIcon className="h-4 w-4 mr-2" />
-                {t("booking.id.sendMessage")}
+                {conversationId ? t("booking.id.sendMessage") : t("loading")}
               </Button>
+              </Link>
 
               {booking.status === "confirmed" && (
                 <Button variant="outline" className="w-full justify-start">
