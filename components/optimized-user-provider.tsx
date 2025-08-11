@@ -119,16 +119,22 @@ export function OptimizedUserProvider({ children }: { children: React.ReactNode 
 
     // Set a shorter timeout to prevent long loading states
     const timeoutId = setTimeout(() => {
-      if (isProfileLoading) {
+      // Only timeout if we're not still loading the session
+      if (isProfileLoading && !isSessionLoading) {
         setIsProfileLoading(false)
         console.warn("Profile loading timed out")
       }
-    }, 1000) // Reduced from 2s to 1s
+    }, 2000) // Increased to 2s to give more time for session restoration
 
     const fetchProfile = async () => {
       // Don't fetch if we already have cached data and it's recent
       if (cachedProfile) {
         clearTimeout(timeoutId)
+        return
+      }
+
+      // Don't fetch if we're still loading the session
+      if (isSessionLoading) {
         return
       }
 
@@ -158,7 +164,10 @@ export function OptimizedUserProvider({ children }: { children: React.ReactNode 
           }, 1000 * (retryCount + 1)) // Exponential backoff
         }
       } finally {
-        setIsProfileLoading(false)
+        // Only set loading to false if we're not still loading the session
+        if (!isSessionLoading) {
+          setIsProfileLoading(false)
+        }
         clearTimeout(timeoutId)
       }
     }

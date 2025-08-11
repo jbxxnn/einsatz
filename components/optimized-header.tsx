@@ -20,6 +20,7 @@ import LoadingSpinner from "./loading-spinner"
 import { Suspense } from "react"
 import LanguageSwitcher from "@/components/language-switcher"
 import { useTranslation } from "@/lib/i18n"
+import MessagesNotificationBadge from "@/components/messages-notification-badge"
 
 
 
@@ -135,7 +136,10 @@ function AuthNavLinks() {
           pathname === "/messages" ? "text-[#33CC99]" : "text-black"
         }`}
       >
-        <CustomMessagesIcon className="h-4 w-4 mr-2" />
+        <div className="relative">
+          <CustomMessagesIcon className="h-4 w-4 mr-2" />
+          <MessagesNotificationBadge />
+        </div>
         {t("header.messages")}
       </Link>
     </>

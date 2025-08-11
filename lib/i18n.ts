@@ -1,3 +1,5 @@
+"use client"
+
 import enMessages from '@/messages/en.json'
 import nlMessages from '@/messages/nl.json'
 import { useEffect, useState } from 'react'
@@ -14,16 +16,16 @@ const LANGUAGE_CHANGE_EVENT = 'languageChange'
 
 export function useTranslation() {
   const [mounted, setMounted] = useState(false)
-  const [locale, setLocale] = useState<Locale>('nl')
+  const [locale, setLocale] = useState<Locale>('en')
 
   useEffect(() => {
-    // Get the stored locale from localStorage or default to 'nl'
+    // Get the stored locale from localStorage or default to 'en'
     const storedLocale = localStorage.getItem('locale') as Locale
     if (storedLocale && (storedLocale === 'en' || storedLocale === 'nl')) {
       setLocale(storedLocale)
     } else {
-      // If no stored locale, set to 'nl' and store it
-      localStorage.setItem('locale', 'nl')
+      // If no stored locale, set to 'en' and store it
+      localStorage.setItem('locale', 'en')
     }
     setMounted(true)
 
