@@ -30,8 +30,8 @@
         "description": "Vind en boek lokale freelancers direct voor uw dringende behoeften"
       },
       "scheduling": {
-        "title": "Zekerheid binnen de Wet DBA",
-        "description": "Doorloop eenvoudig de DBA-check en gebruik het juiste contract. Zo werk je zonder risico op schijnzelfstandigheid en binnen de regels."
+        "title": "Flexibele Planning",
+        "description": "Plan werk dat past bij jouw tijdschema met eenvoudig boekingsbeheer."
       },
       "secure": {
         "title": "Veilig Platform",
@@ -605,16 +605,16 @@
   },
   "bookingform": {
     "stepDetails": "Boeking Details",
-    "stepDBA": "DBA Compliance",
+
     "stepPayment": "Betaling",
-    "dbaStepTitle": "DBA Compliance Vragenlijst",
-    "dbaStepDescription": "Vul de DBA compliance vragenlijst in om te voldoen aan de Nederlandse arbeidswetgeving.",
+
+
     "paymentStepTitle": "Betaling & Bevestiging",
     "paymentStepDescription": "Controleer je boeking details en ga door naar betaling.",
     "bookingSummary": "Boeking Samenvatting",
-    "dbaCompleted": "DBA Vragenlijst Voltooid",
-    "dbaCompletedDescription": "Je DBA compliance vragenlijst is succesvol voltooid.",
-    "continueToDBA": "Ga door naar DBA Vragenlijst",
+
+
+
     "continueToPayment": "Ga door naar Betaling",
     "proceedToPayment": "Ga door naar Betaling",
     "required": "Verplicht",
@@ -925,118 +925,31 @@
       "oneTime": "Eenmalig"
     }
   },
-  "dba": {
-    "freelancer": {
-      "title": "DBA Compliance Vragenlijst",
-      "description": "Vul deze vragenlijst in voor {category} om te voldoen aan de Nederlandse arbeidswetgeving",
-      "info": "Je antwoorden helpen bij het bepalen van je juridische classificatie als freelancer. Deze informatie wordt gebruikt om compliance rapporten voor je boekingen te genereren."
-    },
-    "client": {
-      "title": "DBA Compliance Vragen",
-      "description": "Beantwoord deze vragen om de DBA compliance check voor deze boeking te voltooien",
-      "info": "Je antwoorden, gecombineerd met het profiel van de freelancer, zullen een DBA compliance rapport voor deze boeking genereren."
-    },
-    "progress": {
-      "label": "Voortgang",
-      "questions": "vragen beantwoord"
-    },
-    "category": {
-      "completed": "Voltooid"
-    },
-    "answer": {
-      "yes": "Ja",
-      "no": "Nee"
-    },
-    "save": {
-      "button": "Antwoorden opslaan",
-      "saving": "Opslaan...",
-      "advance": {
-        "title": "Antwoorden opgeslagen & doorgegaan",
-        "description": "Je antwoorden zijn opgeslagen en je bent doorgestuurd naar de volgende onvolledige categorie: {category}"
-      },
-      "success": {
-        "title": "Antwoorden opgeslagen",
-        "description": "Je DBA antwoorden zijn succesvol opgeslagen"
-      },
-      "error": {
-        "title": "Opslaan mislukt",
-        "description": "Het opslaan van je antwoorden is mislukt. Probeer het opnieuw."
-      }
-    },
-    "complete": {
-      "button": "Vragenlijst voltooien",
-      "warning": "Beantwoord alle vragen voordat je de vragenlijst voltooit"
+  "contract": {
+    "title": "Service Contract",
+    "description": "Professionele service overeenkomst voor je boeking",
+    "generate": "Contract genereren",
+    "view": "Contract bekijken",
+    "download": "Contract downloaden",
+    "regenerate": "Contract opnieuw genereren",
+    "generating": "Genereren...",
+    "downloading": "Downloaden...",
+    "regenerating": "Opnieuw genereren...",
+    "noContract": "Geen Contract Beschikbaar",
+    "noContractDescription": "Genereer een professioneel service contract dat boekingsdetails bevat.",
+    "contractInfo": "Contract Informatie",
+    "contractNumber": "Contract Nummer",
+    "status": "Status",
+    "generated": "Gegenereerd",
+    "generatedOn": "Gegenereerd op",
+    "updateDescription": "Contract bijwerken? Genereer het opnieuw met de nieuwste informatie.",
+    "success": {
+      "title": "Contract Gegenereerd",
+      "description": "Je contract is succesvol gegenereerd en kan nu worden gedownload."
     },
     "error": {
-      "loading": {
-        "title": "Laadfout",
-        "description": "Fout bij het laden van DBA vragen"
-      },
-      "fetchingData": "Fout bij ophalen DBA gegevens",
-      "savingAnswers": "Fout bij opslaan DBA antwoorden",
-      "generatingReport": "Fout bij genereren DBA rapport"
-    },
-    "report": {
-      "title": "DBA Compliance Rapport",
-      "score": "Compliance Score",
-      "riskLevel": "Risico Niveau",
-      "safe": "Veilig (Onafhankelijk)",
-      "doubtful": "Twijfelachtig",
-      "highRisk": "Hoog Risico (Werknemer)",
-      "download": "Rapport downloaden",
-      "view": "Rapport bekijken"
-    },
-    "waiver": {
-      "title": "DBA Check Vrijstelling",
-      "description": "Je kunt ervoor kiezen om de DBA compliance check over te slaan, maar dit kan juridische gevolgen hebben.",
-      "confirm": "Ik begrijp het en wil de DBA check overslaan",
-      "reason": "Reden voor vrijstelling (optioneel)",
-      "legalWarning": {
-        "title": "Juridische Waarschuwing",
-        "paragraph1": "Door de DBA-compliance check over te slaan, erkent u dat u de mogelijke juridische gevolgen begrijpt.",
-        "paragraph2": "De DBA (Verklaring Arbeidsrelatie) is ontworpen om beide partijen te beschermen en te zorgen voor naleving van de Nederlandse arbeidswet.",
-        "paragraph3": "Het overslaan van deze check kan leiden tot juridische onzekerheid over de aard van uw arbeidsrelatie."
-      },
-      "whatYouSkip": {
-        "title": "Wat u overslaat:",
-        "item1": "DBA-compliance vragenlijst voor beide partijen",
-        "item2": "Geautomatiseerde risicobeoordeling en scoring",
-        "item3": "Professioneel DBA-compliance rapport",
-        "item4": "Juridische classificatie van de arbeidsrelatie"
-      },
-      "reason": "Reden voor vrijstelling",
-      "reasonPlaceholder": "Geef een reden voor het overslaan van de DBA check (optioneel)...",
-      "reasonHelp": "Deze informatie wordt opgeslagen voor compliance doeleinden en kan worden bekeken door autoriteiten.",
-      "understood": "Ik begrijp de juridische gevolgen van het overslaan van de DBA-compliance check en accepteer volledige verantwoordelijkheid voor deze beslissing.",
-      "confirm": "Ik bevestig dat ik de DBA-compliance check wil overslaan en door te gaan zonder deze juridische bescherming.",
-      "processing": "Verwerken...",
-      "skipDBA": "DBA Check Overslaan",
-      "option": {
-        "title": "DBA Check Overslaan",
-        "description": "U kunt ervoor kiezen om de DBA-compliance check voor deze boeking over te slaan.",
-        "warning": "Dit zal de juridische compliance beoordeling omzeilen. Overweeg de gevolgen zorgvuldig.",
-        "skipDBA": "DBA Check Overslaan"
-      },
-      "status": {
-        "title": "DBA Check Vrijgesteld",
-        "description": "De DBA-compliance check is vrijgesteld voor deze boeking.",
-        "waived": "DBA Check Vrijgesteld",
-        "signedOn": "Vrijstelling ondertekend op",
-        "reason": "Reden opgegeven",
-        "legalNotice": {
-          "title": "Juridische Kennisgeving",
-          "description": "Deze boeking gaat door zonder DBA-compliance verificatie. Beide partijen moeten ervoor zorgen dat ze de juridische gevolgen van hun arbeidsrelatie begrijpen."
-        }
-      },
-      "success": {
-        "title": "DBA Check Vrijgesteld",
-        "description": "De DBA-compliance check is succesvol vrijgesteld voor deze boeking."
-      },
-      "error": {
-        "title": "Fout",
-        "description": "Vrijstelling aanmaken mislukt. Probeer het opnieuw.",
-        "confirmationRequired": "Bevestig dat u de gevolgen begrijpt voordat u doorgaat."
-      }
+      "title": "Fout",
+      "description": "Er is een fout opgetreden bij het genereren van het contract. Probeer het opnieuw."
     }
   }
 }

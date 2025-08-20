@@ -15,17 +15,12 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/lib/toast"
 // import { toast } from "@/hooks/use-toast"
-import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2, FileText, ChevronRight, ChevronLeft, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2, FileText, ChevronRight, ChevronLeft, Shield } from "lucide-react"
 import { format, addDays } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
-import DBAQuestionnaireV2 from "./dba-questionnaire-v2"
-import DBADisputeResolver from "./dba-dispute-resolver"
-import DBAReportDisplay from "./dba-report-display"
-import DBAWaiverModal from "./dba-waiver-modal"
-import DBAWarningDialog from "./dba-warning-dialog"
-import { useDBAReport } from "@/hooks/use-dba-report"
-import { useDBAWaiver } from "@/hooks/use-dba-waiver"
+import { PreBookingDBAModal } from './pre-booking-dba-modal'
+
 
 
 
@@ -46,6 +41,40 @@ const CustomNoBookingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
         </svg>
 )
 
+const CustomRescheduleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  xmlns="http://www.w3.org/2000/svg" 
+  width="24" 
+  height="24" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path 
+    opacity=".4" d="M16 12.692v5.39c0 2.34-1.56 3.89-3.89 3.89H5.89c-2.33 0-3.89-1.55-3.89-3.89v-7.77c0-2.34 1.56-3.89 3.89-3.89h3.83c1.03 0 2.02.41 2.75 1.14l2.39 2.38c.73.73 1.14 1.72 1.14 2.75Z" 
+    fill="#15dda9">
+      </path>
+      <path d="M22 8.249v5.39c0 2.33-1.56 3.89-3.89 3.89H16v-4.84c0-1.03-.41-2.02-1.14-2.75l-2.39-2.38a3.89 3.89 0 0 0-2.75-1.14H8v-.56c0-2.33 1.56-3.89 3.89-3.89h3.83c1.03 0 2.02.41 2.75 1.14l2.39 2.39A3.89 3.89 0 0 1 22 8.249Z" 
+      fill="#15dda9">
+        </path>
+        </svg>
+)
+
+const CustomRescheduleIcon2 = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  xmlns="http://www.w3.org/2000/svg" 
+  width="24" 
+  height="24" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path 
+    opacity=".4" d="M16 12.692v5.39c0 2.34-1.56 3.89-3.89 3.89H5.89c-2.33 0-3.89-1.55-3.89-3.89v-7.77c0-2.34 1.56-3.89 3.89-3.89h3.83c1.03 0 2.02.41 2.75 1.14l2.39 2.38c.73.73 1.14 1.72 1.14 2.75Z" 
+    fill="#000000">
+      </path>
+      <path d="M22 8.249v5.39c0 2.33-1.56 3.89-3.89 3.89H16v-4.84c0-1.03-.41-2.02-1.14-2.75l-2.39-2.38a3.89 3.89 0 0 0-2.75-1.14H8v-.56c0-2.33 1.56-3.89 3.89-3.89h3.83c1.03 0 2.02.41 2.75 1.14l2.39 2.39A3.89 3.89 0 0 1 22 8.249Z" 
+      fill="#000000">
+        </path>
+        </svg>
+)
+
 type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
   job_offerings?: any[]
   is_available_now?: boolean
@@ -58,10 +87,7 @@ type AvailabilityBlock = {
   certainty_level: "guaranteed" | "tentative" | "unavailable"
 }
 
-type DBAAnswer = {
-  question_group_id: string
-  answer_value: string
-}
+
 
 interface BookingFormProps {
   freelancer: Profile
@@ -70,7 +96,7 @@ interface BookingFormProps {
   onBack: () => void
 }
 
-type BookingStep = 'details' | 'dba' | 'payment'
+type BookingStep = 'details' | 'payment'
 
 export default function BookingForm({ freelancer, selectedDate, selectedCategoryId, onBack }: BookingFormProps) {
   const router = useRouter()
@@ -91,20 +117,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [currentStep, setCurrentStep] = useState<BookingStep>('details')
   const [bookingId, setBookingId] = useState<string | null>(null)
   const [clientId, setClientId] = useState<string | null>(null)
-  const [dbaAnswers, setDbaAnswers] = useState<DBAAnswer[]>([])
+  const [showDBAModal, setShowDBAModal] = useState(false)
   const [dbaCompleted, setDbaCompleted] = useState(false)
-  const [dbaReport, setDbaReport] = useState<any>(null)
-  const [showWaiverModal, setShowWaiverModal] = useState(false)
-  const [waiverCreated, setWaiverCreated] = useState(false)
-  const [disputes, setDisputes] = useState<any[]>([])
-  const [disputesResolved, setDisputesResolved] = useState(false)
-  const [freelancerDBAStatus, setFreelancerDBAStatus] = useState<any>(null)
-  const [checkingFreelancerDBA, setCheckingFreelancerDBA] = useState(false)
-  const [showDBAWarning, setShowDBAWarning] = useState(false)
-  const [dbaWarningType, setDbaWarningType] = useState<'no_dba'>('no_dba')
+  const [dbaResult, setDbaResult] = useState<any>(null)
+
   const { t } = useTranslation()
-  const { generateReport } = useDBAReport()
-  const { hasWaiver } = useDBAWaiver()
 
   // Calculate valid end times based on selected start time
   const validEndTimes = useMemo(() => {
@@ -370,6 +387,153 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`
   }
 
+  const handleDBAComplete = async (result: any) => {
+    console.log('🎯 [BOOKING] DBA Complete called with result:', result)
+    setDbaResult(result)
+    setDbaCompleted(true)
+    
+    // Now create the booking since DBA is complete
+    console.log('🎯 [BOOKING] Creating booking with DBA...')
+    await createBookingWithDBA(result)
+  }
+
+  const createBookingWithDBA = async (dbaResult: any) => {
+    setLoading(true)
+
+    try {
+      // Get current user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        toast.error(t("bookingform.authenticationRequired"))
+        router.push("/login")
+        return
+      }
+
+      // Format date and times
+      const bookingDate = format(selectedDate!, "yyyy-MM-dd")
+      const startDateTime = new Date(`${bookingDate}T${selectedStartTime}:00`)
+      const endDateTime = new Date(`${bookingDate}T${selectedEndTime}:00`)
+
+      // Create booking
+      const { data, error } = await supabase
+        .from("bookings")
+        .insert({
+          client_id: user.id,
+          freelancer_id: freelancer.id,
+          title: categoryName
+            ? `${categoryName} ${t("bookingform.service")} with ${freelancer.first_name} ${freelancer.last_name}`
+            : `${t("bookingform.booking")} with ${freelancer.first_name} ${freelancer.last_name}`,
+          description,
+          start_time: startDateTime.toISOString(),
+          end_time: endDateTime.toISOString(),
+          location,
+          hourly_rate: hourlyRate || freelancer.hourly_rate || 0,
+          total_amount: calculateTotal(),
+          status: "pending",
+          payment_status: "unpaid",
+          category_id: selectedCategoryId,
+          payment_method: paymentMethod,
+        })
+        .select()
+
+      if (error) {
+        throw error
+      }
+
+      const newBookingId = data[0].id
+      setBookingId(newBookingId)
+      setClientId(user.id)
+
+      // Submit DBA answers to the database
+      console.log('🎯 [BOOKING] Submitting client DBA for booking:', newBookingId)
+      await submitClientDBA(newBookingId, dbaResult)
+      
+      // Auto-proceed to payment
+      toast.success('Booking created successfully! Proceeding to payment...')
+      setTimeout(() => {
+        setCurrentStep('payment')
+      }, 1000)
+      
+    } catch (error: any) {
+      toast.error(error.message || t("bookingform.somethingWentWrong"))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const submitClientDBA = async (bookingId: string, dbaResult: any) => {
+    try {
+      const response = await fetch('/api/client-dba/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          answers: dbaResult.answers
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit DBA assessment')
+      }
+
+      const serverResult = await response.json()
+      console.log('🐛 [CLIENT DBA DEBUG] Server result:', serverResult)
+      console.log('🐛 [CLIENT DBA DEBUG] Assessment data:', serverResult.assessment)
+      console.log('🐛 [CLIENT DBA DEBUG] Debug info:', serverResult.debug)
+      console.log('🐛 [CLIENT DBA DEBUG] Server debug:', serverResult.debug_server)
+      
+      // Update the DBA result with server-calculated values
+      const updatedResult = {
+        ...dbaResult,
+        combined_score: serverResult.assessment?.combined_score,
+        freelancer_score: serverResult.assessment?.freelancer_total_score,
+        risk_level: serverResult.assessment?.risk_level,
+        debug: serverResult.debug
+      }
+      
+      console.log('🐛 [CLIENT DBA DEBUG] Updated result:', updatedResult)
+      setDbaResult(updatedResult)
+      
+      return serverResult
+    } catch (error) {
+      console.error('Error submitting DBA:', error)
+      // Don't throw error here as booking is already created
+      return null
+    }
+  }
+
+  const handleOpenDBAModal = () => {
+    // Validate required fields before opening DBA modal
+    if (!selectedDate) {
+      toast.error(t("bookingform.pleaseSelectADate"))
+      return
+    }
+
+    if (!selectedStartTime || !selectedEndTime) {
+      toast.error(t("bookingform.pleaseSelectBothStartAndEndTimes"))
+      return
+    }
+
+    if (!location.trim()) {
+      toast.error("Please enter a location before starting DBA assessment")
+      return
+    }
+
+    if (!description.trim()) {
+      toast.error("Please enter a job description before starting DBA assessment")
+      return
+    }
+
+    setShowDBAModal(true)
+  }
+
+
+
   const handleCreateBooking = async () => {
     if (!selectedDate) {
       toast.error(t("bookingform.pleaseSelectADate"))
@@ -429,37 +593,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       setBookingId(data[0].id)
       setClientId(user.id)
       
-      // Check freelancer DBA status before proceeding to DBA step
-      const dbaStatus = await checkFreelancerDBAStatus()
-      
-      console.log('🔍 [Booking Form] DBA Status Check Results:', {
-        dbaStatus,
-        selectedCategoryId,
-        freelancerId: freelancer.id
-      })
-      
-      if (dbaStatus) {
-        console.log('🔍 [Booking Form] DBA Logic:', {
-          status: dbaStatus.status,
-          hasDBA: dbaStatus.has_dba
-        })
-        
-        if (dbaStatus.status === 'no_dba') {
-          // No DBA at all - show warning dialog
-          console.log('🔍 [Booking Form] Showing no_dba warning')
-          setDbaWarningType('no_dba')
-          setShowDBAWarning(true)
-          return // Don't proceed until user responds to dialog
-        } else {
-          // Has V2 DBA - proceed normally
-          console.log('🔍 [Booking Form] Proceeding to DBA step (V2 ready)')
-          setCurrentStep('dba')
-        }
-      } else {
-        // No DBA status - proceed normally (fallback)
-        console.log('🔍 [Booking Form] Proceeding to DBA step (no status)')
-        setCurrentStep('dba')
-      }
+      // Proceed directly to payment step
+      setCurrentStep('payment')
       
       toast.success(t("bookingform.bookingCreated"))
     } catch (error: any) {
@@ -469,168 +604,21 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     }
   }
 
-  const handleDBAComplete = async (answers: DBAAnswer[]) => {
-    setDbaAnswers(answers)
-    setDbaCompleted(true)
-    
-    // Generate DBA report (V2)
-    if (bookingId && clientId && selectedCategoryId) {
-      try {
-        const apiEndpoint = '/api/dba/reports/generate'
-        
-        const response = await fetch(apiEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bookingId,
-            freelancerId: freelancer.id,
-            clientId,
-            jobCategoryId: selectedCategoryId
-          })
-        })
-        
-        const data = await response.json()
-        
-        if (!response.ok) {
-          // Handle no freelancer DBA scenario
-          if (data.has_freelancer_dba === false) {
-            toast.warning(data.message || "Freelancer has not completed DBA assessment")
-            
-            // Show risk warning and allow proceeding anyway
-            const proceed = confirm(
-              `⚠️ DBA Risk Warning\n\n${data.message}\n\nWould you like to proceed with the booking anyway?\n\n• Click "OK" to continue at your own risk\n• Click "Cancel" to contact the freelancer first`
-            )
-            
-            if (proceed) {
-              setDbaReport({ 
-                score: 0, 
-                risk_level: 'high_risk', 
-                no_freelancer_dba: true,
-                message: 'Booking created without DBA assessment - High risk'
-              })
-              setDbaCompleted(true)
-              setCurrentStep('payment')
-              toast.info("Proceeding without DBA assessment - High risk booking")
-            } else {
-              setCurrentStep('details')
-              toast.info("Contact the freelancer to complete their DBA assessment first")
-            }
-            return
-          } else {
-            throw new Error(data.error || 'Failed to generate DBA report')
-          }
-        }
-        
-        if (data.report) {
-          setDbaReport(data.report)
-          
-          // Handle V2 disputes if any
-          if (data.disputes?.length > 0) {
-            setDisputes(data.disputes)
-            setDisputesResolved(false)
-            toast.warning(`DBA report generated with ${data.disputes.length} dispute(s) requiring attention`)
-          } else {
-            setDisputesResolved(true)
-            toast.success(`Compliance score: ${data.report.score}% - Risk level: ${data.report.risk_level}`)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to generate DBA report:', error)
-        toast.error("DBA report could not be generated, but you can continue with payment.")
-      }
-    }
-    
-    // Only proceed to payment if no disputes or disputes are resolved
-    if (!disputesResolved || disputes.length === 0) {
-      setCurrentStep('payment')
-    }
-  }
 
-  const handleDBASave = (answers: DBAAnswer[]) => {
-    setDbaAnswers(answers)
-  }
 
-  const checkFreelancerDBAStatus = async () => {
-    if (!selectedCategoryId) return null
-    
-    console.log('🔍 [Booking Form] Starting DBA status check for:', {
-      freelancerId: freelancer.id,
-      jobCategoryId: selectedCategoryId
-    })
-    
-    setCheckingFreelancerDBA(true)
-    try {
-      const response = await fetch('/api/dba/check-freelancer-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          freelancerId: freelancer.id,
-          jobCategoryId: selectedCategoryId
-        })
-      })
-      
-      console.log('🔍 [Booking Form] DBA status API response:', {
-        status: response.status,
-        ok: response.ok
-      })
-      
-      const data = await response.json()
-      console.log('🔍 [Booking Form] DBA status API data:', data)
-      
-      setFreelancerDBAStatus(data)
-      return data
-    } catch (error) {
-      console.error('🚨 [Booking Form] Failed to check freelancer DBA status:', error)
-      return null
-    } finally {
-      setCheckingFreelancerDBA(false)
-    }
-  }
 
-  const handleWaiverCreated = () => {
-    setWaiverCreated(true)
-    setDbaCompleted(true)
-    // Skip to payment step after waiver
-    setCurrentStep('payment')
-  }
 
-  const handleDBAWarningProceed = () => {
-    setShowDBAWarning(false)
-    
-    // No DBA - proceed with high risk warning
-    setDbaReport({ 
-      score: 0, 
-      risk_level: 'high_risk', 
-      no_freelancer_dba: true,
-      message: 'Booking created without DBA assessment - High risk'
-    })
-    setDbaCompleted(true)
-    setCurrentStep('payment')
-    toast.warning("Proceeding without DBA assessment - High risk booking")
-  }
 
-  const handleDBAWarningCancel = () => {
-    setShowDBAWarning(false)
-    toast.info("Contact the freelancer to complete their DBA assessment first")
-    // Stay on current step (details)
-  }
 
-  const checkForExistingWaiver = async () => {
-    if (bookingId) {
-      const hasExistingWaiver = await hasWaiver(bookingId)
-      if (hasExistingWaiver) {
-        setWaiverCreated(true)
-        setDbaCompleted(true)
-      }
-    }
-  }
 
-  // Check for existing waiver when booking is created
-  useEffect(() => {
-    if (bookingId) {
-      checkForExistingWaiver()
-    }
-  }, [bookingId])
+
+
+
+
+
+
+
+
 
 
 
@@ -643,8 +631,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
   const getStepProgress = () => {
     switch (currentStep) {
-      case 'details': return 33
-      case 'dba': return 66
+      case 'details': return 50
       case 'payment': return 100
       default: return 0
     }
@@ -653,7 +640,6 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const getStepTitle = () => {
     switch (currentStep) {
       case 'details': return t("bookingform.stepDetails")
-      case 'dba': return t("bookingform.stepDBA")
       case 'payment': return t("bookingform.stepPayment")
       default: return ''
     }
@@ -803,6 +789,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                 {t("bookingform.duration")}: {calculateHours()} {calculateHours() === 1 ? t("bookingform.hour") : t("bookingform.hours")}
               </div>
             )}
+
+
           </div>
         )}
       </div>
@@ -832,6 +820,91 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           onChange={(e) => setDescription(e.target.value)}
           required
         />
+      </div>
+
+      {/* DBA Check Button */}
+      <div className="space-y-3 pt-4 border-t">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CustomRescheduleIcon className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium">DBA Compliance Check</span>
+          </div>
+          {dbaCompleted && (
+            <Badge variant="default" className="text-xs">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Completed
+            </Badge>
+          )}
+        </div>
+        
+        <p className="text-xs text-gray-600">
+          Complete your DBA assessment to ensure legal compliance for this working relationship.
+        </p>
+        
+        <Button
+          type="button"
+          onClick={handleOpenDBAModal}
+          variant={dbaCompleted ? "outline" : "default"}
+          size="sm"
+          className="w-full"
+        >
+          <CustomRescheduleIcon2 className="h-4 w-4 mr-2" />
+          {dbaCompleted ? 'Review DBA Assessment' : 'Complete DBA Check'}
+        </Button>
+        
+        {/* Debug Button */}
+        <Button
+          type="button"
+          onClick={async () => {
+            console.log('🔍 [DEBUG] Testing freelancer DBA access...')
+            try {
+              const response = await fetch(`/api/debug/freelancer-dba?freelancer_id=${freelancer.id}&job_category_id=${selectedCategoryId}`)
+              const result = await response.json()
+              console.log('🔍 [DEBUG] Test results:', result)
+              console.log('🔍 [DEBUG] Direct access - All completions:', result.debug_results?.direct_access?.all_completions)
+              console.log('🔍 [DEBUG] Direct access - Specific freelancer:', result.debug_results?.direct_access?.specific_freelancer)
+              console.log('🔍 [DEBUG] Direct access - Category specific:', result.debug_results?.direct_access?.category_specific)
+              console.log('🔍 [DEBUG] RPC access data:', result.debug_results?.rpc_access?.data)
+              console.log('🔍 [DEBUG] Current user:', result.debug_results?.current_user)
+              
+              // Show summary in toast
+              const rpcData = result.debug_results?.rpc_access?.data
+              const summary = `
+                RPC Completions: ${rpcData?.all_completions_count || 0}
+                RPC Answers: ${rpcData?.all_answers_count || 0}
+                Direct Completions: ${result.debug_results?.direct_access?.all_completions?.count || 0}
+              `
+              toast.success(`Debug Complete: ${summary}`)
+            } catch (error) {
+              console.error('🔍 [DEBUG] Test failed:', error)
+              toast.error("Debug Test Failed - Check console for error details")
+            }
+          }}
+          variant="secondary"
+          size="sm"
+          className="mt-2 w-full"
+        >
+          🔍 Debug Freelancer DBA Access
+        </Button>
+
+                        {dbaCompleted && dbaResult && (
+                  <div className="text-xs p-2 rounded-md border bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <span>Risk Level:</span>
+                      <Badge 
+                        variant={dbaResult.risk_level === 'safe' ? 'default' : 'destructive'}
+                        className="text-xs"
+                      >
+                        {dbaResult.risk_level.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                    </div>
+                    <div className="mt-1 text-gray-600">
+                      {dbaResult.combined_score ? 
+                        `Combined Score: ${dbaResult.combined_score} points` : 
+                        `Your Score: ${dbaResult.total_score} points`}
+                    </div>
+                  </div>
+                )}
       </div>
 
       <div className="border-t pt-4 mt-4">
@@ -890,9 +963,9 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       <Button
         type="submit"
         className="w-full"
-        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || paymentMethod === "online"}
+        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || paymentMethod === "online" || !!bookingId}
       >
-        {loading ? t("bookingform.processing") : t("bookingform.continueToDBA")}
+        {loading ? t("bookingform.processing") : bookingId ? 'Booking Created - Complete DBA Above' : t("bookingform.continueToPayment")}
       </Button>
 
       <p className="text-xs text-center text-muted-foreground">
@@ -901,132 +974,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     </form>
   )
 
-  const renderDBAStep = () => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <CustomNoBookingsIcon className="h-5 w-5 text-primary" />
-          <h2 className="text-sm font-semibold">{t("bookingform.dbaStepTitle")}</h2>
-        </div>
-        <Badge variant="secondary">{t("bookingform.required")}</Badge>
-      </div>
-      
-      <p className="text-xs text-black">
-        {t("bookingform.dbaStepDescription")}
-      </p>
 
-      {/* Waiver Option */}
-      {bookingId && clientId && !waiverCreated && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
-            <div className="space-y-2">
-              <h4 className="font-semibold text-orange-500">
-                {t("dba.waiver.option.title")}
-              </h4>
-              <p className="text-xs text-orange-500">
-                {t("dba.waiver.option.warning")}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowWaiverModal(true)}
-                className="border-orange-500 text-orange-700 bg-orange-200 hover:bg-orange-100 text-xs"
-              >
-                {t("dba.waiver.option.skipDBA")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DBA Questionnaire */}
-      {bookingId && clientId && !waiverCreated && (
-        <>
-          <DBAQuestionnaireV2
-            userType="client"
-            bookingId={bookingId}
-            clientId={clientId}
-            freelancerId={freelancer.id}
-            jobCategoryId={selectedCategoryId || undefined}
-            onComplete={handleDBAComplete as any}
-            onSave={handleDBASave as any}
-          />
-          
-          {/* V2 Dispute Resolution */}
-          {disputes.length > 0 && !disputesResolved && (
-            <DBADisputeResolver
-              userType="client"
-              bookingId={bookingId}
-              disputes={disputes}
-              // onResolved={() => setDisputesResolved(true)}
-            />
-          )}
-        </>
-      )}
-
-      {/* Waiver Status */}
-      {waiverCreated && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-5 w-5 text-orange-600" />
-            <div>
-              <h4 className="font-semibold text-orange-800">
-                {t("dba.waiver.status.title")}
-              </h4>
-              <p className="text-sm text-orange-700">
-                {t("dba.waiver.status.description")}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex gap-3 pt-4">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentStep('details')}
-          className="flex items-center gap-2"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          {t("bookingform.back")}
-        </Button>
-        
-        <Button
-          onClick={() => setCurrentStep('payment')}
-          disabled={!dbaCompleted}
-          className="flex items-center gap-2 ml-auto"
-        >
-          {t("bookingform.continueToPayment")}
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
 
   const renderPaymentStep = () => (
     <div className="space-y-4">
-      {/* DBA Report Display */}
-      {bookingId && clientId && selectedCategoryId && (
-        <DBAReportDisplay
-          bookingId={bookingId}
-          freelancerId={freelancer.id}
-          clientId={clientId}
-          jobCategoryId={selectedCategoryId}
-          bookingDetails={{
-            title: categoryName || 'Service',
-            description: description,
-            startDate: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
-            endDate: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
-            total: calculateTotal()
-          }}
-          freelancerDetails={{
-            name: `${freelancer.first_name} ${freelancer.last_name}`,
-            email: freelancer.email
-          }}
-          onReportGenerated={setDbaReport}
-        />
-      )}
+
 
       <div className="flex items-center gap-2">
         <CheckCircle className="h-5 w-5 text-green-500" />
@@ -1076,7 +1028,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       <div className="flex gap-3 pt-4">
         <Button
           variant="outline"
-          onClick={() => setCurrentStep('dba')}
+          onClick={() => setCurrentStep('details')}
           className="flex items-center gap-2"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -1106,7 +1058,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">{getStepTitle()}</h2>
-            <Badge variant="outline">Step {currentStep === 'details' ? 1 : currentStep === 'dba' ? 2 : 3} of 3</Badge>
+            <Badge variant="outline">Step {currentStep === 'details' ? 1 : 2} of 2</Badge>
           </div>
           <Progress value={getStepProgress()} className="h-2" />
         </div>
@@ -1114,25 +1066,23 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       {/* Step Content */}
       {currentStep === 'details' && renderDetailsStep()}
-      {currentStep === 'dba' && renderDBAStep()}
       {currentStep === 'payment' && renderPaymentStep()}
 
-      {/* Waiver Modal */}
-      <DBAWaiverModal
-        isOpen={showWaiverModal}
-        onClose={() => setShowWaiverModal(false)}
-        bookingId={bookingId || ''}
-        onWaiverCreated={handleWaiverCreated}
+      {/* DBA Modal */}
+      <PreBookingDBAModal
+        isOpen={showDBAModal}
+        onClose={() => setShowDBAModal(false)}
+        freelancerId={freelancer.id}
+        jobCategoryId={selectedCategoryId || ''}
+        onComplete={handleDBAComplete}
       />
-
-      <DBAWarningDialog
-        isOpen={showDBAWarning}
-        onClose={() => setShowDBAWarning(false)}
-        onProceed={handleDBAWarningProceed}
-        onCancel={handleDBAWarningCancel}
-        type={dbaWarningType}
-        freelancerName={freelancer.first_name || 'The freelancer'}
-      />
+      
+      {/* Debug info */}
+      {process.env.NODE_ENV === 'development' && showDBAModal && (
+        <div className="fixed bottom-4 left-4 bg-black text-white p-2 text-xs rounded z-50">
+          Debug: selectedCategoryId = {selectedCategoryId || 'null'}, freelancerId = {freelancer.id}
+        </div>
+      )}
     </div>
   )
 }

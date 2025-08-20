@@ -15,7 +15,7 @@ import type { Database } from "@/lib/database.types"
 import { toast } from "@/lib/toast"
 import { useTranslation } from "@/lib/i18n"
 import ContractDisplay from "@/components/contract-display"
-import DBAWaiverDisplay from "@/components/dba-waiver-display"
+
 import OptimizedHeader from "@/components/optimized-header"
 import ModernSidebarNav from "@/components/modern-sidebar-nav"
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar"
@@ -661,17 +661,7 @@ export default function BookingDetailsPage() {
 
          
 
-          {/* DBA Waiver Section */}
-          {booking.status === "confirmed" && (
-            <DBAWaiverDisplay
-              bookingId={booking.id}
-              userType={userType || 'client'}
-              onWaiverCreated={() => {
-                // Refresh the page to show updated status
-                window.location.reload()
-              }}
-            />
-          )}
+
         </div>
 
         <div className="md:col-span-1">

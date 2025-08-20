@@ -30,8 +30,8 @@
         "description": "Find and book local freelancers instantly for your urgent needs"
       },
       "scheduling": {
-        "title": "Security within the DBA Act",
-        "description": "Easily complete the DBA check and use the appropriate contract. This way you work without the risk of being a pseudo-self-employed and within the rules."
+        "title": "Flexible Scheduling",
+        "description": "Schedule work that fits your timeline with easy booking management."
       },
       "secure": {
         "title": "Secure Platform",
@@ -602,16 +602,16 @@
   },
   "bookingform": {
     "stepDetails": "Booking Details",
-    "stepDBA": "DBA Compliance",
+
     "stepPayment": "Payment",
-    "dbaStepTitle": "DBA Compliance Questionnaire",
-    "dbaStepDescription": "Complete the DBA compliance questionnaire to ensure legal compliance with Dutch labor law.",
+
+
     "paymentStepTitle": "Payment & Confirmation",
     "paymentStepDescription": "Review your booking details and proceed to payment.",
     "bookingSummary": "Booking Summary",
-    "dbaCompleted": "DBA Questionnaire Completed",
-    "dbaCompletedDescription": "Your DBA compliance questionnaire has been completed successfully.",
-    "continueToDBA": "Continue to DBA Questionnaire",
+
+
+
     "continueToPayment": "Continue to Payment",
     "proceedToPayment": "Proceed to Payment",
     "required": "Required",
@@ -922,121 +922,10 @@
       "oneTime": "One-time"
     }
   },
-  "dba": {
-    "freelancer": {
-      "title": "DBA Compliance Questionnaire",
-      "description": "Complete this questionnaire for {category} to ensure compliance with Dutch labor law",
-      "info": "Your answers help determine your legal classification as a freelancer. This information is used to generate compliance reports for your bookings."
-    },
-    "client": {
-      "title": "DBA Compliance Questions",
-      "description": "Answer these questions to complete the DBA compliance check for this booking",
-      "info": "Your answers, combined with the freelancer's profile, will generate a DBA compliance report for this booking."
-    },
-    "progress": {
-      "label": "Progress",
-      "questions": "questions answered"
-    },
-    "category": {
-      "completed": "Completed"
-    },
-    "answer": {
-      "yes": "Yes",
-      "no": "No"
-    },
-    "save": {
-      "button": "Save Answers",
-      "saving": "Saving...",
-      "advance": {
-        "title": "Answers Saved & Advanced",
-        "description": "Your answers have been saved and you've been moved to the next incomplete category: {category}"
-      },
-      "success": {
-        "title": "Answers Saved",
-        "description": "Your DBA answers have been saved successfully"
-      },
-      "error": {
-        "title": "Save Failed",
-        "description": "Failed to save your answers. Please try again."
-      }
-    },
-    "complete": {
-      "button": "Complete Questionnaire",
-      "warning": "Please answer all questions before completing the questionnaire"
-    },
-    "error": {
-      "loading": {
-        "title": "Loading Error",
-        "description": "Failed to load DBA questions"
-      },
-      "fetchingData": "Error fetching DBA data",
-      "savingAnswers": "Error saving DBA answers",
-      "generatingReport": "Error generating DBA report"
-    },
-    "report": {
-      "title": "DBA Compliance Report",
-      "score": "Compliance Score",
-      "riskLevel": "Risk Level",
-      "safe": "Safe (Independent)",
-      "doubtful": "Doubtful",
-      "highRisk": "High Risk (Employee)",
-      "download": "Download Report",
-      "view": "View Report"
-    },
-    "waiver": {
-      "title": "DBA Check Waiver",
-      "description": "You can choose to skip the DBA compliance check, but this may have legal implications.",
-      "legalWarning": {
-        "title": "Legal Warning",
-        "paragraph1": "By skipping the DBA compliance check, you acknowledge that you understand the potential legal implications.",
-        "paragraph2": "The DBA (Declaration of Labor Relations) is designed to protect both parties and ensure compliance with Dutch labor law.",
-        "paragraph3": "Skipping this check may result in legal uncertainty about the nature of your working relationship."
-      },
-      "whatYouSkip": {
-        "title": "What you're skipping:",
-        "item1": "DBA compliance questionnaire for both parties",
-        "item2": "Automated risk assessment and scoring",
-        "item3": "Professional DBA compliance report",
-        "item4": "Legal classification of the working relationship"
-      },
-      "reason": "Reason for waiver",
-      "reasonPlaceholder": "Please provide a reason for skipping the DBA check (optional)...",
-      "reasonHelp": "This information is stored for compliance purposes and may be reviewed by authorities.",
-      "understood": "I understand the legal implications of skipping the DBA compliance check and accept full responsibility for this decision.",
-      "confirm": "I confirm that I want to skip the DBA compliance check and proceed without this legal protection.",
-      "processing": "Processing...",
-      "skipDBA": "Skip DBA Check",
-      "option": {
-        "title": "Skip DBA Check",
-        "description": "You can choose to skip the DBA compliance check for this booking.",
-        "warning": "This will bypass the legal compliance assessment. Consider the implications carefully.",
-        "skipDBA": "Skip DBA Check"
-      },
-      "status": {
-        "title": "DBA Check Waived",
-        "description": "The DBA compliance check has been waived for this booking.",
-        "waived": "DBA Check Waived",
-        "signedOn": "Waiver signed on",
-        "reason": "Reason provided",
-        "legalNotice": {
-          "title": "Legal Notice",
-          "description": "This booking proceeds without DBA compliance verification. Both parties should ensure they understand the legal implications of their working relationship."
-        }
-      },
-      "success": {
-        "title": "DBA Check Waived",
-        "description": "The DBA compliance check has been successfully waived for this booking."
-      },
-      "error": {
-        "title": "Error",
-        "description": "Failed to create waiver. Please try again.",
-        "confirmationRequired": "Please confirm that you understand the implications before proceeding."
-      }
-    }
-  },
+
   "contract": {
     "title": "Service Contract",
-    "description": "Professional service agreement with DBA compliance information",
+    "description": "Professional service agreement for your booking",
     "generate": "Generate Contract",
     "view": "View Contract",
     "download": "Download Contract",
@@ -1045,12 +934,12 @@
     "downloading": "Downloading...",
     "regenerating": "Regenerating...",
     "noContract": "No Contract Available",
-    "noContractDescription": "Generate a professional service contract that includes booking details and DBA compliance information.",
+    "noContractDescription": "Generate a professional service contract that includes booking details.",
     "contractInfo": "Contract Information",
     "contractNumber": "Contract Number",
     "status": "Status",
     "generated": "Generated",
-    "dbaCompliance": "DBA Compliance",
+
     "included": "Included",
     "generatedOn": "Generated",
     "updateDescription": "Need to update the contract? Regenerate it with the latest information.",

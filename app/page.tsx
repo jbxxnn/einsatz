@@ -209,7 +209,7 @@ export default function Home() {
         </div>
       </section> */}
 
-        {/* // Our Team Section */}
+        {/* Freelancers */}
       <section className="w-full py-20 bg-gray-50">
         <div className="container mx-auto px-8">
           // Section Header

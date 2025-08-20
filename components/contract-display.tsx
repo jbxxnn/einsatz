@@ -8,12 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { FileText, Download, Eye, Loader } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
 import { useContract } from '@/hooks/use-contract'
-import { useDBAReport } from '@/hooks/use-dba-report'
 import { toast } from '@/hooks/use-toast'
 import ContractPDFViewer from './contract-pdf'
 import type { Database } from '@/lib/database.types'
 
-type DBAReport = Database['public']['Tables']['dba_reports']['Row']
+
 type Booking = Database['public']['Tables']['bookings']['Row'] & {
   freelancer: Database['public']['Tables']['profiles']['Row']
   client: Database['public']['Tables']['profiles']['Row']
@@ -47,33 +46,15 @@ export default function ContractDisplay({
 }: ContractDisplayProps) {
   const { t } = useTranslation()
   const { generateContract, downloadContract, loading: contractLoading } = useContract()
-  const { getReportByBooking, loading: reportLoading } = useDBAReport()
-  const [dbaReport, setDbaReport] = useState<DBAReport | null>(null)
+  const [dbaReport, setDbaReport] = useState<any>(null)
   const [showContract, setShowContract] = useState(false)
   const [contractNumber, setContractNumber] = useState<string>('')
   const [downloading, setDownloading] = useState(false)
 
-  // Load existing DBA report on mount
-  useEffect(() => {
-    loadDBAReport()
-  }, [booking.id])
-
-  const loadDBAReport = async () => {
-    const report = await getReportByBooking(booking.id)
-    if (report) {
-      setDbaReport(report)
-      // If report has contract URL, extract contract number
-      if (report.contract_pdf_url) {
-        const urlParts = report.contract_pdf_url.split('/')
-        const filename = urlParts[urlParts.length - 1]
-        const contractNum = filename.replace('.pdf', '')
-        setContractNumber(contractNum)
-      }
-    }
-  }
+  // Note: DBA functionality removed - contracts now generate without DBA reports
 
   const handleGenerateContract = async () => {
-    const result = await generateContract(booking, dbaReport || undefined)
+    const result = await generateContract(booking, undefined)
     
     if (result.success) {
       setContractNumber(result.contractNumber)
@@ -98,7 +79,7 @@ export default function ContractDisplay({
   const handleDownloadContract = async () => {
     setDownloading(true)
     try {
-      await downloadContract(booking, dbaReport || undefined)
+      await downloadContract(booking, undefined)
     } finally {
       setDownloading(false)
     }
@@ -114,17 +95,7 @@ export default function ContractDisplay({
     })
   }
 
-  if (reportLoading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center py-8">
-            <Loader className="h-8 w-8 animate-spin" />
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
+
 
   return (
     <div className="space-y-6 mt-4">
@@ -232,14 +203,7 @@ export default function ContractDisplay({
                     {t('contract.generated')}
                   </Badge>
                 </div>
-                {dbaReport && (
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">{t('contract.dbaCompliance')}:</span>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                      {t('contract.included')}
-                    </Badge>
-                  </div>
-                )}
+
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">{t('contract.generatedOn')}:</span>
                   <span className="text-sm">{formatDate(new Date().toISOString())}</span>
@@ -291,7 +255,7 @@ export default function ContractDisplay({
           {contractNumber && (
             <ContractPDFViewer
               booking={booking}
-              dbaReport={dbaReport || undefined}
+              dbaReport={undefined}
               contractNumber={contractNumber}
             />
           )}
