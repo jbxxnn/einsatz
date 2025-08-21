@@ -169,14 +169,14 @@ export default function ContractDisplay({
           <Card>
             <CardContent className="p-6">
               <div className="flex flex-col gap-4 justify-center">
-                <Button
+                {/* <Button
                   variant="default"
                   onClick={handleViewContract}
                   className="flex items-center gap-2"
                 >
                   <Eye className="h-4 w-4" />
                   {t('contract.view')}
-                </Button>
+                </Button> */}
                 <Button
                   onClick={handleDownloadContract}
                   disabled={downloading}
