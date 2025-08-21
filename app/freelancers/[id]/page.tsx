@@ -540,7 +540,7 @@ export default function FreelancerProfile() {
                                 categoryId={selectedCategoryId}
                                 onSelectDate={setSelectedDate}
                               />
-                            </div>
+                            </div> 
                           ) : (
                             <div className="text-center py-8">
                               <p className="text-black text-sm">{t("freelancer.selectServiceFirst")}</p>
