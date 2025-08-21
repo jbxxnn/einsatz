@@ -19,3 +19,4 @@ export function getRiskLevelDescription(riskLevel: DBARiskLevel, locale: string)
   return descriptions[riskLevel]?.[locale as keyof typeof descriptions[riskLevel]] || descriptions.safe.en
 }
 
+

@@ -1,7 +1,7 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import puppeteer from 'puppeteer'
+import { jsPDF } from 'jspdf'
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,149 +89,89 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Contract PDF generator using Puppeteer
+// Contract PDF generator using jsPDF (serverless-compatible)
 async function generateContractPDF(data: {
   booking: any
   contractNumber: string
   locale: string
 }): Promise<Buffer> {
-  let browser: any = null
   try {
     const isDutch = data.locale === 'nl'
     
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body { font-family: Arial, sans-serif; margin: 40px; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
-          .title { font-size: 24px; font-weight: bold; color: #1f2937; margin-bottom: 10px; }
-          .subtitle { font-size: 16px; color: #6b7280; margin-bottom: 5px; }
-          .date { font-size: 12px; color: #9ca3af; }
-          .section { margin-bottom: 25px; }
-          .sectionTitle { font-size: 18px; font-weight: bold; color: #1f2937; margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
-          .scoreCard { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb; }
-          .scoreRow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-          .scoreLabel { font-size: 14px; color: #374151; font-weight: bold; }
-          .scoreValue { font-size: 16px; font-weight: bold; }
-          .questionItem { margin-bottom: 15px; padding: 15px; background-color: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; }
-          .questionText { font-size: 12px; color: #1f2937; margin-bottom: 8px; font-weight: bold; }
-          .answerText { font-size: 11px; color: #6b7280; font-style: italic; }
-          .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #9ca3af; text-align: center; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="title">${isDutch ? 'Service Overeenkomst' : 'Service Agreement'}</div>
-          <div class="subtitle">${isDutch ? 'Onafhankelijke Aannemer Overeenkomst' : 'Independent Contractor Agreement'}</div>
-          <div class="date">Contract #${data.contractNumber}</div>
-          <div class="date">${isDutch ? 'Gegenereerd op' : 'Generated on'} ${new Date().toLocaleDateString(isDutch ? 'nl-NL' : 'en-US')}</div>
-        </div>
-        
-        <div class="section">
-          <div class="sectionTitle">${isDutch ? 'Partijen' : 'Parties'}</div>
-          
-          <div class="scoreCard">
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Opdrachtgever' : 'Client'}</span>
-              <span class="scoreValue">${data.booking.profiles?.first_name} ${data.booking.profiles?.last_name}</span>
-            </div>
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Freelancer' : 'Freelancer'}</span>
-              <span class="scoreValue">${data.booking.freelancer?.first_name} ${data.booking.freelancer?.last_name}</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="section">
-          <div class="sectionTitle">${isDutch ? 'Service Details' : 'Service Details'}</div>
-          
-          <div class="scoreCard">
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Beschrijving' : 'Description'}</span>
-              <span class="scoreValue">${data.booking.description || 'No description provided'}</span>
-            </div>
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Datum' : 'Date'}</span>
-              <span class="scoreValue">${new Date(data.booking.start_time).toLocaleDateString(isDutch ? 'nl-NL' : 'en-US')}</span>
-            </div>
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Tijd' : 'Time'}</span>
-              <span class="scoreValue">
-                ${new Date(data.booking.start_time).toLocaleTimeString(isDutch ? 'nl-NL' : 'en-US', { hour: '2-digit', minute: '2-digit' })} - 
-                ${new Date(data.booking.end_time).toLocaleTimeString(isDutch ? 'nl-NL' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Locatie' : 'Location'}</span>
-              <span class="scoreValue">${data.booking.location || 'Not specified'}</span>
-            </div>
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Uurtarief' : 'Hourly Rate'}</span>
-              <span class="scoreValue">€${data.booking.hourly_rate.toFixed(2)}</span>
-            </div>
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Totaal Bedrag' : 'Total Amount'}</span>
-              <span class="scoreValue">€${data.booking.total_amount.toFixed(2)}</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="section">
-          <div class="sectionTitle">${isDutch ? 'Voorwaarden' : 'Terms and Conditions'}</div>
-          
-          <div class="questionItem">
-            <div class="questionText">1. ${isDutch ? 'Onafhankelijke Aannemer Status' : 'Independent Contractor Status'}</div>
-            <div class="answerText">
-              ${isDutch ? 'De freelancer is een onafhankelijke aannemer en geen werknemer van de opdrachtgever.' : 'The freelancer is an independent contractor and not an employee of the client.'}
-            </div>
-          </div>
-          
-          <div class="questionItem">
-            <div class="questionText">2. ${isDutch ? 'Betaling' : 'Payment'}</div>
-            <div class="answerText">
-              ${isDutch ? 'Betaling van €' + data.booking.total_amount.toFixed(2) + ' is verschuldigd bij voltooiing van de diensten.' : 'Payment of €' + data.booking.total_amount.toFixed(2) + ' is due upon completion of services.'}
-            </div>
-          </div>
-          
-          <div class="questionItem">
-            <div class="questionText">3. ${isDutch ? 'Intellectueel Eigendom' : 'Intellectual Property'}</div>
-            <div class="answerText">
-              ${isDutch ? 'Alle intellectuele eigendom blijft bij de freelancer, tenzij anders overeengekomen.' : 'All intellectual property remains with the freelancer unless otherwise agreed.'}
-            </div>
-          </div>
-        </div>
-        
-        <div class="footer">
-          <div>${isDutch ? 'Einsatz Platform - Service Overeenkomst' : 'Einsatz Platform - Service Agreement'}</div>
-          <div>${isDutch ? 'Gegenereerd op' : 'Generated on'}: ${new Date().toLocaleDateString()}</div>
-        </div>
-      </body>
-      </html>
-    `
+    // Create new PDF document
+    const doc = new jsPDF()
     
-    browser = await puppeteer.launch({ 
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-    })
-    const page = await browser.newPage()
-    await page.setContent(html)
-    const pdf = await page.pdf({ format: 'A4', margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' } })
+    // Set font
+    doc.setFont('helvetica')
     
-    return Buffer.from(pdf)
+    // Header
+    doc.setFontSize(24)
+    doc.setFont('helvetica', 'bold')
+    doc.text(isDutch ? 'Service Overeenkomst' : 'Service Agreement', 105, 30, { align: 'center' })
+    
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'normal')
+    doc.text(isDutch ? 'Onafhankelijke Aannemer Overeenkomst' : 'Independent Contractor Agreement', 105, 45, { align: 'center' })
+    
+    doc.setFontSize(12)
+    doc.text(`Contract #${data.contractNumber}`, 105, 55, { align: 'center' })
+    doc.text(`${isDutch ? 'Gegenereerd op' : 'Generated on'} ${new Date().toLocaleDateString(isDutch ? 'nl-NL' : 'en-US')}`, 105, 65, { align: 'center' })
+    
+    // Parties Section
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text(isDutch ? 'Partijen' : 'Parties', 20, 85)
+    
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`${isDutch ? 'Opdrachtgever' : 'Client'}: ${data.booking.profiles?.first_name} ${data.booking.profiles?.last_name}`, 20, 100)
+    doc.text(`${isDutch ? 'Freelancer' : 'Freelancer'}: ${data.booking.freelancer?.first_name} ${data.booking.freelancer?.last_name}`, 20, 110)
+    
+    // Service Details Section
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text(isDutch ? 'Service Details' : 'Service Details', 20, 135)
+    
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`${isDutch ? 'Beschrijving' : 'Description'}: ${data.booking.description || 'No description provided'}`, 20, 150)
+    doc.text(`${isDutch ? 'Datum' : 'Date'}: ${new Date(data.booking.start_time).toLocaleDateString(isDutch ? 'nl-NL' : 'en-US')}`, 20, 160)
+    doc.text(`${isDutch ? 'Tijd' : 'Time'}: ${new Date(data.booking.start_time).toLocaleTimeString(isDutch ? 'nl-NL' : 'en-US', { hour: '2-digit', minute: '2-digit' })} - ${new Date(data.booking.end_time).toLocaleTimeString(isDutch ? 'nl-NL' : 'en-US', { hour: '2-digit', minute: '2-digit' })}`, 20, 170)
+    doc.text(`${isDutch ? 'Locatie' : 'Location'}: ${data.booking.location || 'Not specified'}`, 20, 180)
+    doc.text(`${isDutch ? 'Uurtarief' : 'Hourly Rate'}: €${data.booking.hourly_rate.toFixed(2)}`, 20, 190)
+    doc.text(`${isDutch ? 'Totaal Bedrag' : 'Total Amount'}: €${data.booking.total_amount.toFixed(2)}`, 20, 200)
+    
+    // Terms and Conditions Section
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text(isDutch ? 'Voorwaarden' : 'Terms and Conditions', 20, 225)
+    
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`1. ${isDutch ? 'Onafhankelijke Aannemer Status' : 'Independent Contractor Status'}`, 20, 240)
+    doc.setFontSize(10)
+    doc.text(isDutch ? 'De freelancer is een onafhankelijke aannemer en geen werknemer van de opdrachtgever.' : 'The freelancer is an independent contractor and not an employee of the client.', 25, 250)
+    
+    doc.setFontSize(12)
+    doc.text(`2. ${isDutch ? 'Betaling' : 'Payment'}`, 20, 265)
+    doc.setFontSize(10)
+    doc.text(isDutch ? `Betaling van €${data.booking.total_amount.toFixed(2)} is verschuldigd bij voltooiing van de diensten.` : `Payment of €${data.booking.total_amount.toFixed(2)} is due upon completion of services.`, 25, 275)
+    
+    doc.setFontSize(12)
+    doc.text(`3. ${isDutch ? 'Intellectueel Eigendom' : 'Intellectual Property'}`, 20, 290)
+    doc.setFontSize(10)
+    doc.text(isDutch ? 'Alle intellectuele eigendom blijft bij de freelancer, tenzij anders overeengekomen.' : 'All intellectual property remains with the freelancer unless otherwise agreed.', 25, 300)
+    
+    // Footer
+    doc.setFontSize(10)
+    doc.text(isDutch ? 'Einsatz Platform - Service Overeenkomst' : 'Einsatz Platform - Service Agreement', 105, 320, { align: 'center' })
+    doc.text(`${isDutch ? 'Gegenereerd op' : 'Generated on'}: ${new Date().toLocaleDateString()}`, 105, 330, { align: 'center' })
+    
+    // Return PDF as buffer
+    return Buffer.from(doc.output('arraybuffer'))
   } catch (error) {
     console.error('Contract API: PDF generation error:', error)
     throw error
-  } finally {
-    if (browser) {
-      try {
-        await browser.close()
-      } catch (closeError) {
-        console.error('Contract API: Error closing browser:', closeError)
-      }
-    }
   }
 }
 
@@ -249,3 +189,4 @@ export async function GET() {
     return NextResponse.json({ error: 'GET endpoint failed' }, { status: 500 })
   }
 }
+
