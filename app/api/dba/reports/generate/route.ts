@@ -1,7 +1,7 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import puppeteer from 'puppeteer'
+import { jsPDF } from 'jspdf'
 
 export async function POST(request: NextRequest) {
   try {
@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PDF report generator using Puppeteer
+// PDF report generator using jsPDF (serverless-compatible)
 async function generatePDFReport(data: {
   bookingId: string
   freelancerName: string
@@ -243,130 +243,117 @@ async function generatePDFReport(data: {
   clientAnswers: any[]
   locale: string
 }): Promise<Buffer> {
-  let browser: any = null
   try {
     const isDutch = data.locale === 'nl'
     
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body { font-family: Arial, sans-serif; margin: 40px; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
-          .title { font-size: 24px; font-weight: bold; color: #1f2937; margin-bottom: 10px; }
-          .subtitle { font-size: 16px; color: #6b7280; margin-bottom: 5px; }
-          .date { font-size: 12px; color: #9ca3af; }
-          .section { margin-bottom: 25px; }
-          .sectionTitle { font-size: 18px; font-weight: bold; color: #1f2937; margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
-          .scoreCard { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb; }
-          .scoreRow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-          .scoreLabel { font-size: 14px; color: #374151; font-weight: bold; }
-          .scoreValue { font-size: 16px; font-weight: bold; }
-          .riskLevel { font-size: 14px; padding: 8px 12px; border-radius: 4px; text-align: center; font-weight: bold; }
-          .riskSafe { background-color: #dcfce7; color: #166534; }
-          .riskDoubtful { background-color: #fef3c7; color: #92400e; }
-          .riskHigh { background-color: #fee2e2; color: #991b1b; }
-          .questionItem { margin-bottom: 15px; padding: 15px; background-color: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; }
-          .questionText { font-size: 12px; color: #1f2937; margin-bottom: 8px; font-weight: bold; }
-          .answerText { font-size: 11px; color: #6b7280; font-style: italic; }
-          .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #9ca3af; text-align: center; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="title">${isDutch ? 'DBA Compliance Rapport' : 'DBA Compliance Report'}</div>
-          <div class="subtitle">${isDutch ? 'Declaratie van Arbeidsrelatie' : 'Declaration of Labor Relations'}</div>
-          <div class="date">${new Date().toLocaleDateString(isDutch ? 'nl-NL' : 'en-US')}</div>
-        </div>
-        
-        <div class="section">
-          <div class="sectionTitle">${isDutch ? 'Boeking Informatie' : 'Booking Information'}</div>
-          <div class="scoreCard">
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Boeking ID' : 'Booking ID'}</span>
-              <span class="scoreValue">${data.bookingId}</span>
-            </div>
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Freelancer' : 'Freelancer'}</span>
-              <span class="scoreValue">${data.freelancerName}</span>
-            </div>
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Opdrachtgever' : 'Client'}</span>
-              <span class="scoreValue">${data.clientName}</span>
-            </div>
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Werkcategorie' : 'Job Category'}</span>
-              <span class="scoreValue">${data.jobCategory}</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="section">
-          <div class="sectionTitle">${isDutch ? 'Compliance Score' : 'Compliance Score'}</div>
-          <div class="scoreCard">
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Totale Score' : 'Overall Score'}</span>
-              <span class="scoreValue">${data.score}%</span>
-            </div>
-            <div class="scoreRow">
-              <span class="scoreLabel">${isDutch ? 'Risico Niveau' : 'Risk Level'}</span>
-              <span class="scoreValue ${data.riskLevel === 'safe' ? 'riskSafe' : data.riskLevel === 'doubtful' ? 'riskDoubtful' : 'riskHigh'}">${data.riskLevel.toUpperCase()}</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="section">
-          <div class="sectionTitle">${isDutch ? 'Categorie Scores' : 'Category Scores'}</div>
-          ${Object.entries(data.categoryScores).map(([category, score]) => `
-            <div class="scoreCard">
-              <div class="scoreRow">
-                <span class="scoreLabel">${category}</span>
-                <span class="scoreValue">${score}%</span>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-        
-        <div class="section">
-          <div class="sectionTitle">${isDutch ? 'Gedetailleerde Antwoorden' : 'Detailed Answers'}</div>
-          ${data.clientAnswers.map((answer, index) => `
-            <div class="questionItem">
-              <div class="questionText">${index + 1}. ${answer.dba_questions?.question_text || `Question ${index + 1}`}</div>
-              <div class="answerText">${isDutch ? 'Antwoord' : 'Answer'}: ${answer.answer_value || `Option ${answer.selected_option_index + 1}`}</div>
-            </div>
-          `).join('')}
-        </div>
-        
-        <div class="footer">
-          <div>${isDutch ? 'Gegenereerd op' : 'Generated on'}: ${new Date().toLocaleDateString()}</div>
-          <div>Einsatz Platform - DBA Compliance Report</div>
-        </div>
-      </body>
-      </html>
-    `
+    // Create new PDF document
+    const doc = new jsPDF()
     
-    browser = await puppeteer.launch({ 
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    // Set font
+    doc.setFont('helvetica')
+    
+    // Header
+    doc.setFontSize(24)
+    doc.setFont('helvetica', 'bold')
+    doc.text(isDutch ? 'DBA Compliance Rapport' : 'DBA Compliance Report', 105, 30, { align: 'center' })
+    
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'normal')
+    doc.text(isDutch ? 'Declaratie van Arbeidsrelatie' : 'Declaration of Labor Relations', 105, 45, { align: 'center' })
+    
+    doc.setFontSize(12)
+    doc.text(new Date().toLocaleDateString(isDutch ? 'nl-NL' : 'en-US'), 105, 55, { align: 'center' })
+    
+    // Booking Information Section
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text(isDutch ? 'Boeking Informatie' : 'Booking Information', 20, 75)
+    
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`${isDutch ? 'Boeking ID' : 'Booking ID'}: ${data.bookingId}`, 20, 90)
+    doc.text(`${isDutch ? 'Freelancer' : 'Freelancer'}: ${data.freelancerName}`, 20, 100)
+    doc.text(`${isDutch ? 'Opdrachtgever' : 'Client'}: ${data.clientName}`, 20, 110)
+    doc.text(`${isDutch ? 'Werkcategorie' : 'Job Category'}: ${data.jobCategory}`, 20, 120)
+    
+    // Compliance Score Section
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text(isDutch ? 'Compliance Score' : 'Compliance Score', 20, 145)
+    
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`${isDutch ? 'Totale Score' : 'Overall Score'}: ${data.score}%`, 20, 160)
+    
+    // Risk level with color coding
+    const riskText = data.riskLevel.toUpperCase()
+    const riskY = 170
+    doc.text(`${isDutch ? 'Risico Niveau' : 'Risk Level'}: `, 20, riskY)
+    
+    // Set color based on risk level
+    if (data.riskLevel === 'safe') {
+      doc.setTextColor(22, 101, 52) // Green
+    } else if (data.riskLevel === 'doubtful') {
+      doc.setTextColor(146, 64, 14) // Amber
+    } else {
+      doc.setTextColor(153, 27, 27) // Red
+    }
+    doc.text(riskText, 60, riskY)
+    doc.setTextColor(0, 0, 0) // Reset to black
+    
+    // Category Scores Section
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text(isDutch ? 'Categorie Scores' : 'Category Scores', 20, 195)
+    
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    let categoryY = 210
+    Object.entries(data.categoryScores).forEach(([category, score]) => {
+      doc.text(`${category}: ${score}%`, 20, categoryY)
+      categoryY += 10
     })
-    const page = await browser.newPage()
-    await page.setContent(html)
-    const pdf = await page.pdf({ format: 'A4', margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' } })
     
-    return Buffer.from(pdf)
+    // Detailed Answers Section
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text(isDutch ? 'Gedetailleerde Antwoorden' : 'Detailed Answers', 20, categoryY + 10)
+    
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    let answerY = categoryY + 25
+    
+    data.clientAnswers.forEach((answer, index) => {
+      const questionText = answer.dba_questions?.question_text || `Question ${index + 1}`
+      const answerText = answer.answer_value || `Option ${answer.selected_option_index + 1}`
+      
+      // Check if we need a new page
+      if (answerY > 250) {
+        doc.addPage()
+        answerY = 20
+      }
+      
+      // Question text (bold)
+      doc.setFont('helvetica', 'bold')
+      doc.text(`${index + 1}. ${questionText}`, 20, answerY)
+      answerY += 8
+      
+      // Answer text (normal)
+      doc.setFont('helvetica', 'normal')
+      doc.text(`${isDutch ? 'Antwoord' : 'Answer'}: ${answerText}`, 25, answerY)
+      answerY += 15
+    })
+    
+    // Footer
+    doc.setFontSize(10)
+    doc.text(`${isDutch ? 'Gegenereerd op' : 'Generated on'}: ${new Date().toLocaleDateString()}`, 105, 280, { align: 'center' })
+    doc.text('Einsatz Platform - DBA Compliance Report', 105, 290, { align: 'center' })
+    
+    // Return PDF as buffer
+    return Buffer.from(doc.output('arraybuffer'))
   } catch (error) {
     console.error('DBA Report API: PDF generation error:', error)
     throw error
-  } finally {
-    if (browser) {
-      try {
-        await browser.close()
-      } catch (closeError) {
-        console.error('DBA Report API: Error closing browser:', closeError)
-      }
-    }
   }
 }
 
