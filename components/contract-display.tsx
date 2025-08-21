@@ -51,13 +51,23 @@ export default function ContractDisplay({
   const [contractNumber, setContractNumber] = useState<string>('')
   const [downloading, setDownloading] = useState(false)
 
-  // Note: DBA functionality removed - contracts now generate without DBA reports
+  // Load existing contract number on component mount
+  useEffect(() => {
+    // Check if there's already a contract for this booking
+    // You can store this in localStorage or check from your existing system
+    const existingContract = localStorage.getItem(`contract_${booking.id}`)
+    if (existingContract) {
+      setContractNumber(existingContract)
+    }
+  }, [booking.id])
 
   const handleGenerateContract = async () => {
     const result = await generateContract(booking, undefined)
     
     if (result.success) {
       setContractNumber(result.contractNumber)
+      // Store the contract number so it persists
+      localStorage.setItem(`contract_${booking.id}`, result.contractNumber)
       onContractGenerated?.(result.contractNumber)
       toast({
         title: "Contract Generated",
@@ -80,6 +90,10 @@ export default function ContractDisplay({
     setDownloading(true)
     try {
       await downloadContract(booking, undefined)
+      toast({
+        title: "Contract Downloaded",
+        description: "Contract has been downloaded successfully.",
+      })
     } finally {
       setDownloading(false)
     }
@@ -108,11 +122,9 @@ export default function ContractDisplay({
               <CardTitle>{t('contract.title')}</CardTitle>
             </div>
             {contractNumber && (
-              // <Badge variant="outline" className="text-sm ">
               <div>
                 {contractNumber}
               </div>
-              // </Badge>
             )}
           </div>
           <CardDescription>
@@ -165,7 +177,7 @@ export default function ContractDisplay({
                   <Eye className="h-4 w-4" />
                   {t('contract.view')}
                 </Button>
-                {/* <Button
+                <Button
                   onClick={handleDownloadContract}
                   disabled={downloading}
                   className="flex items-center gap-2"
@@ -181,7 +193,7 @@ export default function ContractDisplay({
                       {t('contract.download')}
                     </>
                   )}
-                </Button> */}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -203,7 +215,6 @@ export default function ContractDisplay({
                     {t('contract.generated')}
                   </Badge>
                 </div>
-
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">{t('contract.generatedOn')}:</span>
                   <span className="text-sm">{formatDate(new Date().toISOString())}</span>
@@ -211,35 +222,6 @@ export default function ContractDisplay({
               </div>
             </CardContent>
           </Card>
-
-          {/* Regenerate Button */}
-          {/* <Card>
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-sm text-gray-600 mb-4">
-                  {t('contract.updateDescription')}
-                </p>
-                <Button 
-                  onClick={handleGenerateContract} 
-                  disabled={contractLoading} 
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  {contractLoading ? (
-                    <>
-                      <Loader className="h-4 w-4 animate-spin" />
-                      {t('contract.regenerating')}
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="h-4 w-4" />
-                      {t('contract.regenerate')}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card> */}
         </>
       )}
 

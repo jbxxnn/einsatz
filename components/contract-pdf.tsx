@@ -325,7 +325,8 @@ function ContractPDF({ booking, dbaReport, contractNumber }: ContractPDFProps) {
               <Text style={styles.termLabel}>1. Independent Contractor Status</Text>
               <Text style={styles.termValue}>
                 The freelancer is an independent contractor and not an employee of the client. 
-                This agreement does not create an employment relationship.
+                This agreement does not create an employment relationship. The freelancer is responsible 
+                for their own taxes, insurance, and compliance with applicable laws.
               </Text>
             </View>
 
@@ -334,30 +335,90 @@ function ContractPDF({ booking, dbaReport, contractNumber }: ContractPDFProps) {
               <Text style={styles.termValue}>
                 Payment of €{booking.total_amount.toFixed(2)} is due upon completion of services. 
                 Payment method: {booking.payment_method === 'offline' ? 'Offline payment as agreed' : 'Online payment through platform'}.
+                Late payments may incur interest charges of 1.5% per month on overdue amounts.
               </Text>
             </View>
 
             <View style={styles.termItem}>
-              <Text style={styles.termLabel}>3. Cancellation Policy</Text>
+              <Text style={styles.termLabel}>3. Service Delivery & Quality</Text>
+              <Text style={styles.termValue}>
+                The freelancer agrees to provide services in a professional manner and to the best of their ability. 
+                Services will be delivered according to the agreed schedule and specifications outlined in this agreement.
+              </Text>
+            </View>
+
+            <View style={styles.termItem}>
+              <Text style={styles.termLabel}>4. Intellectual Property Rights</Text>
+              <Text style={styles.termValue}>
+                Unless otherwise agreed in writing, all intellectual property created during the provision of services 
+                shall remain with the freelancer. The client receives a license to use the work product for the intended purpose.
+              </Text>
+            </View>
+
+            <View style={styles.termItem}>
+              <Text style={styles.termLabel}>5. Confidentiality</Text>
+              <Text style={styles.termValue}>
+                Both parties agree to maintain confidentiality of any proprietary or confidential information 
+                shared during the course of this agreement. This obligation survives the termination of the agreement.
+              </Text>
+            </View>
+
+            <View style={styles.termItem}>
+              <Text style={styles.termLabel}>6. Cancellation Policy</Text>
               <Text style={styles.termValue}>
                 Cancellations must be made at least 24 hours before the scheduled start time. 
-                Late cancellations may result in partial charges.
+                Late cancellations may result in partial charges up to 50% of the total amount.
+                Force majeure events (natural disasters, government actions) may excuse performance.
               </Text>
             </View>
 
             <View style={styles.termItem}>
-              <Text style={styles.termLabel}>4. Liability</Text>
+              <Text style={styles.termLabel}>7. Liability & Indemnification</Text>
               <Text style={styles.termValue}>
                 Each party is responsible for their own actions and any damages caused during the service provision. 
+                The freelancer agrees to indemnify the client against claims arising from the freelancer's negligence.
                 The platform facilitates the connection but is not liable for service outcomes.
               </Text>
             </View>
 
             <View style={styles.termItem}>
-              <Text style={styles.termLabel}>5. Dispute Resolution</Text>
+              <Text style={styles.termLabel}>8. Insurance & Compliance</Text>
+              <Text style={styles.termValue}>
+                The freelancer is responsible for maintaining appropriate professional liability insurance 
+                and compliance with all applicable laws, regulations, and industry standards.
+              </Text>
+            </View>
+
+            <View style={styles.termItem}>
+              <Text style={styles.termLabel}>9. Communication & Updates</Text>
+              <Text style={styles.termValue}>
+                Both parties agree to maintain open communication throughout the project. 
+                Regular updates on progress and any issues should be communicated promptly.
+              </Text>
+            </View>
+
+            <View style={styles.termItem}>
+              <Text style={styles.termLabel}>10. Dispute Resolution</Text>
               <Text style={styles.termValue}>
                 Any disputes arising from this agreement should first be resolved through the platform's 
-                dispute resolution process before seeking external legal action.
+                dispute resolution process before seeking external legal action. The parties agree to 
+                attempt mediation before pursuing litigation.
+              </Text>
+            </View>
+
+            <View style={styles.termItem}>
+              <Text style={styles.termLabel}>11. Termination</Text>
+              <Text style={styles.termValue}>
+                Either party may terminate this agreement with 7 days written notice. 
+                Upon termination, the freelancer will be compensated for work completed up to that point.
+              </Text>
+            </View>
+
+            <View style={styles.termItem}>
+              <Text style={styles.termLabel}>12. Governing Law</Text>
+              <Text style={styles.termValue}>
+                This agreement is governed by the laws of the Netherlands. Any legal proceedings 
+                shall be brought in the courts of the Netherlands, unless otherwise agreed in writing.
               </Text>
             </View>
           </View>

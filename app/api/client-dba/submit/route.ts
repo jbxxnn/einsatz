@@ -13,7 +13,13 @@ interface SubmitDBARequest {
   answers: ClientDBAAnswer[]
 }
 
+export async function GET() {
+  return NextResponse.json({ message: 'DBA submit endpoint is working', timestamp: new Date().toISOString() })
+}
+
 export async function POST(request: NextRequest) {
+  console.log('🚀 [API] DBA submit endpoint called')
+  
   try {
     const supabase = createRouteHandlerClient({ cookies })
 
@@ -36,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Verify booking exists and user is the client
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
-      .select('id, client_id, freelancer_id, job_category_id')
+      .select('id, client_id, freelancer_id, category_id')
       .eq('id', booking_id)
       .eq('client_id', user.id)
       .single()
@@ -45,53 +51,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Booking not found or unauthorized' }, { status: 404 })
     }
 
-    console.log('DEBUG: Booking details:', { 
-      booking_id, 
-      freelancer_id: booking.freelancer_id, 
-      job_category_id: booking.job_category_id,
-      client_id: user.id
-    })
+    // Insert client DBA answers directly into the database
+    const { data: clientAnswersData, error: clientAnswersError } = await supabase
+      .from('client_dba_answers')
+      .insert(
+        answers.map(answer => ({
+          booking_id: booking_id,
+          question_id: answer.question_id,
+          selected_option_index: answer.selected_option_index,
+          answer_score: answer.answer_score
+        }))
+      )
+      .select()
 
-    // DEBUG: Check if freelancer has completed DBA for this category
-    const { data: freelancerDBA, error: freelancerDBAError } = await supabase
-      .from('freelancer_dba_completions')
-      .select('total_score, is_completed, risk_level')
-      .eq('freelancer_id', booking.freelancer_id)
-      .eq('job_category_id', booking.job_category_id)
-      .single()
-
-    console.log('DEBUG: Freelancer DBA lookup:', {
-      freelancer_id: booking.freelancer_id,
-      job_category_id: booking.job_category_id,
-      freelancerDBA,
-      freelancerDBAError
-    })
-
-    // Start transaction
-    const { data, error: transactionError } = await supabase.rpc('process_client_dba_submission', {
-      p_booking_id: booking_id,
-      p_client_id: user.id,
-      p_freelancer_id: booking.freelancer_id,
-      p_job_category_id: booking.job_category_id,
-      p_answers: answers
-    })
-
-    console.log('DEBUG: Function call result:', { data, transactionError })
-
-    if (transactionError) {
-      console.error('Error processing client DBA submission:', transactionError)
-      return NextResponse.json({ error: 'Failed to process DBA submission' }, { status: 500 })
+    if (clientAnswersError) {
+      console.error('Error inserting client DBA answers:', clientAnswersError)
+      return NextResponse.json({ 
+        error: 'Failed to save DBA answers', 
+        details: clientAnswersError.message 
+      }, { status: 500 })
     }
 
-    // Add debug info to response
+    // Calculate basic assessment
+    const clientTotalScore = answers.reduce((sum, answer) => sum + answer.answer_score, 0)
+    
+    let riskLevel = 'safe'
+    if (clientTotalScore > 60) riskLevel = 'high_risk'
+    else if (clientTotalScore > 30) riskLevel = 'doubtful'
+
+    const data = {
+      assessment: {
+        client_total_score: clientTotalScore,
+        combined_score: clientTotalScore,
+        risk_level: riskLevel
+      }
+    }
+
     const response = {
       ...data,
       debug_server: {
         booking_id,
-        freelancer_id: booking.freelancer_id,
-        job_category_id: booking.job_category_id,
-        freelancer_dba_check: freelancerDBA,
-        answers_count: answers.length
+        answers_count: answers.length,
+        client_answers_saved: clientAnswersData?.length || 0
       }
     }
 

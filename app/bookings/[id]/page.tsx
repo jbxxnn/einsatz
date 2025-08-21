@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Calendar, CheckCircle, Clock, MapPin, Star, XCircle, FileText } from "lucide-react"
+import { ArrowLeft, Calendar, CheckCircle, Clock, MapPin, Star, XCircle, FileText, Download, Eye } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { format } from "date-fns"
@@ -53,7 +53,7 @@ const CustomCalendarIcon = (props: React.SVGProps<SVGSVGElement>) => (
       <path opacity=".4" d="M20 9.84c.55 0 1 .45 1 1V17c0 3-1.5 5-5 5H8c-3.5 0-5-2-5-5v-6.16c0-.55.45-1 1-1h16Z" 
       fill="currentColor">
         </path>
-        <path d="M8.5 14.999c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.28-.28.72-.37 1.09-.21.13.05.24.12.33.21.18.19.29.45.29.71 0 .26-.11.52-.29.71-.19.18-.45.29-.71.29ZM12 14.999c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.09-.09.2-.16.33-.21.37-.16.81-.07 1.09.21.18.19.29.45.29.71 0 .26-.11.52-.29.71l-.15.12c-.06.04-.12.07-.18.09-.06.03-.12.05-.18.06-.07.01-.13.02-.2.02ZM15.5 15c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.1-.09.2-.16.33-.21.18-.08.38-.1.58-.06.06.01.12.03.18.06.06.02.12.05.18.09l.15.12c.18.19.29.45.29.71 0 .26-.11.52-.29.71l-.15.12c-.06.04-.12.07-.18.09-.06.03-.12.05-.18.06-.07.01-.14.02-.2.02ZM8.5 18.5c-.13 0-.26-.03-.38-.08-.13-.05-.23-.12-.33-.21-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.1-.09.2-.16.33-.21.18-.08.38-.1.58-.06.06.01.12.03.18.06.06.02.12.05.18.09l.15.12c.18.19.29.45.29.71 0 .26-.11.52-.29.71-.05.04-.1.09-.15.12-.06.04-.12.07-.18.09-.06.03-.12.05-.18.06-.07.01-.13.02-.2.02ZM12 18.5c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.37-.37 1.05-.37 1.42 0 .18.19.29.45.29.71 0 .26-.11.52-.29.71-.19.18-.45.29-.71.29ZM15.5 18.5c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.37-.37 1.05-.37 1.42 0 .18.19.29.45.29.71 0 .26-.11.52-.29.71-.19.18-.45.29-.71.29Z" 
+        <path d="M8.5 14.999c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.28-.28.72-.37 1.09-.21.13.05.24.12.33.21.18.19.29.45.29.71 0 .26-.11.52-.29.71-.19.18-.45.29-.71.29ZM12 14.999c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.09-.09.2-.16.33-.21.37-.16.81-.07 1.09.21.09.1.16.2.21.33.05.12.08.25.08.38s-.03.26-.08.38-.12.23-.21.33a.99.99 0 0 1-.71.29ZM15.5 15c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.1-.09.2-.16.33-.21.18-.08.38-.1.58-.06.06.01.12.03.18.06.06.02.12.05.18.09l.15.12c.18.19.29.45.29.71 0 .26-.11.52-.29.71l-.15.12c-.06.04-.12.07-.18.09-.06.03-.12.05-.18.06-.07.01-.14.02-.2.02ZM8.5 18.5c-.13 0-.26-.03-.38-.08-.13-.05-.23-.12-.33-.21-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.1-.09.2-.16.33-.21.18-.08.38-.1.58-.06.06.01.12.03.18.06.06.02.12.05.18.09l.15.12c.18.19.29.45.29.71 0 .26-.11.52-.29.71-.05.04-.1.09-.15.12-.06.04-.12.07-.18.09-.06.03-.12.05-.18.06-.07.01-.13.02-.2.02ZM12 18.5c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.37-.37 1.05-.37 1.42 0 .18.19.29.45.29.71 0 .26-.11.52-.29.71-.19.18-.45.29-.71.29ZM15.5 18.5c-.26 0-.52-.11-.71-.29-.18-.19-.29-.45-.29-.71 0-.26.11-.52.29-.71.37-.37 1.05-.37 1.42 0 .18.19.29.45.29.71 0 .26-.11.52-.29.71-.19.18-.45.29-.71.29Z" 
         fill="currentColor">
           </path>
           </svg>
@@ -144,6 +144,7 @@ export default function BookingDetailsPage() {
   const [rating, setRating] = useState(5)
   const [submittingReview, setSubmittingReview] = useState(false)
   const [hasReviewed, setHasReviewed] = useState(false)
+  const [downloadingPDF, setDownloadingPDF] = useState(false)
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
   const [conversationId, setConversationId] = useState<string | null>(null)
   useEffect(() => {
@@ -255,6 +256,57 @@ export default function BookingDetailsPage() {
       toast.success(`Booking ${action}ed successfully`)
     } catch (error: any) {
       toast.error(error.message || t("booking.id.error"))
+    }
+  }
+
+  const handleDownloadPDF = async () => {
+    if (!booking) return
+    
+    setDownloadingPDF(true)
+    try {
+      // Add a small delay to prevent connection issues
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      const response = await fetch('/api/dba/reports/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          booking_id: booking.id,
+          locale: 'en', // You can make this dynamic based on user preference
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('PDF generation failed:', response.status, errorText)
+        throw new Error(`Failed to generate PDF report: ${response.status}`)
+      }
+
+      // Get the PDF blob
+      const pdfBlob = await response.blob()
+      
+      // Create download link
+      const url = window.URL.createObjectURL(pdfBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `dba-report-${booking.id}-${new Date().toISOString().split('T')[0]}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast.success('PDF report downloaded successfully!')
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        toast.error('Connection error. Please try again in a moment.')
+      } else {
+        toast.error('Failed to download PDF report')
+      }
+    } finally {
+      setDownloadingPDF(false)
     }
   }
 
@@ -699,6 +751,19 @@ export default function BookingDetailsPage() {
                     />
                   </svg>
                   {t("booking.id.viewInvoice")}
+                </Button>
+              )}
+
+              {/* DBA Report Download */}
+              {booking.payment_method === "offline" && (
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={handleDownloadPDF}
+                  disabled={downloadingPDF}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {downloadingPDF ? "Generating PDF..." : "Download DBA Report"}
                 </Button>
               )}
 

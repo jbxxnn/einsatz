@@ -449,10 +449,17 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       // Submit DBA answers to the database
       console.log('🎯 [BOOKING] Submitting client DBA for booking:', newBookingId)
-      await submitClientDBA(newBookingId, dbaResult)
+      const dbaSubmissionResult = await submitClientDBA(newBookingId, dbaResult)
+      
+      if (dbaSubmissionResult) {
+        console.log('🎯 [BOOKING] DBA submission complete, redirecting to payment...')
+        toast.success('Booking created successfully with DBA assessment!')
+      } else {
+        console.log('🎯 [BOOKING] DBA submission failed, but booking was created. Proceeding to payment...')
+        toast.warning('Booking created successfully, but DBA assessment could not be saved. Please contact support.')
+      }
       
       // Auto-proceed to payment
-      toast.success('Booking created successfully! Proceeding to payment...')
       setTimeout(() => {
         setCurrentStep('payment')
       }, 1000)
@@ -466,6 +473,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
   const submitClientDBA = async (bookingId: string, dbaResult: any) => {
     try {
+      console.log('🔍 [DBA SUBMISSION] Starting DBA submission...')
+      console.log('🔍 [DBA SUBMISSION] URL:', '/api/client-dba/submit')
+      console.log('🔍 [DBA SUBMISSION] Booking ID:', bookingId)
+      console.log('🔍 [DBA SUBMISSION] Answers count:', dbaResult.answers?.length || 0)
+      
       const response = await fetch('/api/client-dba/submit', {
         method: 'POST',
         headers: {
@@ -476,9 +488,14 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           answers: dbaResult.answers
         }),
       })
+      
+      console.log('🔍 [DBA SUBMISSION] Response status:', response.status)
+      console.log('🔍 [DBA SUBMISSION] Response headers:', Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
-        throw new Error('Failed to submit DBA assessment')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('DBA submission failed:', response.status, errorData)
+        throw new Error(`Failed to submit DBA assessment: ${errorData.error || 'Server error'}`)
       }
 
       const serverResult = await response.json()
@@ -529,6 +546,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       return
     }
 
+    // Only allow DBA for offline payments
+    if (paymentMethod === "online") {
+      toast.error("DBA assessment is only required for offline payments. Please select offline payment method to proceed with DBA.")
+      return
+    }
+
     setShowDBAModal(true)
   }
 
@@ -542,6 +565,22 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
     if (!selectedStartTime || !selectedEndTime) {
       toast.error(t("bookingform.pleaseSelectBothStartAndEndTimes"))
+      return
+    }
+
+    if (!location.trim()) {
+      toast.error("Please enter a location before creating the booking")
+      return
+    }
+
+    if (!description.trim()) {
+      toast.error("Please enter a job description before creating the booking")
+      return
+    }
+
+    // For offline payments, require DBA completion
+    if (paymentMethod === "offline" && !dbaCompleted) {
+      toast.error("DBA assessment is required for offline payments. Please complete the DBA assessment above before proceeding.")
       return
     }
 
@@ -822,90 +861,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         />
       </div>
 
-      {/* DBA Check Button */}
-      <div className="space-y-3 pt-4 border-t">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CustomRescheduleIcon className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium">DBA Compliance Check</span>
-          </div>
-          {dbaCompleted && (
-            <Badge variant="default" className="text-xs">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Completed
-            </Badge>
-          )}
-        </div>
-        
-        <p className="text-xs text-gray-600">
-          Complete your DBA assessment to ensure legal compliance for this working relationship.
-        </p>
-        
-        <Button
-          type="button"
-          onClick={handleOpenDBAModal}
-          variant={dbaCompleted ? "outline" : "default"}
-          size="sm"
-          className="w-full"
-        >
-          <CustomRescheduleIcon2 className="h-4 w-4 mr-2" />
-          {dbaCompleted ? 'Review DBA Assessment' : 'Complete DBA Check'}
-        </Button>
-        
-        {/* Debug Button */}
-        <Button
-          type="button"
-          onClick={async () => {
-            console.log('🔍 [DEBUG] Testing freelancer DBA access...')
-            try {
-              const response = await fetch(`/api/debug/freelancer-dba?freelancer_id=${freelancer.id}&job_category_id=${selectedCategoryId}`)
-              const result = await response.json()
-              console.log('🔍 [DEBUG] Test results:', result)
-              console.log('🔍 [DEBUG] Direct access - All completions:', result.debug_results?.direct_access?.all_completions)
-              console.log('🔍 [DEBUG] Direct access - Specific freelancer:', result.debug_results?.direct_access?.specific_freelancer)
-              console.log('🔍 [DEBUG] Direct access - Category specific:', result.debug_results?.direct_access?.category_specific)
-              console.log('🔍 [DEBUG] RPC access data:', result.debug_results?.rpc_access?.data)
-              console.log('🔍 [DEBUG] Current user:', result.debug_results?.current_user)
-              
-              // Show summary in toast
-              const rpcData = result.debug_results?.rpc_access?.data
-              const summary = `
-                RPC Completions: ${rpcData?.all_completions_count || 0}
-                RPC Answers: ${rpcData?.all_answers_count || 0}
-                Direct Completions: ${result.debug_results?.direct_access?.all_completions?.count || 0}
-              `
-              toast.success(`Debug Complete: ${summary}`)
-            } catch (error) {
-              console.error('🔍 [DEBUG] Test failed:', error)
-              toast.error("Debug Test Failed - Check console for error details")
-            }
-          }}
-          variant="secondary"
-          size="sm"
-          className="mt-2 w-full"
-        >
-          🔍 Debug Freelancer DBA Access
-        </Button>
 
-                        {dbaCompleted && dbaResult && (
-                  <div className="text-xs p-2 rounded-md border bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <span>Risk Level:</span>
-                      <Badge 
-                        variant={dbaResult.risk_level === 'safe' ? 'default' : 'destructive'}
-                        className="text-xs"
-                      >
-                        {dbaResult.risk_level.replace('_', ' ').toUpperCase()}
-                      </Badge>
-                    </div>
-                    <div className="mt-1 text-gray-600">
-                      {dbaResult.combined_score ? 
-                        `Combined Score: ${dbaResult.combined_score} points` : 
-                        `Your Score: ${dbaResult.total_score} points`}
-                    </div>
-                  </div>
-                )}
-      </div>
 
       <div className="border-t pt-4 mt-4">
         <div className="flex justify-between mb-2">
@@ -960,12 +916,107 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         </div>
       </div>
 
+      {/* DBA Check Button - Moved below payment method and restricted to offline payments */}
+      <div className="space-y-3 pt-4 border-t">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CustomRescheduleIcon className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium">DBA Compliance Check</span>
+          </div>
+          {dbaCompleted && (
+            <Badge variant="default" className="text-xs">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Completed
+            </Badge>
+          )}
+        </div>
+        
+        <p className="text-xs text-gray-600">
+          Complete your DBA assessment to ensure legal compliance for this working relationship.
+          {paymentMethod === "online" && (
+            <span className="text-orange-600 font-medium"> DBA is only required for offline payments.</span>
+          )}
+        </p>
+        
+        <Button
+          type="button"
+          onClick={handleOpenDBAModal}
+          variant={dbaCompleted ? "outline" : "default"}
+          size="sm"
+          className="w-full"
+          disabled={paymentMethod === "online"}
+        >
+          <CustomRescheduleIcon2 className="h-4 w-4 mr-2" />
+          {paymentMethod === "online" 
+            ? 'DBA Not Required (Online Payment)' 
+            : dbaCompleted 
+              ? 'Review DBA Assessment' 
+              : 'Complete DBA Check'
+          }
+        </Button>
+        
+        {/* Debug Button */}
+        <Button
+          type="button"
+          onClick={async () => {
+            console.log('🔍 [DEBUG] Testing freelancer DBA access...')
+            try {
+              const response = await fetch(`/api/debug/freelancer-dba?freelancer_id=${freelancer.id}&job_category_id=${selectedCategoryId}`)
+              const result = await response.json()
+              console.log('🔍 [DEBUG] Test results:', result)
+              console.log('🔍 [DEBUG] Direct access - All completions:', result.debug_results?.direct_access?.all_completions)
+              console.log('🔍 [DEBUG] Direct access - Specific freelancer:', result.debug_results?.direct_access?.specific_freelancer)
+              console.log('🔍 [DEBUG] Direct access - Category specific:', result.debug_results?.direct_access?.category_specific)
+              console.log('🔍 [DEBUG] RPC access data:', result.debug_results?.rpc_access?.data)
+              console.log('🔍 [DEBUG] Current user:', result.debug_results?.current_user)
+              
+              // Show summary in toast
+              const rpcData = result.debug_results?.rpc_access?.data
+              const summary = `
+                RPC Completions: ${rpcData?.all_completions_count || 0}
+                RPC Answers: ${rpcData?.all_answers_count || 0}
+                Direct Completions: ${result.debug_results?.direct_access?.all_completions?.count || 0}
+              `
+              toast.success(`Debug Complete: ${summary}`)
+            } catch (error) {
+              console.error('🔍 [DEBUG] Test failed:', error)
+              toast.error("Debug Test Failed - Check console for error details")
+            }
+          }}
+          variant="secondary"
+          size="sm"
+          className="mt-2 w-full"
+        >
+          🔍 Debug Freelancer DBA Access
+        </Button>
+
+        {dbaCompleted && dbaResult && (
+          <div className="text-xs p-2 rounded-md border bg-gray-50">
+            <div className="flex items-center justify-between">
+              <span>Risk Level:</span>
+              <Badge 
+                variant={dbaResult.risk_level === 'safe' ? 'default' : 'destructive'}
+                className="text-xs"
+              >
+                {dbaResult.risk_level.replace('_', ' ').toUpperCase()}
+              </Badge>
+            </div>
+            <div className="text-xs text-gray-600 mt-1">
+              {dbaResult.combined_score ?
+                `Combined Score: ${dbaResult.combined_score} points` :
+                `Your Score: ${dbaResult.total_score} points`}
+            </div>
+          </div>
+        )}
+      </div>
+
       <Button
         type="submit"
         className="w-full"
-        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || paymentMethod === "online" || !!bookingId}
+        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || paymentMethod === "online" || (paymentMethod === "offline" && !dbaCompleted) || !!bookingId}
       >
-        {loading ? t("bookingform.processing") : bookingId ? 'Booking Created - Complete DBA Above' : t("bookingform.continueToPayment")}
+        {loading ? t("bookingform.processing") : bookingId ? 'Booking Created - Complete DBA Above' : 
+         paymentMethod === "offline" ? 'Continue to DBA Assessment' : 'Online Payment Not Available'}
       </Button>
 
       <p className="text-xs text-center text-muted-foreground">

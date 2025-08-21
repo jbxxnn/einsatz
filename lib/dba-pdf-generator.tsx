@@ -159,13 +159,18 @@ const categoryLabels = {
   substitution: { en: "Substitution", nl: "Vervangbaarheid" },
   tools: { en: "Tools & Equipment", nl: "Gereedschap & Apparatuur" },
   risk: { en: "Financial Risk", nl: "Financieel Risico" },
-  economic_independence: { en: "Economic Independence", nl: "Economische Onafhankelijkheid" }
+  economic_independence: { en: "Economic Independence", nl: "Economische Onafhankelijkheid" },
+  general: { en: "General Assessment", nl: "Algemene Beoordeling" }
 }
 
 export function generateDBAReport(data: DBAReportData) {
   
   const getCategoryLabel = (category: string) => {
     const labels = categoryLabels[category as keyof typeof categoryLabels]
+    if (!labels) {
+      // Fallback for unknown categories
+      return data.locale === "nl" ? `Categorie: ${category}` : `Category: ${category}`
+    }
     return data.locale === "nl" ? labels.nl : labels.en
   }
 

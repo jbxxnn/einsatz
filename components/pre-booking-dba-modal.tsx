@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { AlertTriangle, Shield, CheckCircle, X, ArrowLeft, ArrowRight, MessageSquare, Loader } from 'lucide-react'
+import { AlertTriangle, Shield, CheckCircle, X, ArrowLeft, ArrowRight, MessageSquare, Loader, FileText } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { toast } from '@/lib/toast'
@@ -715,6 +715,7 @@ export function PreBookingDBAModal({
           </div>
           
           <div className="flex gap-2 pt-4 flex-shrink-0">
+            {/* Main Action Buttons */}
             {dbaResult.risk_level === 'safe' ? (
               <Button onClick={handleProceed} className="flex-1">
                 <CheckCircle className="h-4 w-4 mr-2" />
@@ -749,7 +750,7 @@ export function PreBookingDBAModal({
                     No DBA Data Available
                   </Button>
                 )}
-                <Button onClick={onClose} className="flex-1">
+                <Button onClick={handleProceed} className="flex-1">
                   Proceed Anyway
                 </Button>
               </>

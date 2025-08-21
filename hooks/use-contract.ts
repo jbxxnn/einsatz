@@ -74,16 +74,38 @@ export function useContract() {
     setError(null)
 
     try {
-      // For now, we'll trigger the browser's print dialog for the contract viewer
-      // This is a simpler approach that works reliably
+      // Generate a contract number if we don't have one
+      const contractNumber = generateContractNumber(booking.id)
       
-      // Wait a moment for the contract to load, then trigger print
-      setTimeout(() => {
-        const pdfViewer = document.querySelector('iframe[title="PDF viewer"]') as HTMLIFrameElement
-        if (pdfViewer && pdfViewer.contentWindow) {
-          pdfViewer.contentWindow.print()
-        }
-      }, 1000)
+      // Call the contract generation API to get the PDF
+      const response = await fetch('/api/contracts/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          booking_id: booking.id,
+          contract_number: contractNumber,
+          locale: 'en'
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate contract PDF')
+      }
+
+      // Get the PDF blob
+      const pdfBlob = await response.blob()
+      
+      // Create download link
+      const url = window.URL.createObjectURL(pdfBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `contract-${contractNumber}-${new Date().toISOString().split('T')[0]}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
 
       return true
     } catch (err: any) {

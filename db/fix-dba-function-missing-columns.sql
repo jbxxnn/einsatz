@@ -1,5 +1,5 @@
--- Fix the DBA function to run with elevated privileges
--- This allows the function to read freelancer_dba_completions table even when called by a client
+-- Fix the missing columns in the process_client_dba_submission function
+-- This adds the missing job_category_id, freelancer_id, and client_id columns to the INSERT statement
 
 DROP FUNCTION IF EXISTS process_client_dba_submission(UUID, UUID, UUID, UUID, JSON);
 
@@ -104,6 +104,9 @@ BEGIN
   )
   ON CONFLICT (booking_id) 
   DO UPDATE SET
+    job_category_id = EXCLUDED.job_category_id,
+    freelancer_id = EXCLUDED.freelancer_id,
+    client_id = EXCLUDED.client_id,
     client_total_score = EXCLUDED.client_total_score,
     freelancer_total_score = EXCLUDED.freelancer_total_score,
     combined_score = EXCLUDED.combined_score,
@@ -133,6 +136,9 @@ BEGIN
     'assessment', json_build_object(
       'id', assessment_record.id,
       'booking_id', assessment_record.booking_id,
+      'job_category_id', assessment_record.job_category_id,
+      'freelancer_id', assessment_record.freelancer_id,
+      'client_id', assessment_record.client_id,
       'client_total_score', assessment_record.client_total_score,
       'freelancer_total_score', assessment_record.freelancer_total_score,
       'combined_score', assessment_record.combined_score,
@@ -162,6 +168,4 @@ EXCEPTION WHEN OTHERS THEN
   );
 END;
 $$ LANGUAGE plpgsql;
-
-
 
