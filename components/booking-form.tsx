@@ -14,7 +14,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/lib/toast"
-// import { toast } from "@/hooks/use-toast"
 import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2, FileText, ChevronRight, ChevronLeft, Shield } from "lucide-react"
 import { format, addDays } from "date-fns"
 import type { Database } from "@/lib/database.types"
@@ -112,7 +111,6 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [categoryName, setCategoryName] = useState<string>("")
   const [noAvailability, setNoAvailability] = useState(false)
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null)
-  const [debugInfo, setDebugInfo] = useState<string>("")
   const [paymentMethod, setPaymentMethod] = useState<"online" | "offline">("online")
   const [currentStep, setCurrentStep] = useState<BookingStep>('details')
   const [bookingId, setBookingId] = useState<string | null>(null)
@@ -196,26 +194,16 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     const fetchAvailability = async () => {
       if (!selectedDate || !selectedCategoryId) return
 
-      console.log('🔄 [DEBUG] Starting availability fetch:', {
-        date: selectedDate,
-        categoryId: selectedCategoryId,
-        freelancerId: freelancer.id,
-        timestamp: new Date().toISOString()
-      })
-
       setFetchingAvailability(true)
       setNoAvailability(false)
       setSuggestedDate(null)
       setSelectedStartTime(null)
       setSelectedEndTime(null)
-      setDebugInfo("")
 
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd")
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
-
-        console.log('📡 [DEBUG] Making API request to:', `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`)
 
         const response = await fetch(
           `/api/availability?freelancerId=${freelancer.id}&categoryId=${selectedCategoryId}&date=${formattedDate}`,
@@ -224,45 +212,27 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
         clearTimeout(timeoutId)
 
-        console.log('📥 [DEBUG] API Response status:', response.status, response.ok)
-
         if (!response.ok) {
           throw new Error(t("bookingform.failedToFetchAvailability"))
         }
 
         const data = await response.json()
 
-        console.log('📊 [DEBUG] API Response data:', {
-          hasAvailabilityBlocks: !!data.availabilityBlocks,
-          blocksCount: data.availabilityBlocks?.length || 0,
-          blocks: data.availabilityBlocks,
-          timestamp: new Date().toISOString()
-        })
-
-        // Add debug info
-        setDebugInfo(JSON.stringify(data, null, 2))
-
         if (data.availabilityBlocks && data.availabilityBlocks.length > 0) {
-          console.log('✅ [DEBUG] Setting availability blocks:', data.availabilityBlocks)
           setAvailabilityBlocks(data.availabilityBlocks)
         } else {
-          console.log('❌ [DEBUG] No availability blocks found, setting noAvailability to true')
           setNoAvailability(true)
           // Try to find next available date
           await findNextAvailableDate(selectedDate)
         }
       } catch (error: any) {
-        console.error('💥 [DEBUG] Error in fetchAvailability:', error)
         if (error.name === "AbortError") {
-          console.log('⏰ [DEBUG] Request was aborted due to timeout')
           toast.error(t("bookingform.takingTooLongToLoadAvailability"))
         } else {
-          console.error("Error fetching availability:", error)
           toast.error(t("bookingform.failedToFetchFreelancerAvailability"))
         }
         setNoAvailability(true)
       } finally {
-        console.log('🏁 [DEBUG] Fetch availability completed, setting fetchingAvailability to false')
         setFetchingAvailability(false)
       }
     }
@@ -272,14 +242,10 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
   // Function to find the next available date
   const findNextAvailableDate = async (startDate: Date) => {
-    console.log('🔍 [DEBUG] Starting findNextAvailableDate for:', startDate)
-    
     // Try the next 7 days
     for (let i = 1; i <= 7; i++) {
       const nextDate = addDays(startDate, i)
       const formattedDate = format(nextDate, "yyyy-MM-dd")
-
-      console.log(`🔍 [DEBUG] Checking day ${i}:`, formattedDate)
 
       try {
         const response = await fetch(
@@ -287,16 +253,10 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         )
 
         if (!response.ok) {
-          console.log(`❌ [DEBUG] Day ${i} response not ok:`, response.status)
           continue
         }
 
         const data = await response.json()
-
-        console.log(`📊 [DEBUG] Day ${i} data:`, {
-          hasBlocks: !!data.availabilityBlocks,
-          blocksCount: data.availabilityBlocks?.length || 0
-        })
 
         if (data.availabilityBlocks && data.availabilityBlocks.length > 0) {
           // Check if there are actually available start times
@@ -304,49 +264,23 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             (block: AvailabilityBlock) => block.availableStartTimes.length > 0,
           )
 
-          console.log(`🔍 [DEBUG] Day ${i} hasAvailableTimes:`, hasAvailableTimes)
-
           if (hasAvailableTimes) {
-            console.log(`✅ [DEBUG] Found available date:`, nextDate)
             setSuggestedDate(nextDate)
             return
           }
         }
       } catch (error) {
-        console.error(`💥 [DEBUG] Error checking day ${i}:`, error)
+        // Continue to next date
       }
     }
-    
-    console.log('❌ [DEBUG] No available dates found in next 7 days')
   }
 
   // Get all available start times across all blocks
   const allAvailableStartTimes = useMemo(() => {
     const startTimes = availabilityBlocks.flatMap((block) => block.availableStartTimes)
     const uniqueSortedTimes = [...new Set(startTimes)].sort() // Remove duplicates and sort
-    
-    console.log('🕐 [DEBUG] allAvailableStartTimes calculated:', {
-      availabilityBlocksCount: availabilityBlocks.length,
-      allStartTimes: startTimes,
-      uniqueSortedTimes: uniqueSortedTimes,
-      timestamp: new Date().toISOString()
-    })
-    
     return uniqueSortedTimes
   }, [availabilityBlocks])
-
-  // Debug effect to track state changes
-  useEffect(() => {
-    console.log('🔄 [DEBUG] State changed:', {
-      fetchingAvailability,
-      noAvailability,
-      availabilityBlocksCount: availabilityBlocks.length,
-      allAvailableStartTimesCount: allAvailableStartTimes.length,
-      selectedStartTime,
-      selectedEndTime,
-      timestamp: new Date().toISOString()
-    })
-  }, [fetchingAvailability, noAvailability, availabilityBlocks, allAvailableStartTimes, selectedStartTime, selectedEndTime])
 
   // Get certainty level for display
   const getCertaintyLevel = useMemo(() => {
@@ -388,12 +322,10 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   }
 
   const handleDBAComplete = async (result: any) => {
-    console.log('🎯 [BOOKING] DBA Complete called with result:', result)
     setDbaResult(result)
     setDbaCompleted(true)
     
     // Now create the booking since DBA is complete
-    console.log('🎯 [BOOKING] Creating booking with DBA...')
     await createBookingWithDBA(result)
   }
 
@@ -448,14 +380,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       setClientId(user.id)
 
       // Submit DBA answers to the database
-      console.log('🎯 [BOOKING] Submitting client DBA for booking:', newBookingId)
       const dbaSubmissionResult = await submitClientDBA(newBookingId, dbaResult)
       
       if (dbaSubmissionResult) {
-        console.log('🎯 [BOOKING] DBA submission complete, redirecting to payment...')
         toast.success('Booking created successfully with DBA assessment!')
       } else {
-        console.log('🎯 [BOOKING] DBA submission failed, but booking was created. Proceeding to payment...')
         toast.warning('Booking created successfully, but DBA assessment could not be saved. Please contact support.')
       }
       
@@ -473,11 +402,6 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
   const submitClientDBA = async (bookingId: string, dbaResult: any) => {
     try {
-      console.log('🔍 [DBA SUBMISSION] Starting DBA submission...')
-      console.log('🔍 [DBA SUBMISSION] URL:', '/api/client-dba/submit')
-      console.log('🔍 [DBA SUBMISSION] Booking ID:', bookingId)
-      console.log('🔍 [DBA SUBMISSION] Answers count:', dbaResult.answers?.length || 0)
-      
       const response = await fetch('/api/client-dba/submit', {
         method: 'POST',
         headers: {
@@ -488,21 +412,13 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           answers: dbaResult.answers
         }),
       })
-      
-      console.log('🔍 [DBA SUBMISSION] Response status:', response.status)
-      console.log('🔍 [DBA SUBMISSION] Response headers:', Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        console.error('DBA submission failed:', response.status, errorData)
         throw new Error(`Failed to submit DBA assessment: ${errorData.error || 'Server error'}`)
       }
 
       const serverResult = await response.json()
-      console.log('🐛 [CLIENT DBA DEBUG] Server result:', serverResult)
-      console.log('🐛 [CLIENT DBA DEBUG] Assessment data:', serverResult.assessment)
-      console.log('🐛 [CLIENT DBA DEBUG] Debug info:', serverResult.debug)
-      console.log('🐛 [CLIENT DBA DEBUG] Server debug:', serverResult.debug_server)
       
       // Update the DBA result with server-calculated values
       const updatedResult = {
@@ -513,12 +429,10 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         debug: serverResult.debug
       }
       
-      console.log('🐛 [CLIENT DBA DEBUG] Updated result:', updatedResult)
       setDbaResult(updatedResult)
       
       return serverResult
     } catch (error) {
-      console.error('Error submitting DBA:', error)
       // Don't throw error here as booking is already created
       return null
     }
@@ -710,18 +624,6 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
               <p className="text-sm text-muted-foreground">{t("bookingform.noAvailability")}</p>
             </div>
 
-            {/* Debug Info Display */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs">
-                <p><strong>Debug Info:</strong></p>
-                <p>Fetching: {fetchingAvailability ? 'Yes' : 'No'}</p>
-                <p>No Availability: {noAvailability ? 'Yes' : 'No'}</p>
-                <p>Blocks Count: {availabilityBlocks.length}</p>
-                <p>Available Times: {allAvailableStartTimes.length}</p>
-                <p>Suggested Date: {suggestedDate ? format(suggestedDate, "yyyy-MM-dd") : 'None'}</p>
-              </div>
-            )}
-
             {suggestedDate ? (
               <div className="mt-2 text-center">
                 <p className="text-sm mb-2">
@@ -738,18 +640,6 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Debug Info Display for Available Times */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="p-2 bg-green-100 border border-green-300 rounded text-xs">
-                <p><strong>Debug - Available Times:</strong></p>
-                <p>Blocks Count: {availabilityBlocks.length}</p>
-                <p>Available Times: {allAvailableStartTimes.length}</p>
-                <p>Certainty Level: {getCertaintyLevel}</p>
-                <p>Selected Start: {selectedStartTime || 'None'}</p>
-                <p>Selected End: {selectedEndTime || 'None'}</p>
-              </div>
-            )}
-
             {/* Availability Status Indicator */}
             {getCertaintyLevel && (
               <div className="flex items-center p-2 rounded-md bg-muted/30 text-sm">
@@ -954,41 +844,6 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
               : 'Complete DBA Check'
           }
         </Button>
-        
-        {/* Debug Button */}
-        <Button
-          type="button"
-          onClick={async () => {
-            console.log('🔍 [DEBUG] Testing freelancer DBA access...')
-            try {
-              const response = await fetch(`/api/debug/freelancer-dba?freelancer_id=${freelancer.id}&job_category_id=${selectedCategoryId}`)
-              const result = await response.json()
-              console.log('🔍 [DEBUG] Test results:', result)
-              console.log('🔍 [DEBUG] Direct access - All completions:', result.debug_results?.direct_access?.all_completions)
-              console.log('🔍 [DEBUG] Direct access - Specific freelancer:', result.debug_results?.direct_access?.specific_freelancer)
-              console.log('🔍 [DEBUG] Direct access - Category specific:', result.debug_results?.direct_access?.category_specific)
-              console.log('🔍 [DEBUG] RPC access data:', result.debug_results?.rpc_access?.data)
-              console.log('🔍 [DEBUG] Current user:', result.debug_results?.current_user)
-              
-              // Show summary in toast
-              const rpcData = result.debug_results?.rpc_access?.data
-              const summary = `
-                RPC Completions: ${rpcData?.all_completions_count || 0}
-                RPC Answers: ${rpcData?.all_answers_count || 0}
-                Direct Completions: ${result.debug_results?.direct_access?.all_completions?.count || 0}
-              `
-              toast.success(`Debug Complete: ${summary}`)
-            } catch (error) {
-              console.error('🔍 [DEBUG] Test failed:', error)
-              toast.error("Debug Test Failed - Check console for error details")
-            }
-          }}
-          variant="secondary"
-          size="sm"
-          className="mt-2 w-full"
-        >
-          🔍 Debug Freelancer DBA Access
-        </Button>
 
         {dbaCompleted && dbaResult && (
           <div className="text-xs p-2 rounded-md border bg-gray-50">
@@ -1127,13 +982,6 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         jobCategoryId={selectedCategoryId || ''}
         onComplete={handleDBAComplete}
       />
-      
-      {/* Debug info */}
-      {process.env.NODE_ENV === 'development' && showDBAModal && (
-        <div className="fixed bottom-4 left-4 bg-black text-white p-2 text-xs rounded z-50">
-          Debug: selectedCategoryId = {selectedCategoryId || 'null'}, freelancerId = {freelancer.id}
-        </div>
-      )}
     </div>
   )
 }

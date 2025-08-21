@@ -609,7 +609,8 @@
     "paymentStepTitle": "Payment & Confirmation",
     "paymentStepDescription": "Review your booking details and proceed to payment.",
     "bookingSummary": "Booking Summary",
-
+    "dbaCompleted": "DBA Assessment Completed",
+    "dbaCompletedDescription": "Your DBA compliance assessment has been completed successfully. You can now proceed with the booking.",
 
 
     "continueToPayment": "Continue to Payment",

@@ -612,7 +612,8 @@
     "paymentStepTitle": "Betaling & Bevestiging",
     "paymentStepDescription": "Controleer je boeking details en ga door naar betaling.",
     "bookingSummary": "Boeking Samenvatting",
-
+    "dbaCompleted": "DBA Beoordeling Voltooid",
+    "dbaCompletedDescription": "Je DBA compliance beoordeling is succesvol voltooid. Je kunt nu doorgaan met de boeking.",
 
 
     "continueToPayment": "Ga door naar Betaling",

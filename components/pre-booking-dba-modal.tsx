@@ -171,7 +171,6 @@ export function PreBookingDBAModal({
         setCurrentQuestionIndex(0)
       }
     } catch (error) {
-      console.error('Error fetching questions:', error)
       toast.error('Failed to load DBA questions')
     } finally {
       setLoading(false)
@@ -202,14 +201,10 @@ export function PreBookingDBAModal({
   const handleSubmit = async () => {
     try {
       setSubmitting(true)
-      console.log('🎯 [DBA MODAL] Starting DBA completion...')
       
       // Calculate client total score
       const clientScore = Object.values(answers).reduce((sum, answer) => sum + answer.answer_score, 0)
       const answersArray = Object.values(answers)
-      
-      console.log('🎯 [DBA MODAL] Client score:', clientScore)
-      console.log('🎯 [DBA MODAL] Fetching freelancer score and calculating combined result...')
       
       // Get combined score by calling the server function
       const response = await fetch('/api/client-dba/calculate-combined', {
@@ -230,7 +225,6 @@ export function PreBookingDBAModal({
       }
 
       const combinedResult = await response.json()
-      console.log('🎯 [DBA MODAL] Combined result from server:', combinedResult)
 
       const result: DBAResult = {
         answers: answersArray,
@@ -243,13 +237,10 @@ export function PreBookingDBAModal({
         max_possible_score: combinedResult.max_possible_score || 0
       }
 
-      console.log('🎯 [DBA MODAL] Final DBA result:', result)
       setDbaResult(result)
       setStep('assessment')
       
     } catch (error) {
-      console.error('🎯 [DBA MODAL] Error calculating combined score:', error)
-      
       // Fallback to client-only calculation
       const clientScore = Object.values(answers).reduce((sum, answer) => sum + answer.answer_score, 0)
       const clientOnlyRiskLevel = calculateRisk(clientScore)
@@ -266,7 +257,6 @@ export function PreBookingDBAModal({
         error: 'Failed to get freelancer score'
       }
 
-      console.log('🎯 [DBA MODAL] Using fallback result:', fallbackResult)
       setDbaResult(fallbackResult)
       setStep('assessment')
       toast.error('Warning: Could not fetch freelancer DBA data. Showing client-only assessment.')
@@ -301,11 +291,9 @@ export function PreBookingDBAModal({
         setFreelancerAnswers(data.answers || [])
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        console.error('Failed to load freelancer answers:', response.status, errorData)
         toast.error(`Failed to load freelancer answers: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
-      console.error('Network error loading freelancer answers:', error)
       toast.error('Failed to load freelancer answers - network error')
     } finally {
       setDisputeLoading(false)
@@ -319,9 +307,6 @@ export function PreBookingDBAModal({
     }
 
     try {
-      console.log('🔍 [CONVERSATION] Starting conversation with freelancer:', freelancerId)
-      console.log('🔍 [CONVERSATION] Current user:', user.id)
-
       // First, try to find existing conversation - use the correct table structure
       let conversationId: string | null = null
       
@@ -347,12 +332,8 @@ export function PreBookingDBAModal({
         }
       }
 
-      console.log('🔍 [CONVERSATION] Find conversation result:', { conversationId, userConversations })
-
       // If no existing conversation, create one
       if (!conversationId) {
-        console.log('🔍 [CONVERSATION] Creating new conversation...')
-        
         // First create the conversation
         const { data: newConversation, error: createError } = await supabase
           .from('conversations')
@@ -360,10 +341,7 @@ export function PreBookingDBAModal({
           .select('id')
           .single()
 
-        console.log('🔍 [CONVERSATION] Create conversation result:', { newConversation, createError })
-
         if (createError) {
-          console.error('🔍 [CONVERSATION] Create error details:', createError)
           throw createError
         }
         
@@ -378,7 +356,6 @@ export function PreBookingDBAModal({
           })
 
         if (participant1Error) {
-          console.error('🔍 [CONVERSATION] Add participant 1 error:', participant1Error)
           throw participant1Error
         }
 
@@ -390,14 +367,9 @@ export function PreBookingDBAModal({
           })
 
         if (participant2Error) {
-          console.error('🔍 [CONVERSATION] Add participant 2 error:', participant2Error)
           throw participant2Error
         }
-
-        console.log('🔍 [CONVERSATION] Both participants added successfully')
       }
-
-      console.log('🔍 [CONVERSATION] Using conversation ID:', conversationId)
 
       // Send initial DBA-related message
       const { error: messageError } = await supabase
@@ -407,29 +379,15 @@ export function PreBookingDBAModal({
           p_content: messageText
         })
 
-      console.log('🔍 [CONVERSATION] Add message result:', { messageError })
-
       if (messageError) {
-        console.error('🔍 [CONVERSATION] Message error details:', messageError)
         throw messageError
       }
 
       // Close modal and redirect to the specific conversation
-      console.log('🔍 [CONVERSATION] Success! Redirecting to:', `/messages?conversation=${conversationId}`)
       onClose()
       router.push(`/messages?conversation=${conversationId}`)
 
     } catch (error) {
-      console.error('🔍 [CONVERSATION] Error starting conversation:', error)
-      console.error('🔍 [CONVERSATION] Error type:', typeof error)
-      console.error('🔍 [CONVERSATION] Error keys:', Object.keys(error || {}))
-      
-      // Type-safe error logging
-      if (error && typeof error === 'object') {
-        console.error('🔍 [CONVERSATION] Error message:', (error as any).message)
-        console.error('🔍 [CONVERSATION] Error details:', (error as any).details)
-      }
-      
       toast.error('Failed to start conversation. Please try going to Messages manually.')
       
       // Fallback: just redirect to messages
@@ -596,59 +554,6 @@ export function PreBookingDBAModal({
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {/* Dispute Summary */}
-                        {/* <div className="bg-gray-50 p-4 rounded-lg"> */}
-                          {/* <h6 className="font-medium mb-2">Freelancer DBA Assessment</h6> */}
-                          {/* <div className="text-center">
-                            <div className="text-lg font-bold text-blue-600">
-                              {freelancerAnswers.length}
-                            </div>
-                            <div className="text-gray-600">Questions Answered by Freelancer</div>
-                          </div> */}
-                        {/* </div> */}
-                        
-                        {/* Search/Filter */}
-                        {/* {freelancerAnswers.length > 10 && (
-                          <div className="space-y-3">
-                            <input
-                              type="text"
-                              placeholder="Search questions..."
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                              onChange={(e) => {
-                                const searchTerm = e.target.value.toLowerCase()
-                                const filtered = freelancerAnswers.filter(answer => 
-                                  answer.question_text.toLowerCase().includes(searchTerm) ||
-                                  answer.selected_answer.toLowerCase().includes(searchTerm)
-                                )
-                                // For now, just filter in place - could add state for this
-                                console.log('Filtered answers:', filtered.length)
-                              }}
-                            />
-                            
-                            Category Filter
-                            <div className="flex flex-wrap gap-2">
-                              <span className="text-xs text-gray-600 self-center">Filter by category:</span>
-                              {Array.from(new Set(freelancerAnswers.map(a => a.category))).map(category => (
-                                <Badge 
-                                  key={category} 
-                                  variant="outline" 
-                                  className="text-xs cursor-pointer hover:bg-gray-100"
-                                  onClick={() => {
-                                    // For now, just log - could add state for filtering
-                                    console.log('Filter by category:', category)
-                                  }}
-                                >
-                                  {category}
-                                </Badge>
-                              ))}
-                            </div>
-                            
-                            <div className="text-xs text-gray-500 text-center">
-                              Type to search through questions and answers, or click categories to filter
-                            </div>
-                          </div>
-                        )} */}
-                        
                         {/* Freelancer Answers Display */}
                         {freelancerAnswers.length === 0 ? (
                           <div className="text-center py-8">
@@ -785,11 +690,11 @@ export function PreBookingDBAModal({
           </div>
 
           {/* Current Category */}
-          <div className="text-center">
+          {/* <div className="text-center">
             <Badge variant="outline" className="text-sm">
               {categoryTitles[currentCategory as keyof typeof categoryTitles]}
             </Badge>
-          </div>
+          </div> */}
 
           {/* Question */}
           {currentQuestion && (
@@ -815,7 +720,7 @@ export function PreBookingDBAModal({
                       <div className="flex items-center justify-between">
                         <span className="text-sm">{option}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">{score} pts</span>
+                          {/* <span className="text-xs text-gray-500">{score} pts</span> */}
                           {isSelected && <CheckCircle className="h-4 w-4 text-primary" />}
                         </div>
                       </div>
