@@ -204,7 +204,8 @@
     "results": {
       "found": "Found {count} freelancers",
       "none": "No freelancers found",
-      "fallbackFound": "Found {count} freelancers"
+      "fallbackFound": "Found {count} freelancers",
+      "locationSearch": "📍 Searching within {radius} km of your location"
     },
     "empty": {
       "title": "No freelancers found",
@@ -277,6 +278,9 @@
       "yearsExp": "{years} years exp.",
       "fullLocation": "Full Location",
       "noLocation": "No location specified"
+    },
+    "distance": {
+      "away": "km away"
     }
   },
   "pagination": {

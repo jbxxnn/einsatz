@@ -204,7 +204,8 @@
     "results": {
       "found": "{count} freelancers gevonden",
       "none": "Geen freelancers gevonden",
-      "fallbackFound": "{count} freelancers gevonden"
+      "fallbackFound": "{count} freelancers gevonden",
+      "locationSearch": "📍 Zoeken binnen {radius} km van je locatie"
     },
     "empty": {
       "title": "Geen freelancers gevonden",
@@ -277,6 +278,9 @@
       "yearsExp": "{years} jaar erv.",
       "fullLocation": "Volledige Locatie",
       "noLocation": "Geen locatie opgegeven"
+    },
+    "distance": {
+      "away": "km weg"
     }
   },
   "pagination": {

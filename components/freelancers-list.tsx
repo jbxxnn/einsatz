@@ -187,10 +187,20 @@ export default function FreelancersList() {
     <div className="space-y-6">
       {/* Results header with count and refresh indicator */}
       <div className="flex items-center justify-between ">
-        <div className="text-xs text-black">
-          {t("freelancers.results.found", { count: freelancers.length }) || 
-           t("freelancers.results.fallbackFound", { count: freelancers.length })}
+        <div className="flex flex-col gap-1">
+          <div className="text-xs text-black">
+            {t("freelancers.results.found", { count: freelancers.length }) || 
+             t("freelancers.results.fallbackFound", { count: freelancers.length })}
+          </div>
+          
+          {/* Location search info */}
+          {filters.latitude && filters.longitude && filters.radius && (
+            <div className="text-xs text-gray-600">
+              {t("freelancers.results.locationSearch", { radius: filters.radius })}
+            </div>
+          )}
         </div>
+        
         {isFetching && (
           <div className="flex items-center gap-2 text-xs text-black">
             <RefreshCw className="h-4 w-4 animate-spin" />
@@ -377,21 +387,30 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                     <BadgeCheck className="h-3 w-3 mr-1 text-green-500" />
                   )} */}
               </div>
-              <div className="flex items-center gap-2 mb-6">
+                             <div className="flex items-center gap-2 mb-6">
                {/* <div className="text-xs">€{freelancer.hourly_rate}/hr</div> */}
               <MapPin className="h-3 w-3 text-black" />
-               <TooltipProvider>
-                 <Tooltip>
-                   <TooltipTrigger asChild>
-                     <div className="text-xs cursor-help" style={{ borderStyle: 'dashed', borderWidth: '0 0 1px 0', borderImage: 'repeating-linear-gradient(to right, #9ca3af 0, #9ca3af 4px, transparent 4px, transparent 8px) 1' }}>
-                       {getCityFromLocation(freelancer.location)}
-                     </div>
-                   </TooltipTrigger>
-                   <TooltipContent>
-                     <p className="text-sm">{freelancer.location || t("freelancers.tooltips.noLocation")}</p>
-                   </TooltipContent>
-                 </Tooltip>
-               </TooltipProvider>
+               <div className="flex items-center gap-2">
+                 <TooltipProvider>
+                   <Tooltip>
+                     <TooltipTrigger asChild>
+                       <div className="text-xs cursor-help" style={{ borderStyle: 'dashed', borderWidth: '0 0 1px 0', borderImage: 'repeating-linear-gradient(to right, #9ca3af 0, #9ca3af 4px, transparent 4px, transparent 8px) 1' }}>
+                         {getCityFromLocation(freelancer.location)}
+                       </div>
+                     </TooltipTrigger>
+                     <TooltipContent>
+                       <p className="text-sm">{freelancer.location || t("freelancers.tooltips.noLocation")}</p>
+                     </TooltipContent>
+                   </Tooltip>
+                 </TooltipProvider>
+                 
+                 {/* Distance Display */}
+                 {freelancer.distance !== null && freelancer.distance !== undefined && (
+                   <span className="text-xs text-green-600 font-medium">
+                     ({freelancer.distance.toFixed(1)} {t("freelancers.distance.away")})
+                   </span>
+                 )}
+               </div>
                </div>
               {/* Job Offerings - Hidden when wildcard filter is active */}
               {!showWildcards ? (
