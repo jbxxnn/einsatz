@@ -508,117 +508,122 @@ export default function FreelancerProfile() {
             {activeTab === 'services' && (
               <div className="space-y-6 bg-white rounded-lg p-8">
                 <h3 className="font-semibold mb-2 text-black text-lg">Hire {freelancer.first_name}</h3>
-                <div className="flex flex-wrap gap-2 mb-4">
-                          {freelancer.job_offerings.map((offering) => (
-                            <div 
-                              key={offering.category_id} 
-                              className={`flex items-center justify-between p-3 rounded-full cursor-pointer transition-all duration-200 ${
-                                selectedCategoryId === offering.category_id 
-                                  ? 'bg-[#0e2316] text-white rounded-br-none' 
-                                  : 'bg-[#33CC99] hover:bg-[#2BB88A] text-white'
-                              }`}
-                              onClick={() => setSelectedCategoryId(offering.category_id)}
-                            >                            
-                              <div>
-                                <div className="text-xs font-regular">{offering.category_name}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>  
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card>
-                      <CardContent className="p-6">
+                
+                {/* Step 1: Service Categories Selection */}
+                <div className="space-y-4">
+                  {/* Show categories only when none is selected */}
+                  {!selectedCategoryId && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                      {freelancer.job_offerings.map((offering) => (
+                        <div 
+                          key={offering.category_id} 
+                          className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-[#33CC99]"
+                          onClick={() => setSelectedCategoryId(offering.category_id)}
+                        >
+                          {/* Top gradient bar */}
+                          <div className="h-2 bg-gradient-to-r from-pink-300 to-red-400 rounded-full mb-3"></div>
                           
-
-
-                      {!showBookingForm ? (
-                        <div className="space-y-4">
-                          {selectedCategoryId ? (
-                            <div>
-                              <FreelancerAvailabilityCalendar
-                                freelancerId={params.id as string}
-                                categoryId={selectedCategoryId}
-                                onSelectDate={setSelectedDate}
-                              />
-                            </div> 
-                          ) : (
-                            <div className="text-center py-8">
-                              <p className="text-black text-sm">{t("freelancer.selectServiceFirst")}</p>
+                          {/* Service details */}
+                          <div className="space-y-3">
+                            {/* Category name */}
+                            <div className="flex items-center space-x-2">
+                              <CustomResponseIcon className="h-4 w-4 text-[#33CC99]" />
+                              <h4 className="font-bold text-black text-sm">{offering.category_name}</h4>
                             </div>
-                          )}
-
-                          <Button
-                            className="w-full bg-[#33CC99] hover:bg-[#2BB88A] text-white"
-                            disabled={!selectedDate || !selectedCategoryId}
-                            onClick={() => setShowBookingForm(true)}
-                          >
-                            {t("freelancer.continueToBooking")}
-                          </Button>
-                        </div>
-                      ) : (
-                        <BookingForm
-                          freelancer={freelancer}
-                          selectedDate={selectedDate}
-                          onBack={() => setShowBookingForm(false)}
-                          selectedCategoryId={selectedCategoryId}
-                        />
-                      )}
-                    </CardContent>
-                  </Card>
-                  <div>
-                    <div className="p-2 pt-0">
-                      {selectedOffering ? (
-                        <div className="space-y-1">
-                          <div className="p-4 border border-gray-200 rounded-lg">
-
                             
-
-
-                            <div 
-                                 className="h-5 rounded-lg relative overflow-hidden mt-4 mb-4"
-                                 style={{
-                                  background: getCoverTemplate((freelancer.metadata as any)?.coverTemplate)?.pattern || "linear-gradient(135deg, #1e293b 0%, #334155 50%, #64748b 100%)",
-                                  backgroundSize: "cover"
-                                }}
-                            >
-                            <div className="absolute inset-0 opacity-20">
-                              <div className="w-full h-full" style={{
-                                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-                               }}></div>
-                              </div>
+                            {/* Hourly rate */}
+                            <div className="flex items-center space-x-2">
+                              <CustomPaymentsIcon className="h-4 w-4 text-[#33CC99]" />
+                              <span className="font-bold text-black text-sm">€{offering.hourly_rate} p/hr</span>
                             </div>
-
-                            <div className="flex items-center mb-2">
-                              <CustomResponseIcon className="h-4 w-4 mr-2 text-[#33CC99]" />
-                              <h4 className="text-lg font-semibold">{selectedOffering.category_name}</h4>
-                            </div>
-                            <div className="flex items-baseline space-x-1 mb-2">
-                              <CustomPaymentsIcon className="h-4 w-4 mr-2 text-[#33CC99]" />
-                              <span className="text-sm font-bold text-black">€{selectedOffering.hourly_rate}</span>
-                              <span className="text-xs text-black">{t("freelancer.filters.hour")}</span>
-                            </div>
-                            {selectedOffering.description && (
-                              <div className="flex items-baseline space-x-1 mb-2">
-                              <CustomNoBookingsIcon className="h-4 w-4 mr-2 text-[#33CC99]" />
-                              <p className="text-xs font-light text-black">{selectedOffering.description}</p>
+                            
+                            {/* Description */}
+                            {offering.description && (
+                              <div className="flex items-start space-x-2">
+                                <CustomNoBookingsIcon className="h-4 w-4 text-[#33CC99] mt-0.5" />
+                                <span className="text-black text-xs">{offering.description}</span>
                               </div>
                             )}
-                            {selectedOffering.experience_years && (
-                              <div className="flex items-baseline space-x-1 mb-2">
-                                <CustomViewDetailsIcon className="h-4 w-4 mr-2 text-[#33CC99]" />
-                                <span className="text-xs text-black">{selectedOffering.experience_years} {t("freelancer.filters.yearsOfExperience")}</span>
+                            
+                            {/* Experience years */}
+                            {offering.experience_years && (
+                              <div className="flex items-center space-x-2">
+                                <CustomViewDetailsIcon className="h-4 w-4 text-[#33CC99]" />
+                                <span className="text-black text-xs">{offering.experience_years} years of experience</span>
                               </div>
                             )}
                           </div>
                         </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <p className="text-black">No service selected</p>
-                          <p className="text-xs text-black mt-1">Choose a service from above to see details</p>
-                        </div>
-                      )}
+                      ))}
                     </div>
-                  </div>
+                  )}
+
+                  {/* Show selected category with change option when one is selected */}
+                  {selectedCategoryId && (
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div>
+                          <span className="text-sm font-medium text-black">
+                            {selectedOffering?.category_name}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">Service selected</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedCategoryId(null)}
+                        className="text-xs"
+                      >
+                        Change Category
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Step 2: Calendar Section (only shown after category selection) */}
+                  {selectedCategoryId && (
+                    <div className="flex justify-center">
+                      <div className="w-full max-w-md">
+                        <Card>
+                          <CardContent className="p-6">
+                            {!showBookingForm ? (
+                              <div className="space-y-4">
+                                <div>
+                                  <FreelancerAvailabilityCalendar
+                                    freelancerId={params.id as string}
+                                    categoryId={selectedCategoryId}
+                                    onSelectDate={setSelectedDate}
+                                  />
+                                </div>
+
+                                <Button
+                                  className="w-full bg-[#33CC99] hover:bg-[#2BB88A] text-white"
+                                  disabled={!selectedDate}
+                                  onClick={() => setShowBookingForm(true)}
+                                >
+                                  {t("freelancer.continueToBooking")}
+                                </Button>
+                              </div>
+                            ) : (
+                              <BookingForm
+                                freelancer={freelancer}
+                                selectedDate={selectedDate}
+                                onBack={() => setShowBookingForm(false)}
+                                selectedCategoryId={selectedCategoryId}
+                              />
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show message when no category is selected */}
+                  {!selectedCategoryId && (
+                    <div className="text-center py-8">
+                      <p className="text-black text-sm">Please select a service first to view availability</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
