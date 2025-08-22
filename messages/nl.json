@@ -160,7 +160,9 @@
     "wildcard": "Wildcard",
     "rateStart": "Tarief vanaf",
     "completedJobs": "klussen",
+    "fallbackCompletedJobs": "klussen",
     "message": "Bericht",
+    "fallbackMessage": "Bericht",
     "topRated": "Top Beoordeeld",
     "fastResponse": "Snelle Reactie",
     "completionRate": "Voltooiingspercentage",
@@ -201,21 +203,89 @@
     },
     "results": {
       "found": "{count} freelancers gevonden",
-      "none": "Geen freelancers gevonden"
+      "none": "Geen freelancers gevonden",
+      "fallbackFound": "{count} freelancers gevonden"
     },
     "empty": {
       "title": "Geen freelancers gevonden",
-      "description": "Probeer je filters of zoekcriteria aan te passen om meer freelancers te vinden."
+      "description": "Probeer je filters of zoekcriteria aan te passen om meer freelancers te vinden.",
+      "fallbackTitle": "Geen freelancers gevonden",
+      "fallbackDescription": "Probeer je filters aan te passen om meer freelancers te vinden."
     },
     "error": {
       "title": "Fout bij het laden van freelancers",
-      "description": "Er was een probleem bij het laden van de freelancer lijst. Probeer het opnieuw."
+      "description": "Er was een probleem bij het laden van de freelancer lijst. Probeer het opnieuw.",
+      "fallbackTitle": "Fout bij het laden van freelancers",
+      "fallbackDescription": "Er was een probleem bij het laden van de freelancer lijst. Probeer het opnieuw."
+    },
+    "loading": {
+      "retrying": "Opnieuw proberen...",
+      "tryAgain": "Opnieuw proberen",
+      "refreshing": "Vernieuwen...",
+      "refresh": "Vernieuwen",
+      "updating": "Bijwerken..."
+    },
+    "wildcard": {
+      "modeActive": "Wildcard Modus Actief",
+      "additionalCapabilities": "Aanvullende Mogelijkheden",
+      "capabilities": "mogelijkheden",
+      "categories": {
+        "physical_work": {
+          "label": "Fysiek Werk",
+          "description": "Fysiek in staat en kan fysieke taken uitvoeren"
+        },
+        "customer_facing": {
+          "label": "Klantgericht",
+          "description": "Goede representatie en communicatieve vaardigheden"
+        },
+        "outdoor_work": {
+          "label": "Buitenwerk",
+          "description": "Comfortabel werken in verschillende weersomstandigheden"
+        },
+        "odd_hours": {
+          "label": "Flexibele Uren",
+          "description": "Beschikbaar voor vroege ochtenden, late avonden of weekenden"
+        },
+        "repetitive_work": {
+          "label": "Repetitieve Taken",
+          "description": "Comfortabel met routinematig en repetitief werk"
+        },
+        "analytical_work": {
+          "label": "Analytisch Werk",
+          "description": "Sterke probleemoplossende en analytische vaardigheden"
+        },
+        "creative_work": {
+          "label": "Creatief Werk",
+          "description": "Creatieve vaardigheden en innovatief denken"
+        }
+      }
+    },
+    "dba": {
+      "status": "DBA Status",
+      "completed": "Voltooid",
+      "incomplete": "Onvoltooid",
+      "notAvailable": "Niet Beschikbaar",
+      "riskLevel": "Risico Niveau",
+      "risk": "Risico",
+      "completedSymbol": "✓ DBA",
+      "incompleteSymbol": "⚠ DBA",
+      "noDBA": "✗ Geen DBA"
+    },
+    "tooltips": {
+      "rate": "Tarief: €{rate}/uur",
+      "experience": "Ervaring: {years} jaar",
+      "yearsExp": "{years} jaar erv.",
+      "fullLocation": "Volledige Locatie",
+      "noLocation": "Geen locatie opgegeven"
     }
   },
   "pagination": {
     "previous": "Vorige",
     "next": "Volgende",
-    "showing": "Toont {from}-{to} van {total} freelancers"
+    "showing": "Toont {from}-{to} van {total} freelancers",
+    "fallbackShowing": "Toont {from}-{to} van {total} freelancers",
+    "fallbackPrevious": "Vorige",
+    "fallbackNext": "Volgende"
   },
   "header": {
     "findFreelancers": "Vind freelancers",

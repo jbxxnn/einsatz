@@ -31,6 +31,16 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
   is_available_now?: boolean
   is_verified?: boolean
   completed_bookings?: number
+  wildcard_categories?: {
+    physical_work: boolean
+    customer_facing: boolean
+    outdoor_work: boolean
+    odd_hours: boolean
+    repetitive_work: boolean
+    analytical_work: boolean
+    creative_work: boolean
+  } | null
+  wildcard_enabled?: boolean
 }
 
 export default function FreelancersList() {
@@ -108,21 +118,21 @@ export default function FreelancersList() {
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {t("freelancers.error.title") || "Error loading freelancers"}
+                {t("freelancers.error.title") || t("freelancers.error.fallbackTitle")}
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                {t("freelancers.error.description") || "There was a problem loading the freelancer list. Please try again."}
+                {t("freelancers.error.description") || t("freelancers.error.fallbackDescription")}
             </p>
               <Button onClick={() => refetch()} variant="outline" disabled={isFetching}>
                 {isFetching ? (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Retrying...
+                    {t("freelancers.loading.retrying")}
                   </>
                 ) : (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4" />
-                    Try Again
+                    {t("freelancers.loading.tryAgain")}
                   </>
                 )}
               </Button>
@@ -144,10 +154,10 @@ export default function FreelancersList() {
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {t("freelancers.empty.title") || "No freelancers found"}
+                {t("freelancers.empty.title") || t("freelancers.empty.fallbackTitle")}
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                {t("freelancers.empty.description") || "Try adjusting your filters to find more freelancers."}
+                {t("freelancers.empty.description") || t("freelancers.empty.fallbackDescription")}
               </p>
               <Button 
                 onClick={() => refetch()} 
@@ -157,12 +167,12 @@ export default function FreelancersList() {
                 {isFetching ? (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Refreshing...
+                    {t("freelancers.loading.refreshing")}
                   </>
                 ) : (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4" />
-                    Refresh
+                    {t("freelancers.loading.refresh")}
                   </>
                 )}
               </Button>
@@ -179,12 +189,12 @@ export default function FreelancersList() {
       <div className="flex items-center justify-between ">
         <div className="text-xs text-black">
           {t("freelancers.results.found", { count: freelancers.length }) || 
-           `${freelancers.length} freelancer${freelancers.length !== 1 ? 's' : ''} found`}
+           t("freelancers.results.fallbackFound", { count: freelancers.length })}
         </div>
         {isFetching && (
           <div className="flex items-center gap-2 text-xs text-black">
             <RefreshCw className="h-4 w-4 animate-spin" />
-            Updating...
+            {t("freelancers.loading.updating")}
           </div>
         )}
       </div>
@@ -192,7 +202,11 @@ export default function FreelancersList() {
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-4">
         {/* Freelancers list */}
       {freelancers.map((freelancer: Freelancer) => (
-        <FreelancerCard key={freelancer.id} freelancer={freelancer} />
+        <FreelancerCard 
+          key={freelancer.id} 
+          freelancer={freelancer} 
+          showWildcards={filters.wildcardOnly}
+        />
       ))}
       </div>
 
@@ -204,7 +218,11 @@ export default function FreelancersList() {
               from: (currentPage - 1) * limit + 1, 
               to: Math.min(currentPage * limit, pagination.total),
               total: pagination.total 
-            }) || `Showing ${(currentPage - 1) * limit + 1}-${Math.min(currentPage * limit, pagination.total)} of ${pagination.total} freelancers`}
+            }) || t("pagination.fallbackShowing", { 
+              from: (currentPage - 1) * limit + 1, 
+              to: Math.min(currentPage * limit, pagination.total),
+              total: pagination.total 
+            })}
           </div>
           
           <div className="flex items-center gap-2">
@@ -216,7 +234,7 @@ export default function FreelancersList() {
               className="text-xs text-black bg-transparent"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              {t("pagination.previous") || "Previous"}
+              {t("pagination.previous") || t("pagination.fallbackPrevious")}
             </Button>
             
             <div className="flex items-center gap-1">
@@ -243,7 +261,7 @@ export default function FreelancersList() {
               disabled={!pagination.hasMore}
               className="text-xs text-black bg-transparent"
             >
-              {t("pagination.next") || "Next"}
+              {t("pagination.next") || t("pagination.fallbackNext")}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
@@ -253,7 +271,7 @@ export default function FreelancersList() {
   )
 }
 
-function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
+function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Freelancer, showWildcards?: boolean }) {
   const { t } = useTranslation()
   const initials = `${freelancer.first_name?.[0] || ""}${freelancer.last_name?.[0] || ""}`.toUpperCase()
 
@@ -281,6 +299,28 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
     return colors[Math.abs(hash) % colors.length]
   }
 
+  // Function to extract city from full location string
+  const getCityFromLocation = (location: string | null): string => {
+    if (!location) return ''
+    
+    // Split by common separators (comma, dash, etc.)
+    const parts = location.split(/[,;\-–—]/).map(part => part.trim()).filter(Boolean)
+    
+    // If we have multiple parts, the first part is usually the city
+    if (parts.length > 1) {
+      // Sometimes the first part might be a street number, so check if it's numeric
+      const firstPart = parts[0]
+      if (/^\d+$/.test(firstPart) && parts.length > 2) {
+        // If first part is numeric (street number), take the second part
+        return parts[1]
+      }
+      return firstPart
+    }
+    
+    // If only one part, return as is (might already be just city)
+    return parts[0] || ''
+  }
+
   return (
     <Card className="transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:scale-[1.01] rounded-xl">
       <a href={`/freelancers/${freelancer.id}`}>
@@ -300,7 +340,7 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                {freelancer.is_verified && (
                  <Badge variant="secondary" className="bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 text-xs">
                    <CheckCircle className="h-3 w-3 mr-1" />
-                   Verified
+                   {t("freelancer.verified")}
                  </Badge>
                )}
              </div>
@@ -328,7 +368,7 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                       );
                     })}
                   </div>
-                  <span className="text-xs font-medium ml-1">{freelancer.completed_bookings || "0"} {t("freelancer.completedJobs") || "jobs"}</span>
+                  <span className="text-xs font-medium ml-1">{freelancer.completed_bookings || "0"} {t("freelancer.completedJobs") || t("freelancer.fallbackCompletedJobs")}</span>
                 </div>
                <h3 className="text-md font-bold font-sans group-hover:text-primary transition-colors text-black">
                     {freelancer.first_name} {freelancer.last_name}
@@ -340,206 +380,191 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
               <div className="flex items-center gap-2 mb-6">
                {/* <div className="text-xs">€{freelancer.hourly_rate}/hr</div> */}
               <MapPin className="h-3 w-3 text-black" />
-               <div className="text-xs" style={{ borderStyle: 'dashed', borderWidth: '0 0 1px 0', borderImage: 'repeating-linear-gradient(to right, #9ca3af 0, #9ca3af 4px, transparent 4px, transparent 8px) 1' }}>{freelancer.location}</div>
+               <TooltipProvider>
+                 <Tooltip>
+                   <TooltipTrigger asChild>
+                     <div className="text-xs cursor-help" style={{ borderStyle: 'dashed', borderWidth: '0 0 1px 0', borderImage: 'repeating-linear-gradient(to right, #9ca3af 0, #9ca3af 4px, transparent 4px, transparent 8px) 1' }}>
+                       {getCityFromLocation(freelancer.location)}
+                     </div>
+                   </TooltipTrigger>
+                   <TooltipContent>
+                     <p className="text-sm">{freelancer.location || t("freelancers.tooltips.noLocation")}</p>
+                   </TooltipContent>
+                 </Tooltip>
+               </TooltipProvider>
                </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 auto-rows-fr">
-                {freelancer.job_offerings?.map((offering) => (
-                  <div key={offering.id} className="flex flex-col gap-1">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge 
-                            className={`text-xs cursor-help flex flex-col items-start justify-between rounded-md border transition-colors h-full ${getCategoryColor(offering.category_name)}`}
-                          >
-                            <div className="flex flex-col items-start gap-1 p-1 pr-6 w-full h-full">
-                              <span className="font-bold">
-                                {offering.subcategory_name}
-                              </span>
-                              
-                              {/* Hourly Rate and Experience */}
-                              <div className="flex gap-4 mt-1">
-                                {offering.hourly_rate && (
-                                  <span className="text-xs font-semibold text-green-700">
-                                    €{offering.hourly_rate}/hr
+              {/* Job Offerings - Hidden when wildcard filter is active */}
+              {!showWildcards ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 auto-rows-fr">
+                  {freelancer.job_offerings?.map((offering) => (
+                    <div key={offering.id} className="flex flex-col gap-1">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge 
+                              className={`text-xs cursor-help flex flex-col items-start justify-between rounded-md border transition-colors h-full ${getCategoryColor(offering.category_name)}`}
+                            >
+                              <div className="flex flex-col items-start gap-1 p-1 pr-6 w-full h-full">
+                                <span className="font-bold">
+                                  {offering.subcategory_name}
+                                </span>
+                                
+                                {/* Hourly Rate and Experience */}
+                                <div className="flex gap-4 mt-1">
+                                  {offering.hourly_rate && (
+                                                                      <span className="text-xs font-semibold text-green-700">
+                                    {t("freelancers.tooltips.rate", { rate: offering.hourly_rate })}
                                   </span>
-                                )}
-                                {offering.experience_years && (
-                                  <span className="text-xs text-blue-700">
-                                    {offering.experience_years} years exp.
+                                  )}
+                                  {offering.experience_years && (
+                                                                      <span className="text-xs text-blue-700">
+                                    {t("freelancers.tooltips.yearsExp", { years: offering.experience_years })}
                                   </span>
-                                )}
+                                  )}
+                                </div>
+                                
+                                {/* DBA Status - Always rendered but conditionally styled */}
+                                <div className="flex items-center gap-1 mt-1 mt-auto">
+                                  {offering.dba_status ? (
+                                    <span className={`text-xs px-1 py-0.5 rounded font-medium ${
+                                      offering.dba_status.is_completed 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                      {offering.dba_status.is_completed ? t("freelancers.dba.completedSymbol") : t("freelancers.dba.incompleteSymbol")}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs px-1 py-0.5 rounded bg-red-100 text-red-800 font-medium">
+                                      {t("freelancers.dba.noDBA")}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              
-                              {/* DBA Status - Always rendered but conditionally styled */}
-                              <div className="flex items-center gap-1 mt-1 mt-auto">
-                                {offering.dba_status ? (
-                                  <span className={`text-xs px-1 py-0.5 rounded font-medium ${
-                                    offering.dba_status.is_completed 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : 'bg-yellow-100 text-yellow-800'
-                                  }`}>
-                                    {offering.dba_status.is_completed ? '✓ DBA' : '⚠ DBA'}
-                                  </span>
-                                ) : (
-                                  <span className="text-xs px-1 py-0.5 rounded bg-red-100 text-red-800 font-medium">
-                                    ✗ No DBA
-                                  </span>
-                                )}
-                              </div>
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <div className="space-y-2">
+                              <p className="font-medium">{offering.category_name}</p>
+                              {offering.subcategory_name && (
+                                <p className="text-sm text-gray-600">{offering.subcategory_name}</p>
+                              )}
+                              {offering.hourly_rate && (
+                                <p className="text-sm">{t("freelancers.tooltips.rate", { rate: offering.hourly_rate })}</p>
+                              )}
+                              {offering.experience_years && (
+                                <p className="text-sm">{t("freelancers.tooltips.experience", { years: offering.experience_years })}</p>
+                              )}
+                              {offering.dba_status ? (
+                                <div className="text-sm">
+                                  <p>{t("freelancers.dba.status")}: {offering.dba_status.is_completed ? t("freelancers.dba.completed") : t("freelancers.dba.incomplete")}</p>
+                                  {offering.dba_status.risk_level && (
+                                    <p>{t("freelancers.dba.riskLevel")}: {offering.dba_status.risk_level}</p>
+                                  )}
+                                  {offering.dba_status.risk_percentage > 0 && (
+                                    <p>{t("freelancers.dba.risk")}: {offering.dba_status.risk_percentage}%</p>
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-gray-500">{t("freelancers.dba.status")}: {t("freelancers.dba.notAvailable")}</p>
+                              )}
                             </div>
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <div className="space-y-2">
-                            <p className="font-medium">{offering.category_name}</p>
-                            {offering.subcategory_name && (
-                              <p className="text-sm text-gray-600">{offering.subcategory_name}</p>
-                            )}
-                            {offering.hourly_rate && (
-                              <p className="text-sm">Rate: €{offering.hourly_rate}/hr</p>
-                            )}
-                            {offering.experience_years && (
-                              <p className="text-sm">Experience: {offering.experience_years} years</p>
-                            )}
-                            {offering.dba_status ? (
-                              <div className="text-sm">
-                                <p>DBA Status: {offering.dba_status.is_completed ? 'Completed' : 'Incomplete'}</p>
-                                {offering.dba_status.risk_level && (
-                                  <p>Risk Level: {offering.dba_status.risk_level}</p>
-                                )}
-                                {offering.dba_status.risk_percentage > 0 && (
-                                  <p>Risk: {offering.dba_status.risk_percentage}%</p>
-                                )}
-                              </div>
-                            ) : (
-                              <p className="text-sm text-gray-500">DBA Status: Not Available</p>
-                            )}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Message when wildcard filter is active */
+                <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-md">
+                  <div className="flex items-center gap-2 text-purple-700">
+                    <Zap className="h-4 w-4" />
+                    <span className="text-sm font-medium">{t("freelancers.wildcard.modeActive")}</span>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          {/* <div className="flex flex-col md:flex-row gap-4"> */}
-            {/* <Avatar className="h-16 w-16"> */}
-              {/* <AvatarImage */}
-                {/* // src={freelancer.avatar_url || "/placeholder.svg"} */}
-                {/* // alt={`${freelancer.first_name} ${freelancer.last_name}`} */}
-              {/* /> */}
-              {/* <AvatarFallback>{initials}</AvatarFallback> */}
-            {/* </Avatar> */}
-
-            {/* <div className="flex-1"> */}
-              {/* <div className="flex flex-col md:flex-row md:items-center justify-between gap-2"> */}
-                {/* <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-medium group-hover:text-primary transition-colors">
-                  {freelancer.first_name} {freelancer.last_name}
-                </h3>
-                {freelancer.is_verified && (
-                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    {t("freelancer.verified")}
-                  </Badge>
-                )}
-                  {freelancer.is_available_now && (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
-                      {t("freelancer.availableNow") || "Available Now"}
-                    </Badge>
-                  )}
-                </div> */}
-                {/* <div className="flex items-center gap-1"> */}
-                  {/* <div className="text-sm font-bold">€{freelancer.hourly_rate}/hr</div> */}
-                  {/* <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" /> */}
-                  {/* <span className="text-sm font-medium">{freelancer.rating || "0"}</span> */}
-                {/* </div> */}
-              {/* </div> */}
-
-              {/* <div className="flex flex-wrap gap-2 mt-2">
-              {freelancer.job_offerings?.slice(0, 3).map((offering) => (
-                  <Badge key={offering.id} variant="secondary" className="text-xs">
-                  {offering.category_name}
-                </Badge>
-              ))}
-                {freelancer.job_offerings && freelancer.job_offerings.length > 3 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{freelancer.job_offerings.length - 3} more
-                  </Badge>
-                )}
-              </div> */}
-
-              {/* {freelancer.location && (
-              <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                <MapPin className="h-3 w-3" />
-                <span>{freelancer.location}</span>
-                {typeof freelancer.distance === 'number' && (
-                    <span className="ml-1 text-green-500">
-                      ({Math.round(freelancer.distance * 10) / 10} {t("freelancer.filters.milesAway") || "km away"})
-                    </span>
-                )}
-              </div>
-              )} */}
-
-              {/* Additional info */}
-              {/* <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                {freelancer.completed_bookings && freelancer.completed_bookings > 0 && (
-                  <span>{freelancer.completed_bookings} {t("freelancer.completedBookings") || "completed bookings"}</span>
-                )}
-          </div> */}
-            {/* </div> */}
-                    {/* </div> */}
-          <div className="flex justify-between bg-gray-50 border border-gray-200 rounded-md p-2 gap-2 mt-4">
-            <div className="flex gap-2"> 
-              {freelancer.wildcard_enabled && (
-                <Badge variant="secondary" className="bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100">
-                  <Zap className="h-3 w-3 mr-1" />
-                  {t("freelancer.wildcard") || "Wildcard"}
-                </Badge>
-              )}
-            </div>
-            
-            {/* DBA Summary */}
-            <div className="flex gap-2 items-center">
-              {freelancer.job_offerings && freelancer.job_offerings.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-600">DBA:</span>
-                  {(() => {
-                    const completedDBA = freelancer.job_offerings.filter(o => o.dba_status?.is_completed).length
-                    const totalCategories = freelancer.job_offerings.length
-                    const completionRate = totalCategories > 0 ? Math.round((completedDBA / totalCategories) * 100) : 0
-                    
-                    return (
-                      <span className={`text-xs px-1 py-0.5 rounded ${
-                        completionRate === 100 ? 'bg-green-100 text-green-800' :
-                        completionRate >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {completedDBA}/{totalCategories} ({completionRate}%)
-                      </span>
-                    )
-                  })()}
                 </div>
               )}
-            </div>
-            
-            {/* Rate Summary */}
-            <div className="flex gap-4 items-center">
-              <p className="text-xs text-gray-600 font-medium">{t("freelancer.rateStart") || "Rate starts at"}</p>
-              <div className="text-lg font-bold">
-                {(() => {
-                  const rates = freelancer.job_offerings
-                    ?.map(o => o.hourly_rate)
-                    .filter(rate => rate && rate > 0)
-                    .sort((a, b) => (a || 0) - (b || 0))
-                  
-                  if (rates && rates.length > 0) {
-                    return `€${rates[0]}/hr`
-                  }
-                  return freelancer.hourly_rate ? `€${freelancer.hourly_rate}/hr` : 'N/A'
-                })()}
-              </div>
+              
+              {/* Wildcard Categories Display - Only show when wildcard filter is active */}
+              {showWildcards && freelancer.wildcard_enabled && freelancer.wildcard_categories && (
+                <div className="mt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="h-4 w-4 text-purple-600" />
+                    <span className="text-sm font-medium text-gray-700">{t("freelancers.wildcard.additionalCapabilities")}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(freelancer.wildcard_categories).map(([key, value]) => {
+                      if (!value) return null
+                      
+                      const wildcardInfo = {
+                        physical_work: { 
+                          label: t("freelancers.wildcard.categories.physical_work.label"), 
+                          icon: "💪", 
+                          color: "bg-orange-100 text-orange-800 border-orange-200",
+                          description: t("freelancers.wildcard.categories.physical_work.description")
+                        },
+                        customer_facing: { 
+                          label: t("freelancers.wildcard.categories.customer_facing.label"), 
+                          icon: "👥", 
+                          color: "bg-blue-100 text-blue-800 border-blue-200",
+                          description: t("freelancers.wildcard.categories.customer_facing.description")
+                        },
+                        outdoor_work: { 
+                          label: t("freelancers.wildcard.categories.outdoor_work.label"), 
+                          icon: "🌞", 
+                          color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+                          description: t("freelancers.wildcard.categories.outdoor_work.description")
+                        },
+                        odd_hours: { 
+                          label: t("freelancers.wildcard.categories.odd_hours.label"), 
+                          icon: "🕐", 
+                          color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+                          description: t("freelancers.wildcard.categories.odd_hours.description")
+                        },
+                        repetitive_work: { 
+                          label: t("freelancers.wildcard.categories.repetitive_work.label"), 
+                          icon: "🔄", 
+                          color: "bg-gray-100 text-gray-800 border-gray-200",
+                          description: t("freelancers.wildcard.categories.repetitive_work.description")
+                        },
+                        analytical_work: { 
+                          label: t("freelancers.wildcard.categories.analytical_work.label"), 
+                          icon: "🧠", 
+                          color: "bg-purple-100 text-purple-800 border-purple-200",
+                          description: t("freelancers.wildcard.categories.analytical_work.description")
+                        },
+                        creative_work: { 
+                          label: t("freelancers.wildcard.categories.creative_work.label"), 
+                          icon: "🎨", 
+                          color: "bg-pink-100 text-pink-800 border-pink-200",
+                          description: t("freelancers.wildcard.categories.creative_work.description")
+                        }
+                      }
+                      
+                      const info = wildcardInfo[key as keyof typeof wildcardInfo]
+                      if (!info) return null
+                      
+                      return (
+                        <TooltipProvider key={key}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge 
+                                variant="outline" 
+                                className={`text-xs border ${info.color} hover:opacity-80 transition-opacity cursor-help`}
+                              >
+                                <span className="mr-1">{info.icon}</span>
+                                {info.label}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-sm">{info.description}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
@@ -548,7 +573,7 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
             <Link href={`/freelancers/${freelancer.id}`}>
               <Button size="sm" variant="outline" className="w-full">
                 <MessageCircle className="h-4 w-4 mr-2" />
-                {t("freelancer.message") || "Message"}
+                {t("freelancer.message") || t("freelancer.fallbackMessage")}
               </Button>
             </Link>
           </div> */}

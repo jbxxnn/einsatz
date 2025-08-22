@@ -160,7 +160,9 @@
     "wildcard": "Wildcard",
     "rateStart": "Rate starts at",
     "completedJobs": "jobs",
+    "fallbackCompletedJobs": "jobs",
     "message": "Message",
+    "fallbackMessage": "Message",
     "topRated": "Top Rated",
     "fastResponse": "Fast Response",
     "completionRate": "Completion Rate",
@@ -201,21 +203,89 @@
     },
     "results": {
       "found": "Found {count} freelancers",
-      "none": "No freelancers found"
+      "none": "No freelancers found",
+      "fallbackFound": "Found {count} freelancers"
     },
     "empty": {
       "title": "No freelancers found",
-      "description": "Try adjusting your filters or search criteria to find more freelancers."
+      "description": "Try adjusting your filters or search criteria to find more freelancers.",
+      "fallbackTitle": "No freelancers found",
+      "fallbackDescription": "Try adjusting your filters to find more freelancers."
     },
     "error": {
       "title": "Error loading freelancers",
-      "description": "There was a problem loading the freelancer list. Please try again."
+      "description": "There was a problem loading the freelancer list. Please try again.",
+      "fallbackTitle": "Error loading freelancers",
+      "fallbackDescription": "There was a problem loading the freelancer list. Please try again."
+    },
+    "loading": {
+      "retrying": "Retrying...",
+      "tryAgain": "Try Again",
+      "refreshing": "Refreshing...",
+      "refresh": "Refresh",
+      "updating": "Updating..."
+    },
+    "wildcard": {
+      "modeActive": "Wildcard Mode Active",
+      "additionalCapabilities": "Additional Capabilities",
+      "capabilities": "capabilities",
+      "categories": {
+        "physical_work": {
+          "label": "Physical Work",
+          "description": "Able-bodied and can perform physical tasks"
+        },
+        "customer_facing": {
+          "label": "Customer-Facing",
+          "description": "Good representation and communication skills"
+        },
+        "outdoor_work": {
+          "label": "Outdoor Work",
+          "description": "Comfortable working in different weather conditions"
+        },
+        "odd_hours": {
+          "label": "Flexible Hours",
+          "description": "Available for early mornings, late nights, or weekends"
+        },
+        "repetitive_work": {
+          "label": "Repetitive Tasks",
+          "description": "Comfortable with routine and repetitive work"
+        },
+        "analytical_work": {
+          "label": "Analytical Work",
+          "description": "Strong problem-solving and analytical skills"
+        },
+        "creative_work": {
+          "label": "Creative Work",
+          "description": "Creative skills and innovative thinking"
+        }
+      }
+    },
+    "dba": {
+      "status": "DBA Status",
+      "completed": "Completed",
+      "incomplete": "Incomplete",
+      "notAvailable": "Not Available",
+      "riskLevel": "Risk Level",
+      "risk": "Risk",
+      "completedSymbol": "✓ DBA",
+      "incompleteSymbol": "⚠ DBA",
+      "noDBA": "✗ No DBA"
+    },
+    "tooltips": {
+      "rate": "Rate: €{rate}/hr",
+      "experience": "Experience: {years} years",
+      "yearsExp": "{years} years exp.",
+      "fullLocation": "Full Location",
+      "noLocation": "No location specified"
     }
   },
   "pagination": {
     "previous": "Previous",
     "next": "Next",
-    "showing": "Showing {from}-{to} of {total} freelancers"
+    "showing": "Showing {from}-{to} of {total} freelancers",
+    "fallbackShowing": "Showing {from}-{to} of {total} freelancers",
+    "fallbackPrevious": "Previous",
+    "fallbackNext": "Next"
   },
   "header": {
     "findFreelancers": "Find Freelancers",
