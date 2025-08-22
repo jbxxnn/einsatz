@@ -213,10 +213,10 @@ export default function ChatHeader({ conversationId }: ChatHeaderProps) {
                 {participant.user_type}
               </Badge>
               <div className="flex items-center space-x-1">
-                <div className={`w-2 h-2 rounded-full ${participant.is_online ? 'bg-green-500' : 'bg-gray-400'}`} />
-                <span className="text-xs text-muted-foreground">
+                {/* <div className={`w-2 h-2 rounded-full ${participant.is_online ? 'bg-green-500' : 'bg-gray-400'}`} /> */}
+                {/* <span className="text-xs text-muted-foreground">
                   {participant.is_online ? 'Online' : 'Offline'}
-                </span>
+                </span> */}
                 {participant.last_seen && !participant.is_online && (
                   <span className="text-xs text-muted-foreground ml-1">
                     • Last seen {formatLastSeen(participant.last_seen)}

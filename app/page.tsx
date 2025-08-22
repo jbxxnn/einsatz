@@ -3,10 +3,12 @@
 import { useTranslation } from "@/lib/i18n"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowRight, MessageCircle } from "lucide-react"
+import { ArrowRight, HelpCircleIcon,LogOutIcon,  FolderIcon, SettingsIcon, MessageCircleIcon, MessageCircle, UserIcon } from "lucide-react"
 import { useFreelancers } from "@/hooks/use-freelancers"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
+import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid"
+import { IconSignature } from "@tabler/icons-react"
 
 const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
@@ -120,28 +122,7 @@ export default function Home() {
         </div>
         
         {/* Star Elements */}
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 flex items-center gap-8">
-          {/* Left Star */}
-          <div className="w-4 h-4">
-            <svg viewBox="0 0 24 24" fill="#33CC99" className="w-full h-full opacity-60">
-              <path d="M12 2L15.09 8.26L22 9L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9L8.91 8.26L12 2Z"/>
-            </svg>
-          </div>
-          
-          {/* Center Star */}
-          <div className="w-6 h-6">
-            <svg viewBox="0 0 24 24" fill="#F2C94C" className="w-full h-full">
-              <path d="M12 2L15.09 8.26L22 9L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9L8.91 8.26L12 2Z"/>
-            </svg>
-          </div>
-          
-          {/* Right Star */}
-          <div className="w-4 h-4">
-            <svg viewBox="0 0 24 24" fill="#33CC99" className="w-full h-full opacity-60">
-              <path d="M12 2L15.09 8.26L22 9L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9L8.91 8.26L12 2Z"/>
-            </svg>
-          </div>
-        </div>
+        
       </section>
 
       {/* About Us Section */}
@@ -212,7 +193,7 @@ export default function Home() {
         {/* Freelancers */}
       <section className="w-full py-20 bg-gray-50">
         <div className="container mx-auto px-8">
-          // Section Header
+          {/* Section Header */}
           <div className="text-center mb-16">
             <div className="text-sm uppercase tracking-wider text-[#33CC99] font-semibold mb-4">
               Our Freelancers
@@ -225,70 +206,77 @@ export default function Home() {
             </p>
           </div>
 
-          // Freelancers Grid
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            {isLoading ? (
-              // Loading skeletons
-              Array.from({ length: 12 }, (_, i) => (
-                <div key={i} className="text-center">
-                  <Skeleton className="w-48 h-48 mx-auto mb-4 rounded-lg" />
-                  <Skeleton className="h-6 w-32 mx-auto mb-2" />
-                  <Skeleton className="h-4 w-24 mx-auto mb-4" />
-                  <div className="flex items-center justify-center gap-2">
-                    <Skeleton className="h-3 w-12" />
-                    <Skeleton className="h-3 w-3 rounded-full" />
-                    <Skeleton className="h-3 w-16" />
-                  </div>
-                </div>
-              ))
-            ) : error ? (
-              <div className="col-span-full text-center text-gray-500">
-                Unable to load freelancers
-              </div>
-            ) : freelancers.length === 0 ? (
-              <div className="col-span-full text-center text-gray-500">
-                No freelancers available
-              </div>
-            ) : (
-              freelancers.slice(0, 12).map((freelancer: any) => (
-                <div key={freelancer.id} className="text-center">
-                  // Profile Image
-                  <div className="w-48 h-48 mx-auto mb-4 rounded-lg overflow-hidden">
-                    <Avatar className="w-full h-full">
-                      <AvatarImage 
-                        src={freelancer.avatar_url || "/placeholder-user.jpg"} 
-                        alt={`${freelancer.first_name} ${freelancer.last_name}`} 
-                      />
-                      <AvatarFallback className="w-full h-full text-2xl bg-gradient-to-br from-gray-200 to-gray-300">
-                        {freelancer.first_name?.[0]}{freelancer.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  
-                  // Name
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {freelancer.first_name} {freelancer.last_name}
-                  </h3>
-                  
-                  // Role - Show first job category or default
-                  <p className="text-gray-600 mb-4">
-                    {freelancer.job_offerings?.[0]?.category_name || 'Freelancer'}
-                  </p>
-                  
-                  // Contact Links
-                  <div className="flex items-center justify-center gap-2 text-sm">
-                    <a href={`mailto:${freelancer.email}`} className="text-gray-700 hover:text-[#33CC99] underline">EMAIL</a>
-                    <div className="w-1 h-1 bg-[#33CC99] rounded-full"></div>
-                    <Link href={`/freelancers/${freelancer.id}`} className="text-gray-700 hover:text-[#33CC99] underline">PROFILE</Link>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          {/* Freelancers BentoGrid */}
+          {isLoading ? (
+            // Loading skeletons using BentoGrid
+            <BentoGrid className="mb-16">
+              {Array.from({ length: 12 }, (_, i) => (
+                <BentoGridItem
+                  key={i}
+                  title={<div className="h-6 w-32 bg-neutral-200 rounded animate-pulse"></div>}
+                  description={<div className="h-4 w-24 bg-neutral-200 rounded animate-pulse"></div>}
+                  header={
+                    <div className="flex flex-col items-center justify-center h-full space-y-4 p-4">
+                      <div className="w-32 h-32 bg-neutral-200 rounded-lg animate-pulse"></div>
+                      <div className="h-6 w-32 bg-neutral-200 rounded animate-pulse"></div>
+                      <div className="h-4 w-24 bg-neutral-200 rounded animate-pulse"></div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-12 bg-neutral-200 rounded animate-pulse"></div>
+                        <div className="h-3 w-3 bg-neutral-200 rounded-full animate-pulse"></div>
+                        <div className="h-3 w-16 bg-neutral-200 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                  }
+                  icon={<div className="h-4 w-4 bg-neutral-200 rounded animate-pulse"></div>}
+                  className="h-full"
+                />
+              ))}
+            </BentoGrid>
+          ) : error ? (
+            <div className="text-center text-gray-500 mb-16">
+              Unable to load freelancers
+            </div>
+          ) : freelancers.length === 0 ? (
+            <div className="text-center text-gray-500 mb-16">
+              No freelancers available
+            </div>
+          ) : (
+            <BentoGrid className="mb-16">
+              {freelancers.slice(0, 12).map((freelancer: any, i: number) => (
+                <Link key={freelancer.id} href={`/freelancers/${freelancer.id}`}>
+                  <BentoGridItem
+                    title={`${freelancer.first_name} ${freelancer.last_name}`}
+                    hour={freelancer.hourly_rate}
+                    description={freelancer.job_offerings?.map((job: any) => job.category_name).join(', ') || 'Freelancer'}
+                    header={
+                      <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-lg bg-dot-black/[0.2] flex-col space-y-2">
+                        {/* Profile Image */}
+                        <div className="rounded-lg overflow-hidden">
+                          <Avatar className="w-full h-full">
+                            <AvatarImage 
+                              src={freelancer.avatar_url || "/placeholder-user.jpg"} 
+                              alt={`${freelancer.first_name} ${freelancer.last_name}`} 
+                            />
+                            <AvatarFallback className="w-full h-full text-2xl bg-gradient-to-br from-gray-200 to-gray-300">
+                              {freelancer.first_name?.[0]}{freelancer.last_name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                      </div>
+                    }
+                    icon={
+                      <IconSignature className="h-4 w-4 text-neutral-500" />
+                    }
+                    className="h-full hover:shadow-lg transition-all duration-200 cursor-pointer"
+                  />
+                </Link>
+              ))}
+            </BentoGrid>
+          )}
         </div>
       </section>
 
-      // CTA Banner
+      {/* CTA Banner
     {/*   <section className="w-full py-16 bg-[#1A302B] relative overflow-hidden">
         Background Pattern
         <div className="absolute inset-0 opacity-10">

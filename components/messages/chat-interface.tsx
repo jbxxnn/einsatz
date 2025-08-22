@@ -406,29 +406,29 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
         )}
         
         {/* Scroll position indicator */}
-        <div className="absolute top-4 right-4 text-xs bg-black/50 text-white px-2 py-1 rounded">
+        {/* <div className="absolute top-4 right-4 text-xs bg-black/50 text-white px-2 py-1 rounded">
           {shouldAutoScroll ? '📍 At bottom' : '⬆️ Scrolled up'}
-        </div>
+        </div> */}
         
-        {/* Auto-scroll indicator (for debugging) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="absolute top-12 right-4 text-xs bg-black/50 text-white px-2 py-1 rounded">
-            Auto-scroll: {shouldAutoScroll ? 'ON' : 'OFF'}
-          </div>
-        )}
+        {/* Auto-scroll indicator (for debugging)
+            {process.env.NODE_ENV === 'development' && (
+              <div className="absolute top-12 right-4 text-xs bg-black/50 text-white px-2 py-1 rounded">
+                Auto-scroll: {shouldAutoScroll ? 'ON' : 'OFF'}
+              </div>
+            )} */}
       </div>
 
       {/* Message Input */}
       <div className="border-t p-4">
         <div className="flex space-x-2">
-          <Button
+          {/* <Button
             variant="ghost"
             size="sm"
             onClick={handleAttachment}
             className="flex-shrink-0"
           >
             <Paperclip className="h-4 w-4" />
-          </Button>
+          </Button> */}
           
           <Button
             variant="ghost"
