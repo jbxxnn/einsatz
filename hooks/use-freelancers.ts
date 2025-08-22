@@ -5,6 +5,14 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
   job_offerings?: Array<{
     id: string
     category_name: string
+    subcategory_name?: string
+    hourly_rate?: number
+    experience_years?: number
+    dba_status?: {
+      risk_level: string
+      risk_percentage: number
+      is_completed: boolean
+    } | null
   }>
   rating?: number
   distance?: number

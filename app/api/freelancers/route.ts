@@ -1,5 +1,5 @@
 // import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { calculateDistance } from "@/lib/geocoding"
@@ -39,8 +39,7 @@ export async function GET(request: Request) {
   const longitude = url.searchParams.get("longitude")
   const radius = url.searchParams.get("radius") || "10" // Default 10 km
 
-  const cookieStore = await cookies()
-  const supabase = createServerComponentClient({ cookies: () => cookieStore })
+  const supabase = createRouteHandlerClient({ cookies })
 
   try {
     let query = supabase
@@ -104,11 +103,31 @@ export async function GET(request: Request) {
       .in("freelancer_id", freelancerIds)
       .eq("status", "completed")
 
+    // Batch query for DBA status
+    const { data: dbaData } = await supabase
+      .from("freelancer_dba_completions")
+      .select("freelancer_id, job_category_id, risk_level, risk_percentage, is_completed")
+      .in("freelancer_id", freelancerIds)
+
     // Create lookup maps for O(1) access
     const availabilityMap = new Set(availabilityData?.map(a => a.freelancer_id) || [])
     const bookingsMap = new Map()
     completedBookingsData?.forEach(booking => {
       bookingsMap.set(booking.freelancer_id, (bookingsMap.get(booking.freelancer_id) || 0) + 1)
+    })
+
+    // Create DBA status map
+    const dbaMap = new Map()
+    dbaData?.forEach(dba => {
+      if (!dbaMap.has(dba.freelancer_id)) {
+        dbaMap.set(dba.freelancer_id, [])
+      }
+      dbaMap.get(dba.freelancer_id).push({
+        category_id: dba.job_category_id,
+        risk_level: dba.risk_level,
+        risk_percentage: dba.risk_percentage,
+        is_completed: dba.is_completed
+      })
     })
 
     // Process the data efficiently
@@ -122,11 +141,23 @@ export async function GET(request: Request) {
             if (b.display_order === null) return -1
             return a.display_order - b.display_order
           })
-          .map((offering: any) => ({
-            ...offering,
-            category_name: offering.job_categories.name,
-            subcategory_name: offering.job_subcategories?.name,
-          }))
+          .map((offering: any) => {
+            // Get DBA status for this category
+            const dbaStatus = dbaMap.get(profile.id)?.find((dba: any) => dba.category_id === offering.category_id)
+            
+            return {
+              ...offering,
+              category_name: offering.job_categories.name,
+              subcategory_name: offering.job_subcategories?.name,
+              hourly_rate: offering.hourly_rate,
+              experience_years: offering.experience_years,
+              dba_status: dbaStatus ? {
+                risk_level: dbaStatus.risk_level,
+                risk_percentage: dbaStatus.risk_percentage,
+                is_completed: dbaStatus.is_completed
+              } : null
+            }
+          })
 
       // Check availability from map
       const isAvailableNow = availabilityMap.has(profile.id)
@@ -166,7 +197,7 @@ export async function GET(request: Request) {
       processedFreelancers = processedFreelancers.filter((freelancer) => {
         // A freelancer must have at least one job offering that matches the selected subcategory
         return freelancer.job_offerings.some((offering: JobOffering) => {
-          return subcategories.includes(offering.subcategory_id)
+          return offering.subcategory_id && subcategories.includes(offering.subcategory_id)
         })
       })
     }
