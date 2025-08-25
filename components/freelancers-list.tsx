@@ -414,7 +414,7 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                </div>
               {/* Job Offerings - Hidden when wildcard filter is active */}
               {!showWildcards ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 auto-rows-fr">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 auto-rows-fr">
                   {freelancer.job_offerings?.map((offering) => (
                     <div key={offering.id} className="flex flex-col gap-1">
                       <TooltipProvider>
@@ -423,7 +423,7 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                             <Badge 
                               className={`text-xs cursor-help flex flex-col items-start justify-between rounded-md border transition-colors h-full ${getCategoryColor(offering.category_name)}`}
                             >
-                              <div className="flex flex-col items-start gap-1 p-1 pr-6 w-full h-full">
+                              <div className="flex flex-col items-start gap-1 p-1 w-full h-full">
                                 <span className="font-bold">
                                   {offering.subcategory_name}
                                 </span>

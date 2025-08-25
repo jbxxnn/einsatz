@@ -352,6 +352,8 @@
     "title": "Dashboard",
     "profileNotFound": "Profile not found",
     "goToHome": "Go to Home",
+    "redirectingToLogin": "Redirecting to Login",
+    "pleaseWait": "Please wait while we redirect you...",
 
 
     "welcome": "Welcome back, {name}! 👋",
@@ -506,6 +508,10 @@
     "coverDesignTooltip": "Select a cover design that represents your professional style",
     "hideOptions": "Hide Options",
     "chooseCover": "Choose Cover",
+    "profileNotFound": "Profile not found",
+    "goToHome": "Go to Home",
+    "redirectingToLogin": "Redirecting to Login",
+    "pleaseWait": "Please wait while we redirect you...",
     "completeness": {
       "title": "Profile Completeness",
       "complete": "Your profile is complete! Great job!",
@@ -590,7 +596,11 @@
     "subcategory": "Subcategory",
     "hourlyRate": "Hourly Rate",
     "experienceYears": "Years of Experience",
-    "actions": "Actions"
+    "actions": "Actions",
+    "profileNotFound": "Profile not found",
+    "goToHome": "Go to Home",
+    "redirectingToLogin": "Redirecting to Login",
+    "pleaseWait": "Please wait while we redirect you..."
   },
   "bookings": {
     "title": "Bookings",
@@ -636,6 +646,8 @@
     "notSet": "Not set",
     "profileNotFound": "Profile not found",
     "goToHome": "Go to Home",
+    "redirectingToLogin": "Redirecting to Login",
+    "pleaseWait": "Please wait while we redirect you...",
     "bookingDetails": "Booking Details",
     "bookingId": "Booking ID",
     "bookFreelancer": "Book Freelancer",

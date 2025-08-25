@@ -1011,6 +1011,13 @@ export default function DashboardPage() {
     sms: false,
   })
 
+  // Redirect to login if no profile found - must be at top level
+  useEffect(() => {
+    if (!isLoading && !isProfileLoading && !profile) {
+      router.push("/login");
+    }
+  }, [isLoading, isProfileLoading, profile, router]);
+
   // Load notification settings from profile metadata
   useEffect(() => {
     if (profile?.metadata && typeof profile.metadata === "object" && (profile.metadata as any).notifications) {
@@ -1097,15 +1104,16 @@ export default function DashboardPage() {
                               </div>
         </SidebarProvider>
       )
-    }
+  }
 
+  // Show loading or redirect message if no profile
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">{t("dashboard.profileNotFound")}</h1>
-        <Button onClick={() => router.push("/")}>{t("dashboard.goToHome")}</Button>
-                                </div>
-    )
+        <h1 className="text-2xl font-bold mb-4">{t("dashboard.redirectingToLogin")}</h1>
+        <p className="text-gray-600">{t("dashboard.pleaseWait")}</p>
+      </div>
+    );
   }
 
   return (

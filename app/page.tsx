@@ -52,9 +52,7 @@ export default function Home() {
         <div className="flex items-center justify-between bg-[#0e2316] rounded-xl p-4 border border-[#3e4f454d]">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            {/* <div className="w-3 h-3 bg-[#33CC99] rounded-full flex items-center justify-center animate-pulse" > */}
-              <LogoIcon />
-            {/* </div> */}
+            <LogoIcon />
             <div>
               <h1 className="text-xl font-bold font-mono">Einsatz</h1>
             </div>
@@ -64,9 +62,6 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-2">
             <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
               <a href="/freelancers"><span className="text-xs">Find Freelancers</span></a>
-            </div>
-            <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
-              <a href="/login"><span className="text-xs">Jobs Offerings</span></a>
             </div>
             <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
               <a href="#"><span className="text-xs">Learn more</span></a>
@@ -312,7 +307,7 @@ export default function Home() {
       </section> */}
 
       {/* // Why Choose Einsatz Section */}
-      {/* <section className="w-full py-20 bg-white">
+      <section className="w-full py-20 bg-white">
         <div className="container mx-auto px-8">
           // Header Area
           <div className="flex flex-col lg:flex-row items-start gap-12 mb-16">
@@ -442,7 +437,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section> */}
+      </section>
 
       {/* Footer */}
       <footer className="w-full bg-gray-50 border-t border-gray-200">
@@ -451,14 +446,11 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
             {/* Left Side - Logo and Address */}
             <div className="lg:col-span-2">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-[#33CC99] rounded-lg flex items-center justify-center">
-                  <span className="text-[#1A302B] font-bold text-sm">E</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-[#1A302B]">Einsatz</h3>
-                  <p className="text-xs text-gray-500">Freelance Platform</p>
-                </div>
+              <div className="flex items-center gap-2 mb-2">
+              {/* <LogoIcon /> */}
+              <div>
+              <h1 className="text-xl font-bold font-mono text-[#000000]">Einsatz</h1>
+            </div>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed">
                 Connecting skilled professionals with businesses.<br />

@@ -44,6 +44,13 @@ export default function JobOfferingsPage() {
   const { supabase } = useOptimizedSupabase()
   const { profile, isLoading: isProfileLoading } = useOptimizedUser()
 
+  // Redirect to login if no profile found - must be at top level
+  React.useEffect(() => {
+    if (!isProfileLoading && !profile) {
+      router.push("/login");
+    }
+  }, [isProfileLoading, profile, router]);
+
   // Check if user is freelancer and redirect if not
   React.useEffect(() => {
     if (profile && profile.user_type !== "freelancer") {
@@ -77,10 +84,10 @@ export default function JobOfferingsPage() {
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">{t("jobOfferings.profileNotFound")}</h1>  
-        <Button onClick={() => router.push("/")}>{t("jobOfferings.goToHome")}</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("jobOfferings.redirectingToLogin")}</h1>
+        <p className="text-gray-600">{t("jobOfferings.pleaseWait")}</p>
       </div>
-    )
+    );
   }
 
   return (

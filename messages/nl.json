@@ -352,6 +352,8 @@
     "title": "Dashboard",
     "profileNotFound": "Profiel niet gevonden",
     "goToHome": "Ga naar startpagina",
+    "redirectingToLogin": "Doorverwijzen naar Inloggen",
+    "pleaseWait": "Even geduld terwijl we je doorverwijzen...",
 
 
     "welcome": "Welkom terug, {name}! 👋",
@@ -509,6 +511,10 @@
     "coverDesignTooltip": "Selecteer een cover ontwerp dat je professionele stijl vertegenwoordigt",
     "hideOptions": "Verberg opties",
     "chooseCover": "Kies cover",
+    "profileNotFound": "Profiel niet gevonden",
+    "goToHome": "Ga naar Home",
+    "redirectingToLogin": "Doorverwijzen naar Inloggen",
+    "pleaseWait": "Even geduld terwijl we je doorverwijzen...",
     "completeness": {
       "title": "Profiel Voltooiing",
       "complete": "Je profiel is compleet! Goed gedaan!",
@@ -593,7 +599,11 @@
     "subcategory": "Subcategorie",
     "hourlyRate": "Uurtarief",
     "experienceYears": "Jaren ervaring",
-    "actions": "Acties"
+    "actions": "Acties",
+    "profileNotFound": "Profiel niet gevonden",
+    "goToHome": "Ga naar Home",
+    "redirectingToLogin": "Doorverwijzen naar Inloggen",
+    "pleaseWait": "Even geduld terwijl we je doorverwijzen..."
   },
   "bookings": {
     "title": "Boekingen",
@@ -639,6 +649,8 @@
     "notSet": "Niet ingesteld",
     "profileNotFound": "Profiel niet gevonden",
     "goToHome": "Ga naar Home",
+    "redirectingToLogin": "Doorverwijzen naar Inloggen",
+    "pleaseWait": "Even geduld terwijl we je doorverwijzen...",
     "bookingDetails": "Boeking Details",
     "bookingId": "Boeking ID",
     "bookFreelancer": "Boek Freelancer",

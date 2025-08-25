@@ -124,6 +124,13 @@ export default function ProfilePage() {
   const [showCoverSelector, setShowCoverSelector] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Redirect to login if no profile found - must be at top level
+  React.useEffect(() => {
+    if (!isProfileLoading && !profile) {
+      router.push("/login");
+    }
+  }, [isProfileLoading, profile, router]);
+
   // Initialize form state from profile data
   React.useEffect(() => {
     if (profile) {
@@ -332,10 +339,10 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">{t("profile.profileNotFound")}</h1>
-        <Button onClick={() => router.push("/")}>{t("dashboard.goToHome")}</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("profile.redirectingToLogin")}</h1>
+        <p className="text-gray-600">{t("profile.pleaseWait")}</p>
       </div>
-    )
+    );
   }
 
   return (

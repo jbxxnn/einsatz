@@ -111,6 +111,13 @@ export default function BookingsPage() {
   const { profile, isLoading: isProfileLoading } = useOptimizedUser()
   const [bookings, setBookings] = useState<Booking[]>([])
 
+  // Redirect to login if no profile found - must be at top level
+  useEffect(() => {
+    if (!isProfileLoading && !profile) {
+      router.push("/login");
+    }
+  }, [isProfileLoading, profile, router]);
+
   useEffect(() => {
     if (!profile) return;
     const fetchBookings = async () => {
@@ -241,10 +248,10 @@ export default function BookingsPage() {
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">{t("bookings.profileNotFound")}</h1>
-        <Button onClick={() => router.push("/")}>{t("bookings.goToHome")}</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("bookings.redirectingToLogin")}</h1>
+        <p className="text-gray-600">{t("bookings.pleaseWait")}</p>
       </div>
-    )
+    );
   }
 
   return (
