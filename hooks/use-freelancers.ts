@@ -89,13 +89,22 @@ const fetchFreelancers = async (params: UseFreelancersParams): Promise<Freelance
 }
 
 export function useFreelancers(params: UseFreelancersParams = {}) {
+  // Log when this hook is called
+  console.log('🎯 useFreelancers called at:', new Date().toLocaleTimeString(), 'with params:', params)
+  
   return useQuery({
     queryKey: ['freelancers', params],
-    queryFn: () => fetchFreelancers(params),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: true,
-    retry: 3,
-    refetchInterval: 2 * 60 * 1000, // 2 minutes
+    queryFn: () => {
+      console.log('🚀 Fetching freelancers at:', new Date().toLocaleTimeString())
+      return fetchFreelancers(params)
+    },
+    // Override global settings to reduce egress
+    staleTime: 10 * 60 * 1000, // 10 minutes - freelancers don't change often
+    gcTime: 15 * 60 * 1000, // 15 minutes
+    refetchOnWindowFocus: false, // Disable for this heavy query
+    retry: 2, // Reduce retries
+    refetchInterval: 15 * 60 * 1000, // 15 minutes instead of 2 minutes
+    // Smart caching: Only refetch when data is actually stale
+    // Manual refetch can be triggered for real-time updates when needed
   })
 } 

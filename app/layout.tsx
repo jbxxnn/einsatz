@@ -8,7 +8,7 @@ import Footer from "@/components/footer"
 import { OptimizedSupabaseProvider } from "@/components/optimized-supabase-provider"
 import { OptimizedUserProvider } from "@/components/optimized-user-provider"
 import { Suspense } from "react"
-import PerformanceMonitor from "@/components/performance-monitor"
+import { PerformanceMonitor } from "@/components/performance-monitor"
 import { QueryProvider } from "@/components/query-provider"
 
 export const metadata = {

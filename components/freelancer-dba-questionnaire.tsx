@@ -87,7 +87,17 @@ export default function FreelancerDBAQuestionnaire({
   const answeredQuestions = Object.keys(answers).length
   const progress = totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0
 
+  // Ensure we only count answers for questions that actually exist in the current category
+  const validAnsweredQuestions = Object.keys(answers).filter(answerId => {
+    const questionId = parseInt(answerId)
+    return Object.values(questions).flat().some(q => q.id === questionId)
+  }).length
+  
+  const validProgress = totalQuestions > 0 ? (validAnsweredQuestions / totalQuestions) * 100 : 0
+
   useEffect(() => {
+    // Reset answers when job category changes
+    setAnswers({})
     fetchData()
   }, [jobCategoryId])
 
@@ -199,7 +209,7 @@ export default function FreelancerDBAQuestionnaire({
   const completeQuestionnaire = async () => {
     await saveAnswers()
     
-    if (progress === 100) {
+    if (validProgress === 100) {
       toast({
         title: "DBA Complete!",
         description: `Your DBA assessment for ${jobCategoryName} is now complete.`
@@ -256,12 +266,12 @@ export default function FreelancerDBAQuestionnaire({
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>{answeredQuestions} of {totalQuestions} questions completed</span>
-              <span>{Math.round(progress)}%</span>
+              <span>{validAnsweredQuestions} of {totalQuestions} questions completed</span>
+              <span>{Math.round(validProgress)}%</span>
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress value={validProgress} className="h-2" />
             
-            {completion?.is_completed && (
+            {/* {completion?.is_completed && (
               <div className="flex items-center gap-2 mt-4">
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <span className="text-sm text-green-600 font-medium">
@@ -274,7 +284,7 @@ export default function FreelancerDBAQuestionnaire({
                   {completion.risk_percentage?.toFixed(1)}%
                 </Badge>
               </div>
-            )}
+            )} */}
           </div>
         </CardContent>
       </Card>
@@ -364,7 +374,7 @@ export default function FreelancerDBAQuestionnaire({
             {saving ? "Saving..." : "Save Progress"}
           </Button>
 
-          {progress === 100 && (
+          {validProgress === 100 && (
             <Button
               onClick={completeQuestionnaire}
               disabled={saving}

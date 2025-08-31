@@ -93,14 +93,21 @@ function processAvailabilityData(availability: AvailabilityEntry[]): Map<string,
 export function useAvailability(freelancerId: string) {
   const { supabase } = useOptimizedSupabase()
 
+  // Log when this hook is called
+  console.log('📅 useAvailability called at:', new Date().toLocaleTimeString(), 'for freelancer:', freelancerId)
+
   return useQuery({
     queryKey: ['availability', freelancerId],
-    queryFn: () => fetchAvailability(supabase, freelancerId),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: true,
-    retry: 3,
-    refetchInterval: 2 * 60 * 1000, // 2 minutes
+    queryFn: () => {
+      console.log('🚀 Fetching availability at:', new Date().toLocaleTimeString(), 'for freelancer:', freelancerId)
+      return fetchAvailability(supabase, freelancerId)
+    },
+    // Override global settings to reduce egress
+    staleTime: 5 * 60 * 1000, // 5 minutes - availability changes occasionally
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // Disable for this query
+    retry: 2, // Reduce retries
+    refetchInterval: 10 * 60 * 1000, // 10 minutes instead of 2 minutes
   })
 }
 

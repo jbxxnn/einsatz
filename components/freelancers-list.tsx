@@ -193,6 +193,18 @@ export default function FreelancersList() {
              t("freelancers.results.fallbackFound", { count: freelancers.length })}
           </div>
           
+          {/* Cache status indicator */}
+          <div className="text-xs text-gray-500">
+            {t("freelancers.cache.lastUpdated") || "Last updated"}:
+            {isFetching ? (
+              <span className="text-blue-600 ml-1">Updating...</span>
+            ) : (
+              <span className="text-green-600 ml-1">
+                {new Date().toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+          
           {/* Location search info */}
           {filters.latitude && filters.longitude && filters.radius && (
             <div className="text-xs text-gray-600">
@@ -201,12 +213,36 @@ export default function FreelancersList() {
           )}
         </div>
         
-        {isFetching && (
-          <div className="flex items-center gap-2 text-xs text-black">
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            {t("freelancers.loading.updating")}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Manual refresh button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="text-xs"
+          >
+            {isFetching ? (
+              <>
+                <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                {t("freelancers.loading.updating") || "Updating..."}
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-3 w-3 mr-1" />
+                {t("freelancers.refresh") || "Refresh"}
+              </>
+            )}
+          </Button>
+          
+          {/* Auto-update indicator */}
+          {isFetching && (
+            <div className="flex items-center gap-2 text-xs text-black">
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              {t("freelancers.loading.updating")}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-4">
@@ -288,15 +324,15 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
   // Function to get category color based on category name
   const getCategoryColor = (categoryName: string) => {
     const colors = [
-      'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200',
-      'bg-green-100 text-green-800 border-green-200 hover:bg-green-200',
-      'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200',
-      'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200',
-      'bg-pink-100 text-pink-800 border-pink-200 hover:bg-pink-200',
-      'bg-indigo-100 text-indigo-800 border-indigo-200 hover:bg-indigo-200',
-      'bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200',
-      'bg-red-100 text-red-800 border-red-200 hover:bg-red-200',
-      'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200',
+      'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
+      'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
+      'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
+      'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
+      'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
+      'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
+      'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
+      'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
+      'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
       'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200',
     ]
     
@@ -413,7 +449,6 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                </div>
                </div>
               {/* Job Offerings - Hidden when wildcard filter is active */}
-              {!showWildcards ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 auto-rows-fr">
                   {freelancer.job_offerings?.map((offering) => (
                     <div key={offering.id} className="flex flex-col gap-1">
@@ -431,12 +466,12 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                                 {/* Hourly Rate and Experience */}
                                 <div className="flex gap-4 mt-1">
                                   {offering.hourly_rate && (
-                                                                      <span className="text-xs font-semibold text-green-700">
+                                                                      <span className="text-xs font-semibold">
                                     {t("freelancers.tooltips.rate", { rate: offering.hourly_rate })}
                                   </span>
                                   )}
                                   {offering.experience_years && (
-                                                                      <span className="text-xs text-blue-700">
+                                                                      <span className="text-xs">
                                     {t("freelancers.tooltips.yearsExp", { years: offering.experience_years })}
                                   </span>
                                   )}
@@ -461,7 +496,7 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                               </div>
                             </Badge>
                           </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
+                          {/* <TooltipContent className="max-w-xs">
                             <div className="space-y-2">
                               <p className="font-medium">{offering.category_name}</p>
                               {offering.subcategory_name && (
@@ -487,21 +522,12 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                                 <p className="text-sm text-gray-500">{t("freelancers.dba.status")}: {t("freelancers.dba.notAvailable")}</p>
                               )}
                             </div>
-                          </TooltipContent>
+                          </TooltipContent> */}
                         </Tooltip>
                       </TooltipProvider>
                     </div>
                   ))}
                 </div>
-              ) : (
-                /* Message when wildcard filter is active */
-                <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-md">
-                  <div className="flex items-center gap-2 text-purple-700">
-                    <Zap className="h-4 w-4" />
-                    <span className="text-sm font-medium">{t("freelancers.wildcard.modeActive")}</span>
-                  </div>
-                </div>
-              )}
               
               {/* Wildcard Categories Display - Only show when wildcard filter is active */}
               {showWildcards && freelancer.wildcard_enabled && freelancer.wildcard_categories && (
@@ -518,25 +544,25 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                         physical_work: { 
                           label: t("freelancers.wildcard.categories.physical_work.label"), 
                           icon: "💪", 
-                          color: "bg-orange-100 text-orange-800 border-orange-200",
+                          color: "bg-gray-100 text-gray-800 border-gray-200",
                           description: t("freelancers.wildcard.categories.physical_work.description")
                         },
                         customer_facing: { 
                           label: t("freelancers.wildcard.categories.customer_facing.label"), 
                           icon: "👥", 
-                          color: "bg-blue-100 text-blue-800 border-blue-200",
+                          color: "bg-gray-100 text-gray-800 border-gray-200",
                           description: t("freelancers.wildcard.categories.customer_facing.description")
                         },
                         outdoor_work: { 
                           label: t("freelancers.wildcard.categories.outdoor_work.label"), 
                           icon: "🌞", 
-                          color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+                          color: "bg-gray-100 text-gray-800 border-gray-200",
                           description: t("freelancers.wildcard.categories.outdoor_work.description")
                         },
                         odd_hours: { 
                           label: t("freelancers.wildcard.categories.odd_hours.label"), 
                           icon: "🕐", 
-                          color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+                          color: "bg-gray-100 text-gray-800 border-gray-200",
                           description: t("freelancers.wildcard.categories.odd_hours.description")
                         },
                         repetitive_work: { 
@@ -548,13 +574,13 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                         analytical_work: { 
                           label: t("freelancers.wildcard.categories.analytical_work.label"), 
                           icon: "🧠", 
-                          color: "bg-purple-100 text-purple-800 border-purple-200",
+                          color: "bg-gray-100 text-gray-800 border-gray-200",
                           description: t("freelancers.wildcard.categories.analytical_work.description")
                         },
                         creative_work: { 
                           label: t("freelancers.wildcard.categories.creative_work.label"), 
                           icon: "🎨", 
-                          color: "bg-pink-100 text-pink-800 border-pink-200",
+                          color: "bg-gray-100 text-gray-800 border-gray-200",
                           description: t("freelancers.wildcard.categories.creative_work.description")
                         }
                       }
