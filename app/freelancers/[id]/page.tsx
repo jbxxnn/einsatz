@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -22,6 +22,7 @@ import Link from "next/link"
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"] & {
   category_name: string
+  subcategory_name?: string
   icon?: string
 }
 
@@ -181,12 +182,14 @@ export default function FreelancerProfile() {
   const { t } = useTranslation()
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { supabase } = useOptimizedSupabase()
   const [freelancer, setFreelancer] = useState<FreelancerWithOfferings | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [showBookingForm, setShowBookingForm] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null)
   const [reviews, setReviews] = useState<any[]>([])
   const [completedJobs, setCompletedJobs] = useState<number>(0)
   const [activeTab, setActiveTab] = useState<'services' | 'reviews'>('services')
@@ -198,7 +201,7 @@ export default function FreelancerProfile() {
   // Clear selected date when category changes
   useEffect(() => {
     setSelectedDate(undefined)
-  }, [selectedCategoryId])
+  }, [selectedCategoryId, selectedSubcategoryId])
 
   useEffect(() => {
     const fetchFreelancer = async () => {
@@ -222,7 +225,8 @@ export default function FreelancerProfile() {
           .from("freelancer_job_offerings")
           .select(`
           *,
-          job_categories (id, name, icon)
+          job_categories (id, name, icon),
+          job_subcategories (id, name)
         `)
           .eq("freelancer_id", params.id)
 
@@ -235,6 +239,7 @@ export default function FreelancerProfile() {
           ...offering,
           category_name: offering.job_categories.name,
           icon: offering.job_categories.icon,
+          subcategory_name: offering.job_subcategories.name,
         }))
 
         // Check real-time availability
@@ -296,7 +301,8 @@ export default function FreelancerProfile() {
             profiles!reviewer_id(first_name, last_name, avatar_url),
             bookings!inner(
               category_id,
-              job_categories(name)
+              job_categories(name),
+              job_subcategories(name)
             )
           `)
           .eq("reviewee_id", params.id)
@@ -324,10 +330,48 @@ export default function FreelancerProfile() {
 
     fetchFreelancer()
   }, [supabase, params.id, router, currentPage])
+
+  // Handle URL synchronization for category selection
+  useEffect(() => {
+    // Read category from URL on page load
+    const categoryFromUrl = searchParams.get('category')
+    if (categoryFromUrl && freelancer) {
+      // Check if the category exists in the freelancer's offerings
+      const categoryExists = freelancer.job_offerings.some(offering => offering.category_id === categoryFromUrl)
+      if (categoryExists) {
+        setSelectedCategoryId(categoryFromUrl)
+      }
+    }
+  }, [searchParams, freelancer])
+
+  // Update URL when category is selected
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategoryId(categoryId)
+    // Update URL with category parameter
+    const newSearchParams = new URLSearchParams(searchParams.toString())
+    newSearchParams.set('category', categoryId)
+    router.push(`/freelancers/${params.id}?${newSearchParams.toString()}`, { scroll: false })
+  }
+
+  // Clear category from URL when deselected
+  const handleCategoryDeselect = () => {
+    setSelectedCategoryId(null)
+    // Remove category from URL
+    const newSearchParams = new URLSearchParams(searchParams.toString())
+    newSearchParams.delete('category')
+    const newUrl = newSearchParams.toString() 
+      ? `/freelancers/${params.id}?${newSearchParams.toString()}`
+      : `/freelancers/${params.id}`
+    router.push(newUrl, { scroll: false })
+  }
   
   const getSelectedOffering = () => {
     if (!freelancer || !selectedCategoryId) return null
-    return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId)
+    return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId && offering.subcategory_id === selectedSubcategoryId)
+  }
+  const getSelectedSubcategory = () => {
+    if (!freelancer || !selectedCategoryId) return null
+    return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId && offering.subcategory_id === selectedSubcategoryId)
   }
 
   if (loading) {
@@ -344,7 +388,7 @@ export default function FreelancerProfile() {
   }
   
   const selectedOffering = getSelectedOffering()
-
+  const selectedSubcategory = getSelectedSubcategory()
   return (
     <>
     <OptimizedHeader />
@@ -518,7 +562,7 @@ export default function FreelancerProfile() {
                         <div 
                           key={offering.category_id} 
                           className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-[#33CC99]"
-                          onClick={() => setSelectedCategoryId(offering.category_id)}
+                          onClick={() => handleCategorySelect(offering.category_id)}
                         >
                           {/* Top gradient bar */}
                           <div className="h-2 bg-gradient-to-r from-pink-300 to-red-400 rounded-full mb-3"></div>
@@ -528,7 +572,7 @@ export default function FreelancerProfile() {
                             {/* Category name */}
                             <div className="flex items-center space-x-2">
                               <CustomResponseIcon className="h-4 w-4 text-[#33CC99]" />
-                              <h4 className="font-bold text-black text-sm">{offering.category_name}</h4>
+                              <h4 className="font-bold text-black text-sm">{offering.subcategory_name}</h4>
                             </div>
                             
                             {/* Hourly rate */}
@@ -572,7 +616,7 @@ export default function FreelancerProfile() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedCategoryId(null)}
+                        onClick={handleCategoryDeselect}
                         className="text-xs"
                       >
                         Change Category

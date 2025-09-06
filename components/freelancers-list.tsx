@@ -16,6 +16,7 @@ import { useTranslation } from "@/lib/i18n"
 type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
   job_offerings?: Array<{
     id: string
+    category_id?: string
     category_name: string
     subcategory_name?: string
     hourly_rate?: number
@@ -456,9 +457,11 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Badge 
-                              className={`text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full ${getCategoryColor(offering.category_name)}`}
-                            >
+                            <Link href={`/freelancers/${freelancer.id}${offering.category_id ? `?category=${offering.category_id}` : ''}`}>
+                              <Badge 
+                                className={`text-xs cursor-pointer flex flex-col items-start justify-start rounded-md border transition-colors h-full hover:shadow-md hover:scale-105 ${getCategoryColor(offering.category_name)}`}
+                                onClick={(e) => e.stopPropagation()}
+                              >
                             <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full relative">
                               {/* DBA Status - Positioned at top right */}
                               {offering.dba_status?.is_completed && (
@@ -483,7 +486,7 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                               {/* Hourly Rate and Experience */}
                               <div className="flex gap-4 mt-1">
                                 {offering.hourly_rate && (
-                                                                      <span className="text-xs font-semibold">
+                                                                      <span className="text-xs font-normal">
                                   {t("freelancers.tooltips.rate", { rate: offering.hourly_rate })}
                                 </span>
                                 )}
@@ -495,7 +498,7 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                               </div>
                               
                               {/* Description */}
-                              <div className="flex items-center gap-1 mt-1">
+                              <div className="flex items-center gap-1 mt-1 font-normal">
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -511,6 +514,7 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                               </div>
                               </div>
                             </Badge>
+                            </Link>
                           </TooltipTrigger>
                           {/* <TooltipContent className="max-w-xs">
                             <div className="space-y-2">
