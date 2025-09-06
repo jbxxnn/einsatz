@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { MapPin, Star, CheckCircle, AlertCircle, RefreshCw, BadgeCheck, ChevronLeft, ChevronRight, Zap, MessageCircle } from "lucide-react"
+import { MapPin, Star, CheckCircle, AlertCircle, RefreshCw, BadgeCheck, ChevronLeft, ChevronRight, Zap, MessageCircle, Shield } from "lucide-react"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
@@ -20,6 +20,7 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
     subcategory_name?: string
     hourly_rate?: number
     experience_years?: number
+    description?: string
     dba_status?: {
       risk_level: string
       risk_percentage: number
@@ -456,43 +457,58 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Badge 
-                              className={`text-xs cursor-help flex flex-col items-start justify-between rounded-md border transition-colors h-full ${getCategoryColor(offering.category_name)}`}
+                              className={`text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full ${getCategoryColor(offering.category_name)}`}
                             >
-                              <div className="flex flex-col items-start gap-1 p-1 w-full h-full">
-                                <span className="font-bold">
-                                  {offering.subcategory_name}
-                                </span>
-                                
-                                {/* Hourly Rate and Experience */}
-                                <div className="flex gap-4 mt-1">
-                                  {offering.hourly_rate && (
+                            <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full relative">
+                              {/* DBA Status - Positioned at top right */}
+                              {offering.dba_status?.is_completed && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="absolute top-1 right-1 text-xxs px-1 py-0.5 rounded-full font-medium bg-green-100 text-green-800 z-10 cursor-help">
+                                        <Shield className="h-3 w-3" />
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="text-sm">{t("freelancers.dba.completedTooltip")}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                              
+                              <span className="font-bold">
+                                {offering.subcategory_name}
+                              </span>
+                              
+                              {/* Hourly Rate and Experience */}
+                              <div className="flex gap-4 mt-1">
+                                {offering.hourly_rate && (
                                                                       <span className="text-xs font-semibold">
-                                    {t("freelancers.tooltips.rate", { rate: offering.hourly_rate })}
-                                  </span>
-                                  )}
-                                  {offering.experience_years && (
+                                  {t("freelancers.tooltips.rate", { rate: offering.hourly_rate })}
+                                </span>
+                                )}
+                                {offering.experience_years && (
                                                                       <span className="text-xs">
-                                    {t("freelancers.tooltips.yearsExp", { years: offering.experience_years })}
-                                  </span>
-                                  )}
-                                </div>
-                                
-                                {/* DBA Status - Always rendered but conditionally styled */}
-                                <div className="flex items-center gap-1 mt-1 mt-auto">
-                                  {offering.dba_status ? (
-                                    <span className={`text-xs px-1 py-0.5 rounded font-medium ${
-                                      offering.dba_status.is_completed 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : 'bg-yellow-100 text-yellow-800'
-                                    }`}>
-                                      {offering.dba_status.is_completed ? t("freelancers.dba.completedSymbol") : t("freelancers.dba.incompleteSymbol")}
-                                    </span>
-                                  ) : (
-                                    <span className="text-xs px-1 py-0.5 rounded bg-red-100 text-red-800 font-medium">
-                                      {t("freelancers.dba.noDBA")}
-                                    </span>
-                                  )}
-                                </div>
+                                  {t("freelancers.tooltips.yearsExp", { years: offering.experience_years })}
+                                </span>
+                                )}
+                              </div>
+                              
+                              {/* Description */}
+                              <div className="flex items-center gap-1 mt-1">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="line-clamp-2 text-xs cursor-help">
+                                        {offering.description}
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      <p className="text-sm whitespace-pre-wrap">{offering.description}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
                               </div>
                             </Badge>
                           </TooltipTrigger>

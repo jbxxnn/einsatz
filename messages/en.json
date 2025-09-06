@@ -267,6 +267,7 @@
       "incomplete": "Incomplete",
       "notAvailable": "Not Available",
       "riskLevel": "Risk Level",
+      "completedTooltip": "This freelancer has completed their DBA assessment for this job category",
       "risk": "Risk",
       "completedSymbol": "✓ DBA",
       "incompleteSymbol": "⚠ DBA",

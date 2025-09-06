@@ -552,6 +552,48 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                   rows={3}
                   className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                 />
+                
+                {/* Live Preview */}
+                {description && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Preview (as shown to clients):</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
+                      <div className="flex flex-col gap-1">
+                        <div className="text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200">
+                          <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full">
+                            <span className="font-bold">
+                              {selectedSubcategoryId ? "Sample Subcategory" : "Sample Category"}
+                            </span>
+                            
+                            {/* Hourly Rate and Experience */}
+                            <div className="flex gap-4 mt-1">
+                              <span className="text-xs font-semibold">
+                                €{hourlyRate || "45"}/hour
+                              </span>
+                              {experienceYears && (
+                                <span className="text-xs">
+                                  {experienceYears} {experienceYears === "1" ? "year" : "years"}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {/* Description - This is what gets truncated */}
+                            <div className="flex items-center gap-1 mt-1">
+                              <div className="line-clamp-2 text-xs">
+                                {description}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {description.length > 80 && (
+                      <div className="text-xs text-orange-600">
+                        ⚠️ Text will be truncated at 2 lines on the freelancers list
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <Button onClick={handleAddOffering} disabled={saving} className="w-full">

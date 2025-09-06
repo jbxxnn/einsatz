@@ -267,6 +267,7 @@
       "incomplete": "Onvoltooid",
       "notAvailable": "Niet Beschikbaar",
       "riskLevel": "Risico Niveau",
+      "completedTooltip": "Deze freelancer heeft hun DBA-beoordeling voltooid voor deze jobcategorie",
       "risk": "Risico",
       "completedSymbol": "✓ DBA",
       "incompleteSymbol": "⚠ DBA",
