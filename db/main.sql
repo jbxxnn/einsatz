@@ -34,11 +34,11 @@ CREATE TABLE public.booking_dba_assessments (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT booking_dba_assessments_pkey PRIMARY KEY (id),
-  CONSTRAINT booking_dba_assessments_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id),
-  CONSTRAINT booking_dba_assessments_freelancer_dba_completion_id_fkey FOREIGN KEY (freelancer_dba_completion_id) REFERENCES public.freelancer_dba_completions(id),
   CONSTRAINT booking_dba_assessments_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.profiles(id),
+  CONSTRAINT booking_dba_assessments_freelancer_dba_completion_id_fkey FOREIGN KEY (freelancer_dba_completion_id) REFERENCES public.freelancer_dba_completions(id),
   CONSTRAINT booking_dba_assessments_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.profiles(id),
-  CONSTRAINT booking_dba_assessments_job_category_id_fkey FOREIGN KEY (job_category_id) REFERENCES public.job_categories(id)
+  CONSTRAINT booking_dba_assessments_job_category_id_fkey FOREIGN KEY (job_category_id) REFERENCES public.job_categories(id),
+  CONSTRAINT booking_dba_assessments_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id)
 );
 CREATE TABLE public.bookings (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -60,9 +60,9 @@ CREATE TABLE public.bookings (
   payment_method character varying DEFAULT 'online'::character varying CHECK (payment_method::text = ANY (ARRAY['online'::character varying, 'offline'::character varying]::text[])),
   booking_status USER-DEFINED DEFAULT 'pending_payment'::booking_status_enum,
   CONSTRAINT bookings_pkey PRIMARY KEY (id),
-  CONSTRAINT bookings_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.job_categories(id),
   CONSTRAINT bookings_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.profiles(id),
-  CONSTRAINT bookings_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.profiles(id)
+  CONSTRAINT bookings_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.profiles(id),
+  CONSTRAINT bookings_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.job_categories(id)
 );
 CREATE TABLE public.client_dba_answers (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -72,16 +72,16 @@ CREATE TABLE public.client_dba_answers (
   answer_score integer NOT NULL,
   answered_at timestamp with time zone DEFAULT now(),
   CONSTRAINT client_dba_answers_pkey PRIMARY KEY (id),
-  CONSTRAINT client_dba_answers_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id),
-  CONSTRAINT client_dba_answers_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.dba_questions(id)
+  CONSTRAINT client_dba_answers_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.dba_questions(id),
+  CONSTRAINT client_dba_answers_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id)
 );
 CREATE TABLE public.conversation_participants (
   conversation_id uuid NOT NULL,
   profile_id uuid NOT NULL,
   joined_at timestamp with time zone DEFAULT now(),
   CONSTRAINT conversation_participants_pkey PRIMARY KEY (conversation_id, profile_id),
-  CONSTRAINT conversation_participants_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id),
-  CONSTRAINT conversation_participants_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
+  CONSTRAINT conversation_participants_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
+  CONSTRAINT conversation_participants_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id)
 );
 CREATE TABLE public.conversations (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -142,8 +142,8 @@ CREATE TABLE public.freelancer_availability (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT freelancer_availability_pkey PRIMARY KEY (id),
-  CONSTRAINT freelancer_availability_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.job_categories(id),
-  CONSTRAINT freelancer_availability_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.profiles(id)
+  CONSTRAINT freelancer_availability_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.profiles(id),
+  CONSTRAINT freelancer_availability_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.job_categories(id)
 );
 CREATE TABLE public.freelancer_dba_answers (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -191,9 +191,9 @@ CREATE TABLE public.freelancer_global_availability (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT freelancer_global_availability_pkey PRIMARY KEY (id),
-  CONSTRAINT freelancer_global_availability_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.profiles(id),
   CONSTRAINT freelancer_global_availability_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.job_categories(id),
-  CONSTRAINT freelancer_global_availability_service_id_fkey FOREIGN KEY (service_id) REFERENCES public.freelancer_job_offerings(id)
+  CONSTRAINT freelancer_global_availability_service_id_fkey FOREIGN KEY (service_id) REFERENCES public.freelancer_job_offerings(id),
+  CONSTRAINT freelancer_global_availability_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.freelancer_job_offerings (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -210,8 +210,8 @@ CREATE TABLE public.freelancer_job_offerings (
   metadata jsonb,
   display_order integer,
   CONSTRAINT freelancer_job_offerings_pkey PRIMARY KEY (id),
-  CONSTRAINT freelancer_job_offerings_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.profiles(id),
   CONSTRAINT freelancer_job_offerings_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.job_categories(id),
+  CONSTRAINT freelancer_job_offerings_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.profiles(id),
   CONSTRAINT freelancer_job_offerings_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.job_subcategories(id)
 );
 CREATE TABLE public.invoices (
@@ -226,8 +226,8 @@ CREATE TABLE public.invoices (
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT invoices_pkey PRIMARY KEY (id),
   CONSTRAINT invoices_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES public.profiles(id),
-  CONSTRAINT invoices_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id),
-  CONSTRAINT invoices_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.profiles(id)
+  CONSTRAINT invoices_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.profiles(id),
+  CONSTRAINT invoices_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id)
 );
 CREATE TABLE public.job_categories (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -311,7 +311,7 @@ CREATE TABLE public.reviews (
   comment text,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT reviews_pkey PRIMARY KEY (id),
-  CONSTRAINT reviews_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id),
   CONSTRAINT reviews_reviewer_id_fkey FOREIGN KEY (reviewer_id) REFERENCES public.profiles(id),
-  CONSTRAINT reviews_reviewee_id_fkey FOREIGN KEY (reviewee_id) REFERENCES public.profiles(id)
+  CONSTRAINT reviews_reviewee_id_fkey FOREIGN KEY (reviewee_id) REFERENCES public.profiles(id),
+  CONSTRAINT reviews_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id)
 );

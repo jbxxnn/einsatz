@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/lib/toast"
-import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2, FileText, ChevronRight, ChevronLeft, Shield } from "lucide-react"
+import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2, FileText, ChevronRight, ChevronLeft, Shield, Upload, X, Image as ImageIcon } from "lucide-react"
 import { format, addDays } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
@@ -118,6 +118,9 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [showDBAModal, setShowDBAModal] = useState(false)
   const [dbaCompleted, setDbaCompleted] = useState(false)
   const [dbaResult, setDbaResult] = useState<any>(null)
+  const [uploadedImages, setUploadedImages] = useState<Array<{url: string, path: string, file?: File}>>([])
+  const [uploadingImages, setUploadingImages] = useState(false)
+  const [tempImages, setTempImages] = useState<File[]>([])
 
   const { t } = useTranslation()
 
@@ -329,6 +332,126 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     await createBookingWithDBA(result)
   }
 
+  // Image upload functions
+  const handleImageUpload = async (files: FileList) => {
+    const fileArray = Array.from(files)
+    
+    // Validate file count
+    if (tempImages.length + fileArray.length > 5) {
+      toast.error("Maximum 5 images allowed")
+      return
+    }
+
+    // Validate each file
+    for (const file of fileArray) {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`${file.name}: Invalid file type. Only JPG, JPEG, PNG, and WEBP are allowed.`)
+        return
+      }
+
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error(`${file.name}: File size too large. Maximum size is 2MB.`)
+        return
+      }
+    }
+
+    // Store files temporarily and create preview URLs
+    const newTempImages = [...tempImages, ...fileArray]
+    setTempImages(newTempImages)
+
+    // Create preview URLs for display
+    const previewImages = fileArray.map(file => ({
+      url: URL.createObjectURL(file),
+      path: '', // Will be set when uploaded to storage
+      file: file
+    }))
+
+    setUploadedImages(prev => [...prev, ...previewImages])
+    toast.success(`${fileArray.length} image(s) added successfully`)
+  }
+
+  const handleImageRemove = async (imageIndex: number) => {
+    const imageToRemove = uploadedImages[imageIndex]
+    
+    // If it's a temporary image (before booking creation)
+    if (imageToRemove.file) {
+      // Remove from temp images
+      const newTempImages = tempImages.filter((_, index) => index !== (tempImages.length - uploadedImages.length + imageIndex))
+      setTempImages(newTempImages)
+      
+      // Remove from uploaded images display
+      setUploadedImages(prev => prev.filter((_, index) => index !== imageIndex))
+      
+      // Revoke object URL to free memory
+      URL.revokeObjectURL(imageToRemove.url)
+      
+      toast.success('Image removed successfully')
+    } else {
+      // If it's an uploaded image (after booking creation)
+      try {
+        const response = await fetch(`/api/upload-booking-image?path=${encodeURIComponent(imageToRemove.path)}`, {
+          method: 'DELETE',
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to delete image')
+        }
+
+        setUploadedImages(prev => prev.filter((_, index) => index !== imageIndex))
+        toast.success('Image removed successfully')
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to remove image')
+      }
+    }
+  }
+
+  // Upload temporary images to storage
+  const uploadTempImages = async (bookingId: string) => {
+    if (tempImages.length === 0) return []
+
+    setUploadingImages(true)
+    try {
+      const uploadPromises = tempImages.map(async (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('bookingId', bookingId)
+
+        const response = await fetch('/api/upload-booking-image', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Upload failed')
+        }
+
+        return response.json()
+      })
+
+      const results = await Promise.all(uploadPromises)
+      const uploadedImageUrls = results.map(result => result.url)
+      
+      // Update uploadedImages with actual URLs
+      setUploadedImages(prev => prev.map((img, index) => {
+        if (img.file) {
+          const result = results.find(r => r.path.includes(img.file!.name) || index < results.length)
+          return result ? { url: result.url, path: result.path } : img
+        }
+        return img
+      }))
+
+      setTempImages([]) // Clear temp images
+      return uploadedImageUrls
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload images')
+      return []
+    } finally {
+      setUploadingImages(false)
+    }
+  }
+
   const createBookingWithDBA = async (dbaResult: any) => {
     setLoading(true)
 
@@ -349,7 +472,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       const startDateTime = new Date(`${bookingDate}T${selectedStartTime}:00`)
       const endDateTime = new Date(`${bookingDate}T${selectedEndTime}:00`)
 
-      // Create booking
+      // Create booking first
       const { data, error } = await supabase
         .from("bookings")
         .insert({
@@ -368,6 +491,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           payment_status: "unpaid",
           category_id: selectedCategoryId,
           payment_method: paymentMethod,
+          images: [], // Will be updated after image upload
         })
         .select()
 
@@ -378,6 +502,17 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       const newBookingId = data[0].id
       setBookingId(newBookingId)
       setClientId(user.id)
+
+      // Upload images to storage
+      const uploadedImageUrls = await uploadTempImages(newBookingId)
+
+      // Update booking with image URLs
+      if (uploadedImageUrls.length > 0) {
+        await supabase
+          .from("bookings")
+          .update({ images: uploadedImageUrls })
+          .eq("id", newBookingId)
+      }
 
       // Submit DBA answers to the database
       const dbaSubmissionResult = await submitClientDBA(newBookingId, dbaResult)
@@ -517,7 +652,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       const startDateTime = new Date(`${bookingDate}T${selectedStartTime}:00`)
       const endDateTime = new Date(`${bookingDate}T${selectedEndTime}:00`)
 
-      // Create booking
+      // Create booking first
       const { data, error } = await supabase
         .from("bookings")
         .insert({
@@ -536,6 +671,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           payment_status: "unpaid",
           category_id: selectedCategoryId,
           payment_method: paymentMethod,
+          images: [], // Will be updated after image upload
         })
         .select()
 
@@ -543,8 +679,20 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         throw error
       }
 
-      setBookingId(data[0].id)
+      const newBookingId = data[0].id
+      setBookingId(newBookingId)
       setClientId(user.id)
+
+      // Upload images to storage
+      const uploadedImageUrls = await uploadTempImages(newBookingId)
+
+      // Update booking with image URLs
+      if (uploadedImageUrls.length > 0) {
+        await supabase
+          .from("bookings")
+          .update({ images: uploadedImageUrls })
+          .eq("id", newBookingId)
+      }
       
       // Proceed directly to payment step
       setCurrentStep('payment')
@@ -751,6 +899,77 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         />
       </div>
 
+      {/* Image Upload Section */}
+      <div className="space-y-2">
+        <Label className="text-xs text-black">Job Images (Optional)</Label>
+        <div className="border rounded-md p-3">
+          {/* Upload Area */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-center w-full">
+              <label
+                htmlFor="image-upload"
+                className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                  <p className="mb-2 text-sm text-gray-500">
+                    <span className="font-semibold">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    PNG, JPG, JPEG, WEBP (MAX. 2MB each, 5 images max)
+                  </p>
+                </div>
+                <input
+                  id="image-upload"
+                  type="file"
+                  className="hidden"
+                  multiple
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
+                  disabled={uploadingImages || uploadedImages.length >= 5}
+                />
+              </label>
+            </div>
+
+            {/* Upload Progress */}
+            {uploadingImages && (
+              <div className="flex items-center justify-center py-2">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <span className="text-sm text-gray-600">Uploading images...</span>
+              </div>
+            )}
+
+            {/* Image Previews */}
+            {uploadedImages.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {uploadedImages.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={image.url}
+                      alt={`Upload ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-md border"
+                    />
+                    <button
+                      title="Remove image"
+                      type="button"
+                      onClick={() => handleImageRemove(index)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Image Count */}
+            <div className="text-xs text-gray-500 text-center">
+              {uploadedImages.length}/5 images uploaded
+            </div>
+          </div>
+        </div>
+      </div>
+
 
 
       <div className="border-t pt-4 mt-4">
@@ -870,7 +1089,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         className="w-full"
         disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || paymentMethod === "online" || (paymentMethod === "offline" && !dbaCompleted) || !!bookingId}
       >
-        {loading ? t("bookingform.processing") : bookingId ? 'Booking Created - Complete DBA Above' : 
+        {loading ? t("bookingform.processing") : bookingId ? 'Booking Created - Proceed to Payment' : 
          paymentMethod === "offline" ? 'Continue to DBA Assessment' : 'Online Payment Not Available'}
       </Button>
 
@@ -912,6 +1131,26 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             <span className="text-xs text-black">{t("bookingform.total")}</span>
             <span className="text-xs text-black">€{calculateTotal().toFixed(2)}</span>
           </div>
+          
+          {/* Images Summary */}
+          {uploadedImages.length > 0 && (
+            <div className="border-t pt-4">
+              <div className="flex items-center gap-2 mb-2">
+                <ImageIcon className="h-4 w-4 text-gray-500" />
+                <span className="text-xs text-black font-medium">Job Images ({uploadedImages.length})</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {uploadedImages.map((image, index) => (
+                  <img
+                    key={index}
+                    src={image.url}
+                    alt={`Job image ${index + 1}`}
+                    className="w-full h-16 object-cover rounded border"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -130,6 +130,7 @@ const CustomNoBookingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
   client: Database["public"]["Tables"]["profiles"]["Row"]
+  images?: string[]
 }
 
 export default function BookingDetailsPage() {
@@ -516,6 +517,37 @@ export default function BookingDetailsPage() {
                     <h3 className="text-xs font-medium text-black mb-2">{t("booking.id.description")}</h3>
                     <p className="text-xs text-black">{booking.description || t("booking.id.noDescription")}</p>
                   </div>
+
+                  {/* Job Images */}
+                  {booking.images && Array.isArray(booking.images) && booking.images.length > 0 && (
+                    <div>
+                      <h3 className="text-xs font-medium text-black mb-2">Job Images ({booking.images.length})</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {booking.images.map((imageUrl, index) => (
+                          <div key={index} className="relative group">
+                            <div className="aspect-square rounded-lg overflow-hidden border">
+                              <Image
+                                src={imageUrl}
+                                alt={`Job image ${index + 1}`}
+                                fill
+                                className="object-cover hover:scale-105 transition-transform duration-200"
+                              />
+                            </div>
+                            <button
+                              title="View image in full screen"
+                              onClick={() => {
+                                // Open image in full screen
+                                window.open(imageUrl, '_blank')
+                              }}
+                              className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100"
+                            >
+                              <Eye className="h-6 w-6 text-white" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -732,13 +764,6 @@ export default function BookingDetailsPage() {
                 {conversationId ? t("booking.id.sendMessage") : t("loading")}
               </Button>
               </Link>
-
-              {booking.status === "confirmed" && (
-                <Button variant="outline" className="w-full justify-start">
-                  <CustomNoBookingsIcon className="h-4 w-4 mr-2" />
-                  {t("contract.view")}
-                </Button>
-              )}
 
               {booking.status === "completed" && (
                 <Button variant="outline" className="w-full justify-start">
