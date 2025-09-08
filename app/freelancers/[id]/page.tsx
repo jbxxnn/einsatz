@@ -24,6 +24,11 @@ type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row
   category_name: string
   subcategory_name?: string
   icon?: string
+  dba_status?: {
+    is_completed: boolean
+    risk_level: string
+    risk_percentage: number
+  } | null
 }
 
 
@@ -234,12 +239,29 @@ export default function FreelancerProfile() {
           throw offeringsError
         }
 
-        // Format job offerings
+        // Fetch DBA status for this freelancer
+        const { data: dbaData } = await supabase
+          .from('freelancer_dba_completions')
+          .select('job_category_id, risk_level, risk_percentage, is_completed')
+          .eq('freelancer_id', params.id)
+
+        // Create DBA status map
+        const dbaMap = new Map()
+        dbaData?.forEach(dba => {
+          dbaMap.set(dba.job_category_id, {
+            is_completed: dba.is_completed,
+            risk_level: dba.risk_level,
+            risk_percentage: dba.risk_percentage
+          })
+        })
+
+        // Format job offerings with DBA status
         const formattedOfferings = offeringsData.map((offering) => ({
           ...offering,
           category_name: offering.job_categories.name,
           icon: offering.job_categories.icon,
           subcategory_name: offering.job_subcategories.name,
+          dba_status: dbaMap.get(offering.category_id) || null
         }))
 
         // Check real-time availability

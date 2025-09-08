@@ -89,7 +89,19 @@ type AvailabilityBlock = {
 
 
 interface BookingFormProps {
-  freelancer: Profile
+  freelancer: Profile & {
+    job_offerings?: Array<{
+      id: string
+      category_id: string
+      category_name: string
+      subcategory_name?: string
+      dba_status?: {
+        is_completed: boolean
+        risk_level: string
+        risk_percentage: number
+      } | null
+    }>
+  }
   selectedDate: Date | undefined
   selectedCategoryId?: string | null
   onBack: () => void
@@ -111,18 +123,26 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [categoryName, setCategoryName] = useState<string>("")
   const [noAvailability, setNoAvailability] = useState(false)
   const [suggestedDate, setSuggestedDate] = useState<Date | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<"online" | "offline">("online")
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "offline">("offline")
   const [currentStep, setCurrentStep] = useState<BookingStep>('details')
   const [bookingId, setBookingId] = useState<string | null>(null)
   const [clientId, setClientId] = useState<string | null>(null)
   const [showDBAModal, setShowDBAModal] = useState(false)
   const [dbaCompleted, setDbaCompleted] = useState(false)
   const [dbaResult, setDbaResult] = useState<any>(null)
+  const [dbaSkipped, setDbaSkipped] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<Array<{url: string, path: string, file?: File}>>([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [tempImages, setTempImages] = useState<File[]>([])
 
   const { t } = useTranslation()
+
+  // Get freelancer's DBA status for the selected category
+  const freelancerDbaStatus = useMemo(() => {
+    if (!selectedCategoryId || !freelancer.job_offerings) return null
+    const offering = freelancer.job_offerings.find(offering => offering.category_id === selectedCategoryId)
+    return offering?.dba_status || null
+  }, [selectedCategoryId, freelancer.job_offerings])
 
   // Calculate valid end times based on selected start time
   const validEndTimes = useMemo(() => {
@@ -595,16 +615,16 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       return
     }
 
-    // Only allow DBA for offline payments
-    if (paymentMethod === "online") {
-      toast.error("DBA assessment is only required for offline payments. Please select offline payment method to proceed with DBA.")
-      return
-    }
+    // DBA is always available now
 
     setShowDBAModal(true)
   }
 
-
+  const handleSkipDBA = () => {
+    setDbaSkipped(true)
+    setDbaCompleted(false)
+    setDbaResult(null)
+  }
 
   const handleCreateBooking = async () => {
     if (!selectedDate) {
@@ -627,10 +647,19 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       return
     }
 
-    // For offline payments, require DBA completion
-    if (paymentMethod === "offline" && !dbaCompleted) {
-      toast.error("DBA assessment is required for offline payments. Please complete the DBA assessment above before proceeding.")
-      return
+    // Check DBA requirements based on freelancer's DBA status
+    if (freelancerDbaStatus?.is_completed) {
+      // Freelancer completed DBA - client can skip or complete DBA
+      if (!dbaCompleted && !dbaSkipped) {
+        toast.error("Please either complete the DBA assessment or skip it to proceed with the booking.")
+        return
+      }
+    } else {
+      // Freelancer didn't complete DBA - client can only skip DBA
+      if (!dbaSkipped) {
+        toast.error("The freelancer hasn't completed their DBA for this job category. Please skip DBA to proceed with the booking.")
+        return
+      }
     }
 
     setLoading(true)
@@ -989,21 +1018,14 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       <div className="space-y-2 border-t pt-4">
         <Label className="text-xs text-black">{t("bookingform.paymentMethod")}</Label>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4">
           <div
-            className={`border rounded-md p-3 cursor-pointer flex items-center text-xs text-black ${
-              paymentMethod === "online" ? "border-primary bg-primary/5" : "border-muted"
-            }`}
-            onClick={() => setPaymentMethod("online")}
+            className="border rounded-md p-3 flex items-center text-xs text-gray-400 bg-gray-50 cursor-not-allowed opacity-50"
           >
-            <div
-              className={`w-2 h-2 rounded-full border mr-4 ${
-                paymentMethod === "online" ? "border-primary bg-primary" : "border-muted"
-              }`}
-            ></div>
+            <div className="w-2 h-2 rounded-full border border-gray-300 mr-4"></div>
             <div>
-              <p className="font-medium text-xs text-black">{t("bookingform.onlinePayment")}</p>
-              <p className="text-xs text-black">{t("bookingform.paySecurely")}</p>
+              <p className="font-medium text-xs text-gray-400">{t("bookingform.onlinePayment")}</p>
+              <p className="text-xs text-gray-400">Currently unavailable</p>
             </div>
           </div>
           <div
@@ -1025,44 +1047,86 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         </div>
       </div>
 
-      {/* DBA Check Button - Moved below payment method and restricted to offline payments */}
+      {/* DBA Check Section - Shows different options based on freelancer's DBA status */}
       <div className="space-y-3 pt-4 border-t">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CustomRescheduleIcon className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium">DBA Compliance Check</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CustomRescheduleIcon className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium">DBA Compliance Check</span>
+            </div>
+            {dbaCompleted && (
+              <Badge variant="default" className="text-xs">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Completed
+              </Badge>
+            )}
+            {dbaSkipped && (
+              <Badge variant="outline" className="text-xs text-orange-600 border-orange-200">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Skipped
+              </Badge>
+            )}
           </div>
-          {dbaCompleted && (
-            <Badge variant="default" className="text-xs">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Completed
-            </Badge>
+          
+          {freelancerDbaStatus?.is_completed ? (
+            // Freelancer completed DBA - client can choose to complete or skip
+            <div className="space-y-3">
+              <p className="text-xs text-gray-600">
+                The freelancer has completed their DBA assessment for this job category. You can either complete your own DBA assessment or skip it (you will bear legal risks).
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={handleOpenDBAModal}
+                  variant={dbaCompleted ? "outline" : "default"}
+                  size="sm"
+                  className="flex-1"
+                >
+                  <CustomRescheduleIcon2 className="h-4 w-4 mr-2" />
+                  {dbaCompleted ? 'Review DBA Assessment' : 'Complete DBA Check'}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSkipDBA}
+                  variant={dbaSkipped ? "outline" : "outline"}
+                  size="sm"
+                  className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50"
+                >
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  Skip DBA
+                </Button>
+              </div>
+            </div>
+          ) : (
+            // Freelancer didn't complete DBA - client can only skip
+            <div className="space-y-3">
+              <div className="bg-orange-50 border border-orange-200 rounded-md p-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-orange-800">
+                      Freelancer DBA Not Completed
+                    </p>
+                    <p className="text-xs text-orange-700 mt-1">
+                      The freelancer hasn't completed their DBA assessment for this job category. 
+                      You will bear all legal responsibility if you proceed without DBA.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <Button
+                type="button"
+                onClick={handleSkipDBA}
+                variant={dbaSkipped ? "outline" : "outline"}
+                size="sm"
+                className="w-full text-orange-600 border-orange-200 hover:bg-orange-50"
+              >
+                <AlertCircle className="h-4 w-4 mr-2" />
+                {dbaSkipped ? 'DBA Skipped - Proceed with Risk' : 'Proceed without DBA (You bear legal risks)'}
+              </Button>
+            </div>
           )}
         </div>
-        
-        <p className="text-xs text-gray-600">
-          Complete your DBA assessment to ensure legal compliance for this working relationship.
-          {paymentMethod === "online" && (
-            <span className="text-orange-600 font-medium"> DBA is only required for offline payments.</span>
-          )}
-        </p>
-        
-        <Button
-          type="button"
-          onClick={handleOpenDBAModal}
-          variant={dbaCompleted ? "outline" : "default"}
-          size="sm"
-          className="w-full"
-          disabled={paymentMethod === "online"}
-        >
-          <CustomRescheduleIcon2 className="h-4 w-4 mr-2" />
-          {paymentMethod === "online" 
-            ? 'DBA Not Required (Online Payment)' 
-            : dbaCompleted 
-              ? 'Review DBA Assessment' 
-              : 'Complete DBA Check'
-          }
-        </Button>
 
         {dbaCompleted && dbaResult && (
           <div className="text-xs p-2 rounded-md border bg-gray-50">
@@ -1082,15 +1146,16 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             </div>
           </div>
         )}
-      </div>
 
       <Button
         type="submit"
         className="w-full"
-        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || paymentMethod === "online" || (paymentMethod === "offline" && !dbaCompleted) || !!bookingId}
+        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || (!dbaCompleted && !dbaSkipped) || !!bookingId}
       >
         {loading ? t("bookingform.processing") : bookingId ? 'Booking Created - Proceed to Payment' : 
-         paymentMethod === "offline" ? 'Continue to DBA Assessment' : 'Online Payment Not Available'}
+         dbaCompleted ? 'Booking Created - Proceed to Payment' : 
+         dbaSkipped ? 'Booking Created - Proceed to Payment' : 
+         'Complete DBA or Skip to Proceed'}
       </Button>
 
       <p className="text-xs text-center text-muted-foreground">
