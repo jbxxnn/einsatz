@@ -21,7 +21,7 @@
       "findFreelancers": "Vind freelancers",
       "becomeFreelancer": "Word freelancer",
       "bookLocalFreelancers": "Boek lokale freelancers direct",
-      "goToDashboard": "Ga naar dashboard"  
+      "goToDashboard": "Ga naar dashboard"
     },
     "features": {
       "title": "Waarom Einsatz Kiezen",
@@ -380,8 +380,6 @@
     "goToHome": "Ga naar startpagina",
     "redirectingToLogin": "Doorverwijzen naar Inloggen",
     "pleaseWait": "Even geduld terwijl we je doorverwijzen...",
-
-
     "welcome": "Welkom terug, {name}! 👋",
     "hereIsWhatIsHappening": "Hier is wat er vandaag gebeurt met je projecten.",
     "totalSpent": "Totaal uitgegeven",
@@ -456,12 +454,6 @@
     "perProject": "Per project",
     "from": "van",
     "completionRate": "Voltooiingspercentage",
-
-
-
-
-
-
     "stats": {
       "bookings": "Boekingen",
       "upcoming": "Aankomend",
@@ -717,17 +709,12 @@
   },
   "bookingform": {
     "stepDetails": "Boeking Details",
-
     "stepPayment": "Betaling",
-
-
     "paymentStepTitle": "Betaling & Bevestiging",
     "paymentStepDescription": "Controleer je boeking details en ga door naar betaling.",
     "bookingSummary": "Boeking Samenvatting",
     "dbaCompleted": "DBA Beoordeling Voltooid",
     "dbaCompletedDescription": "Je DBA compliance beoordeling is succesvol voltooid. Je kunt nu doorgaan met de boeking.",
-
-
     "continueToPayment": "Ga door naar Betaling",
     "proceedToPayment": "Ga door naar Betaling",
     "required": "Verplicht",
@@ -886,7 +873,7 @@
       "yourReviewHelpsOthersMakeInformedDecisions": "Je beoordeling helpt andere mensen om weloverwogen beslissingen te nemen.",
       "actions": "Acties",
       "sendMessage": "Bericht sturen",
-    "confirmed": "Bevestigd",
+      "confirmed": "Bevestigd",
       "viewInvoice": "Factuur bekijken",
       "requestCancellation": "Annulering aanvragen",
       "reportAnIssue": "Probleem melden",
@@ -1066,7 +1053,7 @@
     }
   },
   "dbaModal": {
-    "loading": "DBA Beoordeling Laden",
+    "loading": "Laden...",
     "assessmentComplete": "DBA Beoordeling Voltooid",
     "dbaScore": "DBA Score",
     "riskLevel": "Risiconiveau",
@@ -1094,7 +1081,6 @@
     "cancelBooking": "Boeking Annuleren",
     "disputeFreelancerDBA": "Freelancer DBA Betwisten",
     "hideDetails": "Details Verbergen",
-    "loading": "Laden...",
     "noDbaDataAvailable": "Geen DBA Gegevens Beschikbaar",
     "proceedAnyway": "Toch Doorgaan",
     "dbaComplianceAssessment": "DBA Nalevingsbeoordeling",
@@ -1120,10 +1106,112 @@
     "workEnvironment": "Werkomgeving",
     "professionalRisk": "Professioneel Risico",
     "defaultMessage": "Hoi! Ik heb enkele vragen over je DBA-beoordeling voor deze functiecategorie. Kunnen we de antwoorden bespreken?"
+  },
+  "categories": {
+    "business___consulting": "Zakelijke dienstverlening & advies",
+    "it___data": "IT & data",
+    "marketing___communications": "Marketing & communicatie",
+    "content___creation": "Content & creatie",
+    "design___ux": "Design & UX",
+    "construction___trades": "Bouw & techniek",
+    "production___maintenance": "Productie & onderhoud",
+    "healthcare___wellness": "Zorg & welzijn",
+    "education___training": "Onderwijs & training",
+    "hospitality___events": "Horeca & evenementen",
+    "logistics___transportation": "Logistiek & vervoer",
+    "finance___legal": "Financieel & juridisch",
+    "administrative_support": "Administratieve ondersteuning",
+    "sports___well_being": "Sport & welzijn",
+    "sustainability___environment": "Duurzaamheid & milieu"
+  },
+  "jobTypes": {
+    "interim_manager": "Interim-manager",
+    "project_manager": "Projectmanager",
+    "hr_consultant": "HR-consultant",
+    "management_consultant": "Management consultant",
+    "business_strategist": "Bedrijfsstrateeg",
+    "organizational_consultant": "Organisatieadviseur",
+    "software_developer": "Software-developer",
+    "web_app_developer": "Web-/app-ontwikkelaar",
+    "ai_ml_specialist": "AI-/ML-specialist",
+    "data_analyst": "Data-analist",
+    "cloud_engineer": "Cloud engineer",
+    "cybersecurity_expert": "Cybersecurity-expert",
+    "digital_marketer": "Digital marketeer",
+    "social_media_manager": "Social-media-manager",
+    "seo_sea_specialist": "SEO/SEA-specialist",
+    "content_marketer": "Contentmarketeer",
+    "email_marketer": "E-mailmarketeer",
+    "pr_consultant": "PR-adviseur",
+    "copywriter": "Copywriter",
+    "journalist": "Journalist",
+    "translator": "Vertaler",
+    "photographer": "Fotograaf",
+    "videographer": "Videograaf",
+    "video_editor": "Video-editor",
+    "podcast_producer": "Podcast-producer",
+    "graphic_designer": "Grafisch ontwerper",
+    "ux_ui_designer": "UX/UI-designer",
+    "product_designer": "Productdesigner",
+    "animator": "Animator",
+    "illustration_3d_artist": "Illustratie-/3D-kunstenaar",
+    "interior_designer": "Interieurontwerper",
+    "carpenter": "Timmerman",
+    "electrician": "Elektricien",
+    "plumber": "Loodgieter",
+    "bricklayer": "Metselaar",
+    "painter": "Schilder",
+    "roofer": "Dakdekker",
+    "paver": "Stratenmaker",
+    "installer": "Installateur",
+    "mechanic": "Monteur",
+    "boiler_mechanic": "CV-monteur",
+    "solar_panel_installer": "Zonnepanelen-installateur",
+    "handyman": "Klusjesman",
+    "gardener": "Tuinman",
+    "cleaner": "Schoonmaker",
+    "nurse": "Verpleegkundige",
+    "caregiver": "Verzorgende",
+    "physiotherapist": "Fysiotherapeut",
+    "psychologist_coach": "Psycholoog/coach",
+    "dental_assistant": "Tandartsassistente",
+    "tutor": "Bijlesdocent",
+    "language_trainer": "Taaltrainer",
+    "exam_coach": "Examencoach",
+    "e_learning_developer": "E-learning-ontwikkelaar",
+    "business_trainer": "Zakelijk trainer",
+    "coach": "Coach",
+    "catering_chef": "Cateringkok",
+    "barista": "Barista",
+    "bartender": "Barman",
+    "event_planner": "Eventplanner",
+    "wedding_planner": "Weddingplanner",
+    "host": "Gastvrouw/host",
+    "food_truck_operator": "Foodtruck-uitbater",
+    "courier": "Koerier",
+    "moving_service": "Verhuisservice",
+    "driver": "Chauffeur",
+    "bike_delivery_rider": "Fietsbezorger",
+    "logistics_coordinator": "Logistiek coördinator",
+    "bookkeeper": "Boekhouder",
+    "tax_advisor": "Belastingadviseur",
+    "financial_planner": "Financieel planner",
+    "lawyer": "Jurist",
+    "mediator": "Mediator",
+    "compliance_expert": "Compliance-expert",
+    "virtual_assistant": "Virtuele assistent",
+    "data_entry_specialist": "Data-entry-specialist",
+    "customer_service_representative": "Klantenservice-medewerker",
+    "secretary": "Secretaresse",
+    "scheduler": "Planner",
+    "personal_trainer": "Personal trainer",
+    "yoga_fitness_instructor": "Yoga-/fitness-instructeur",
+    "nutrition_coach": "Voedingscoach",
+    "masseur": "Masseur",
+    "sports_physiotherapist": "Sportfysiotherapeut",
+    "energy_advisor": "Energie-adviseur",
+    "circular_economy_specialist": "Circulaire-economie-specialist",
+    "environmental_consultant": "Milieukundig consultant",
+    "sustainability_coach": "Duurzaamheidscoach"
   }
 }
-
-
-
-
-

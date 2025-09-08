@@ -1,5 +1,6 @@
 import useSWR from "swr"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
+import { useState, useEffect } from "react"
 import { SWRConfiguration } from "swr"
 
 // Generic fetcher function for SWR
@@ -87,7 +88,26 @@ export function useFreelancers(filters: {
 
 // Hook for fetching categories
 export function useCategories() {
-  return useSWR("/api/categories", fetcher, {
+  // Get locale from localStorage or default to 'en'
+  const [locale, setLocale] = useState<string>('en')
+  
+  useEffect(() => {
+    const storedLocale = localStorage.getItem('locale')
+    if (storedLocale && (storedLocale === 'en' || storedLocale === 'nl')) {
+      setLocale(storedLocale)
+    }
+    
+    // Listen for language changes
+    const handleLanguageChange = () => {
+      const newLocale = localStorage.getItem('locale') || 'en'
+      setLocale(newLocale)
+    }
+    
+    window.addEventListener('languageChange', handleLanguageChange)
+    return () => window.removeEventListener('languageChange', handleLanguageChange)
+  }, [])
+  
+  return useSWR(`/api/categories?locale=${locale}`, fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 300000, // 5 minutes - categories don't change often
   })
@@ -95,8 +115,26 @@ export function useCategories() {
 
 // Hook for fetching subcategories by category ID
 export function useSubcategories(categoryId: string | null) {
-  const url = categoryId ? `/api/subcategories?categoryId=${categoryId}` : null
+  // Get locale from localStorage or default to 'en'
+  const [locale, setLocale] = useState<string>('en')
   
+  useEffect(() => {
+    const storedLocale = localStorage.getItem('locale')
+    if (storedLocale && (storedLocale === 'en' || storedLocale === 'nl')) {
+      setLocale(storedLocale)
+    }
+    
+    // Listen for language changes
+    const handleLanguageChange = () => {
+      const newLocale = localStorage.getItem('locale') || 'en'
+      setLocale(newLocale)
+    }
+    
+    window.addEventListener('languageChange', handleLanguageChange)
+    return () => window.removeEventListener('languageChange', handleLanguageChange)
+  }, [])
+  
+  const url = categoryId ? `/api/subcategories?categoryId=${categoryId}&locale=${locale}` : null
   return useSWR(url, fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 300000, // 5 minutes - subcategories don't change often

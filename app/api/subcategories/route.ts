@@ -6,6 +6,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const categoryId = searchParams.get("categoryId")
+    const locale = searchParams.get("locale") || "en"
 
     if (!categoryId) {
       return NextResponse.json({ error: "Category ID is required" }, { status: 400 })
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
 
     const { data, error } = await supabase
       .from("job_subcategories")
-      .select("*")
+      .select("id, category_id, name, name_nl, name_en, description, created_at, updated_at")
       .eq("category_id", categoryId)
       .order("name")
 
@@ -25,7 +26,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Failed to fetch subcategories" }, { status: 500 })
     }
 
-    return NextResponse.json(data)
+    // Transform subcategories to include localized names
+    const localizedSubcategories = data.map(subcategory => ({
+      ...subcategory,
+      name: locale === 'nl' ? subcategory.name_nl : subcategory.name_en,
+    }))
+
+    return NextResponse.json(localizedSubcategories)
   } catch (error) {
     console.error("Error in subcategories API:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

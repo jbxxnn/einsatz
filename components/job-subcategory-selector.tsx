@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
+import { useState } from "react"
+import { useSubcategories } from "@/lib/data-fetching"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -24,35 +24,8 @@ export default function JobSubcategorySelector({
   onChange,
   className,
 }: JobSubcategorySelectorProps) {
-  const { supabase } = useOptimizedSupabase()
   const [open, setOpen] = useState(false)
-  const [subcategories, setSubcategories] = useState<JobSubcategory[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchSubcategories = async () => {
-      setLoading(true)
-
-      if (!categoryId) {
-        setSubcategories([])
-        setLoading(false)
-        return
-      }
-
-      const { data, error } = await supabase
-        .from("job_subcategories")
-        .select("*")
-        .eq("category_id", categoryId)
-        .order("name")
-
-      if (!error && data) {
-        setSubcategories(data)
-      }
-      setLoading(false)
-    }
-
-    fetchSubcategories()
-  }, [supabase, categoryId])
+  const { data: subcategories, isLoading: loading } = useSubcategories(categoryId)
 
   const handleSelect = (subcategoryId: string) => {
     onChange(subcategoryId === selectedSubcategory ? null : subcategoryId)
@@ -60,7 +33,7 @@ export default function JobSubcategorySelector({
   }
 
   const getSelectedSubcategoryName = () => {
-    const selected = subcategories.find((subcategory) => subcategory.id === selectedSubcategory)
+    const selected = subcategories?.find((subcategory) => subcategory.id === selectedSubcategory)
     return selected ? selected.name : ""
   }
 
@@ -91,7 +64,7 @@ export default function JobSubcategorySelector({
             <CommandList>
               <CommandEmpty>No subcategory found.</CommandEmpty>
               <CommandGroup>
-                {subcategories.map((subcategory) => (
+                {subcategories?.map((subcategory) => (
                   <CommandItem
                     key={subcategory.id}
                     value={subcategory.name}

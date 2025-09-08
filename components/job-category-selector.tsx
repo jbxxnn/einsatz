@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
+import { useCategories } from "@/lib/data-fetching"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -25,24 +25,8 @@ export default function JobCategorySelector({
   multiple = true,
   className,
 }: JobCategorySelectorProps) {
-  const { supabase } = useOptimizedSupabase()
   const [open, setOpen] = useState(false)
-  const [categories, setCategories] = useState<JobCategory[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setLoading(true)
-      const { data, error } = await supabase.from("job_categories").select("*").order("name")
-
-      if (!error && data) {
-        setCategories(data)
-      }
-      setLoading(false)
-    }
-
-    fetchCategories()
-  }, [supabase])
+  const { data: categories, isLoading: loading } = useCategories()
 
   const handleSelect = (categoryId: string) => {
     if (multiple) {
@@ -58,7 +42,7 @@ export default function JobCategorySelector({
   }
 
   const getSelectedCategoryNames = () => {
-    return categories.filter((category) => selectedCategories.includes(category.id)).map((category) => category.name)
+    return categories?.filter((category) => selectedCategories.includes(category.id)).map((category) => category.name) || []
   }
 
   return (
@@ -96,7 +80,7 @@ export default function JobCategorySelector({
             <CommandList>
               <CommandEmpty>No category found.</CommandEmpty>
               <CommandGroup>
-                {categories.map((category) => (
+                {categories?.map((category) => (
                   <CommandItem key={category.id} value={category.name} onSelect={() => handleSelect(category.id)}>
                     <Check
                       className={cn(

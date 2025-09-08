@@ -393,15 +393,15 @@ export function PreBookingDBAModal({
         .join('')
       
       fullMessage = `${messageText}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📝 SELECTED ANSWERS FOR DISCUSSION\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${selectedAnswersText}`
-    }
+      }
 
-    // Send initial DBA-related message
-    const { error: messageError } = await supabase
-      .rpc('add_message', {
-        p_conversation_id: conversationId,
-        p_sender_id: user.id,
+      // Send initial DBA-related message
+      const { error: messageError } = await supabase
+        .rpc('add_message', {
+          p_conversation_id: conversationId,
+          p_sender_id: user.id,
         p_content: fullMessage
-      })
+        })
 
       if (messageError) {
         throw messageError
@@ -594,8 +594,8 @@ export function PreBookingDBAModal({
                                 {selectedAnswers.length} {t('dbaModal.selected')}
                               </div>
                             </div>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                              {freelancerAnswers.map((fAnswer: any) => (
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {freelancerAnswers.map((fAnswer: any) => (
                                 <div key={fAnswer.question_id} className={`border rounded-lg p-4 transition-colors ${
                                   selectedAnswers.includes(fAnswer.question_id) 
                                     ? 'bg-blue-50 border-blue-200' 
@@ -617,16 +617,16 @@ export function PreBookingDBAModal({
                                       aria-label={`${t('dbaModal.selectAnswerForQuestion')} ${fAnswer.question_id}`}
                                     />
                                     <div className="flex-1">
-                                      <h5 className="font-medium mb-3 text-sm leading-tight">{fAnswer.question_text}</h5>
-                                      
-                                      <div className="bg-green-50 p-3 rounded border border-green-200">
+                                <h5 className="font-medium mb-3 text-sm leading-tight">{fAnswer.question_text}</h5>
+                                
+                                <div className="bg-green-50 p-3 rounded border border-green-200">
                                         <p className="text-sm font-medium text-green-800 mb-1">{t('dbaModal.freelancersAnswer')}</p>
-                                        <p className="text-sm">{fAnswer.selected_answer} ({fAnswer.answer_score} pts)</p>
+                                  <p className="text-sm">{fAnswer.selected_answer} ({fAnswer.answer_score} pts)</p>
                                       </div>
                                     </div>
-                                  </div>
                                 </div>
-                              ))}
+                              </div>
+                            ))}
                             </div>
                           </div>
                         )}

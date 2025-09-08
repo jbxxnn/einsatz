@@ -1,0 +1,328 @@
+[
+  {
+    "category_nl": "Zakelijke dienstverlening & advies",
+    "category_en": "Business & consulting",
+    "job_types": {
+      "nl": [
+        "Interim-manager",
+        "Projectmanager",
+        "HR-consultant",
+        "Management consultant",
+        "Bedrijfsstrateeg",
+        "Organisatieadviseur"
+      ],
+      "en": [
+        "Interim manager",
+        "Project manager",
+        "HR consultant",
+        "Management consultant",
+        "Business strategist",
+        "Organizational consultant"
+      ]
+    }
+  },
+  {
+    "category_nl": "IT & data",
+    "category_en": "IT & data",
+    "job_types": {
+      "nl": [
+        "Software-developer",
+        "Web-/app-ontwikkelaar",
+        "AI-/ML-specialist",
+        "Data-analist",
+        "Cloud engineer",
+        "Cybersecurity-expert"
+      ],
+      "en": [
+        "Software developer",
+        "Web/app developer",
+        "AI/ML specialist",
+        "Data analyst",
+        "Cloud engineer",
+        "Cybersecurity expert"
+      ]
+    }
+  },
+  {
+    "category_nl": "Marketing & communicatie",
+    "category_en": "Marketing & communications",
+    "job_types": {
+      "nl": [
+        "Digital marketeer",
+        "Social-media-manager",
+        "SEO/SEA-specialist",
+        "Contentmarketeer",
+        "E-mailmarketeer",
+        "PR-adviseur"
+      ],
+      "en": [
+        "Digital marketer",
+        "Social media manager",
+        "SEO/SEA specialist",
+        "Content marketer",
+        "Email marketer",
+        "PR consultant"
+      ]
+    }
+  },
+  {
+    "category_nl": "Content & creatie",
+    "category_en": "Content & creation",
+    "job_types": {
+      "nl": [
+        "Copywriter",
+        "Journalist",
+        "Vertaler",
+        "Fotograaf",
+        "Videograaf",
+        "Video-editor",
+        "Podcast-producer",
+        "Grafisch ontwerper"
+      ],
+      "en": [
+        "Copywriter",
+        "Journalist",
+        "Translator",
+        "Photographer",
+        "Videographer",
+        "Video editor",
+        "Podcast producer",
+        "Graphic designer"
+      ]
+    }
+  },
+  {
+    "category_nl": "Design & UX",
+    "category_en": "Design & UX",
+    "job_types": {
+      "nl": [
+        "UX/UI-designer",
+        "Productdesigner",
+        "Animator",
+        "Illustratie-/3D-kunstenaar",
+        "Interieurontwerper"
+      ],
+      "en": [
+        "UX/UI designer",
+        "Product designer",
+        "Animator",
+        "Illustration/3D artist",
+        "Interior designer"
+      ]
+    }
+  },
+  {
+    "category_nl": "Bouw & techniek",
+    "category_en": "Construction & trades",
+    "job_types": {
+      "nl": [
+        "Timmerman",
+        "Elektricien",
+        "Loodgieter",
+        "Metselaar",
+        "Schilder",
+        "Dakdekker",
+        "Stratenmaker",
+        "Installateur"
+      ],
+      "en": [
+        "Carpenter",
+        "Electrician",
+        "Plumber",
+        "Bricklayer",
+        "Painter",
+        "Roofer",
+        "Paver",
+        "Installer"
+      ]
+    }
+  },
+  {
+    "category_nl": "Productie & onderhoud",
+    "category_en": "Production & maintenance",
+    "job_types": {
+      "nl": [
+        "Monteur",
+        "CV-monteur",
+        "Zonnepanelen-installateur",
+        "Klusjesman",
+        "Tuinman",
+        "Schoonmaker"
+      ],
+      "en": [
+        "Mechanic",
+        "Boiler mechanic",
+        "Solar panel installer",
+        "Handyman",
+        "Gardener",
+        "Cleaner"
+      ]
+    }
+  },
+  {
+    "category_nl": "Zorg & welzijn",
+    "category_en": "Healthcare & wellness",
+    "job_types": {
+      "nl": [
+        "Verpleegkundige",
+        "Verzorgende",
+        "Fysiotherapeut",
+        "Psycholoog/coach",
+        "Tandartsassistente"
+      ],
+      "en": [
+        "Nurse",
+        "Caregiver",
+        "Physiotherapist",
+        "Psychologist/coach",
+        "Dental assistant"
+      ]
+    }
+  },
+  {
+    "category_nl": "Onderwijs & training",
+    "category_en": "Education & training",
+    "job_types": {
+      "nl": [
+        "Bijlesdocent",
+        "Taaltrainer",
+        "Examencoach",
+        "E-learning-ontwikkelaar",
+        "Zakelijk trainer",
+        "Coach"
+      ],
+      "en": [
+        "Tutor",
+        "Language trainer",
+        "Exam coach",
+        "E-learning developer",
+        "Business trainer",
+        "Coach"
+      ]
+    }
+  },
+  {
+    "category_nl": "Horeca & evenementen",
+    "category_en": "Hospitality & events",
+    "job_types": {
+      "nl": [
+        "Cateringkok",
+        "Barista",
+        "Barman",
+        "Eventplanner",
+        "Weddingplanner",
+        "Gastvrouw/host",
+        "Foodtruck-uitbater"
+      ],
+      "en": [
+        "Catering chef",
+        "Barista",
+        "Bartender",
+        "Event planner",
+        "Wedding planner",
+        "Host",
+        "Food truck operator"
+      ]
+    }
+  },
+  {
+    "category_nl": "Logistiek & vervoer",
+    "category_en": "Logistics & transportation",
+    "job_types": {
+      "nl": [
+        "Koerier",
+        "Verhuisservice",
+        "Chauffeur",
+        "Fietsbezorger",
+        "Logistiek coördinator"
+      ],
+      "en": [
+        "Courier",
+        "Moving service",
+        "Driver",
+        "Bike delivery rider",
+        "Logistics coordinator"
+      ]
+    }
+  },
+  {
+    "category_nl": "Financieel & juridisch",
+    "category_en": "Finance & legal",
+    "job_types": {
+      "nl": [
+        "Boekhouder",
+        "Belastingadviseur",
+        "Financieel planner",
+        "Jurist",
+        "Mediator",
+        "Compliance-expert"
+      ],
+      "en": [
+        "Bookkeeper",
+        "Tax advisor",
+        "Financial planner",
+        "Lawyer",
+        "Mediator",
+        "Compliance expert"
+      ]
+    }
+  },
+  {
+    "category_nl": "Administratieve ondersteuning",
+    "category_en": "Administrative support",
+    "job_types": {
+      "nl": [
+        "Virtuele assistent",
+        "Data-entry-specialist",
+        "Klantenservice-medewerker",
+        "Secretaresse",
+        "Planner"
+      ],
+      "en": [
+        "Virtual assistant",
+        "Data-entry specialist",
+        "Customer service representative",
+        "Secretary",
+        "Scheduler"
+      ]
+    }
+  },
+  {
+    "category_nl": "Sport & welzijn",
+    "category_en": "Sports & well-being",
+    "job_types": {
+      "nl": [
+        "Personal trainer",
+        "Yoga-/fitness-instructeur",
+        "Voedingscoach",
+        "Masseur",
+        "Sportfysiotherapeut"
+      ],
+      "en": [
+        "Personal trainer",
+        "Yoga/fitness instructor",
+        "Nutrition coach",
+        "Masseur",
+        "Sports physiotherapist"
+      ]
+    }
+  },
+  {
+    "category_nl": "Duurzaamheid & milieu",
+    "category_en": "Sustainability & environment",
+    "job_types": {
+      "nl": [
+        "Energie-adviseur",
+        "Circulaire-economie-specialist",
+        "Milieukundig consultant",
+        "Duurzaamheidscoach"
+      ],
+      "en": [
+        "Energy advisor",
+        "Circular economy specialist",
+        "Environmental consultant",
+        "Sustainability coach"
+      ]
+    }
+  }
+]
