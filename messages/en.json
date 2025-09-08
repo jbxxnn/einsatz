@@ -102,6 +102,8 @@
     "selectedService": "Selected Service",
     "yearsOfExperience": "years of experience",
     "hour": "hour",
+    "year": "year",
+    "years": "years",
     "services": "Services",
     "noBioProvided": "No bio provided.",
     "noReviewsYet": "No reviews yet",
@@ -109,6 +111,29 @@
     "serviceArea": "Service Area",
     "serviceRadius": "Service Radius",
     "experienceYears": "years of experience",
+    "serviceDetails": {
+      "hourlyRate": "Hourly Rate",
+      "experience": "Experience",
+      "dbaStatus": "DBA Status",
+      "completed": "Completed",
+      "serviceDescription": "Service Description",
+      "jobCategory": "Job Category",
+      "subcategory": "Subcategory"
+    },
+    "bookingProcess": {
+      "title": "How to Book",
+      "step1": "Select your preferred date and time from the calendar",
+      "step2": "Fill in job details and location",
+      "step3": "Complete DBA assessment or skip (based on freelancer's status)",
+      "step4": "Review and confirm your booking"
+    },
+    "importantNotes": {
+      "title": "Important Notes",
+      "paymentDirect": "Payment is made directly to the freelancer",
+      "dbaCompliance": "DBA assessment ensures legal compliance",
+      "imageUpload": "You can upload job images for better clarity",
+      "cancellationPolicy": "Cancellation policy applies to all bookings"
+    },
     "error": {
       "failedToLoadProfile": "Failed to load freelancer profile",
       "freelancerNotFound": "Freelancer not found",

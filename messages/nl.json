@@ -102,6 +102,8 @@
     "selectedService": "Geselecteerde Dienst",
     "yearsOfExperience": "jaren ervaring",
     "hour": "uur",
+    "year": "jaar",
+    "years": "jaren",
     "services": "Diensten",
     "noBioProvided": "Geen bio geprovideerd.",
     "noReviewsYet": "Geen beoordelingen nog",
@@ -109,6 +111,29 @@
     "serviceArea": "Servicegebied",
     "serviceRadius": "Servicegebied",
     "experienceYears": "jaren ervaring",
+    "serviceDetails": {
+      "hourlyRate": "Uurtarief",
+      "experience": "Ervaring",
+      "dbaStatus": "DBA Status",
+      "completed": "Voltooid",
+      "serviceDescription": "Dienstbeschrijving",
+      "jobCategory": "Jobcategorie",
+      "subcategory": "Subcategorie"
+    },
+    "bookingProcess": {
+      "title": "Hoe te Boeken",
+      "step1": "Selecteer je gewenste datum en tijd uit de kalender",
+      "step2": "Vul jobdetails en locatie in",
+      "step3": "Voltooi DBA-beoordeling of sla over (gebaseerd op freelancer's status)",
+      "step4": "Bekijk en bevestig je boeking"
+    },
+    "importantNotes": {
+      "title": "Belangrijke Opmerkingen",
+      "paymentDirect": "Betaling wordt direct aan de freelancer gedaan",
+      "dbaCompliance": "DBA-beoordeling zorgt voor juridische naleving",
+      "imageUpload": "Je kunt jobafbeeldingen uploaden voor meer duidelijkheid",
+      "cancellationPolicy": "Annuleringsbeleid geldt voor alle boekingen"
+    },
     "error": {
       "failedToLoadProfile": "Fout bij het laden van freelancer profiel",
       "failedToLoadBookings": "Fout bij het laden van boekingen",

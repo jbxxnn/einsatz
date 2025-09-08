@@ -4,12 +4,12 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import FreelancerAvailabilityCalendar from "@/components/freelancer-availability-calendar"
 import { toast } from "@/lib/toast"
-import { MapPin, Star, Clock, CheckCircle, MessageCircle, Shield, Award, Zap, Globe, User, Loader, ShieldCheck } from "lucide-react"
+import { MapPin, Star, Clock, CheckCircle, Info, MessageCircle, Shield, Award, Zap, Globe, User, Loader, ShieldCheck } from "lucide-react"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
 import BookingForm from "@/components/booking-form"
@@ -389,7 +389,12 @@ export default function FreelancerProfile() {
   
   const getSelectedOffering = () => {
     if (!freelancer || !selectedCategoryId) return null
-    return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId && offering.subcategory_id === selectedSubcategoryId)
+    // First try to find exact match with subcategory
+    if (selectedSubcategoryId) {
+      return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId && offering.subcategory_id === selectedSubcategoryId)
+    }
+    // If no subcategory selected, return the first offering for this category
+    return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId)
   }
   const getSelectedSubcategory = () => {
     if (!freelancer || !selectedCategoryId) return null
@@ -573,7 +578,6 @@ export default function FreelancerProfile() {
             {/* Services Tab */}
             {activeTab === 'services' && (
               <div className="space-y-6 bg-white rounded-lg p-8">
-                <h3 className="font-semibold mb-2 text-black text-lg">Hire {freelancer.first_name}</h3>
                 
                 {/* Step 1: Service Categories Selection */}
                 <div className="space-y-4">
@@ -624,32 +628,110 @@ export default function FreelancerProfile() {
                     </div>
                   )}
 
-                  {/* Show selected category with change option when one is selected */}
+                  {/* Step 2: Booking Section (only shown after category selection) */}
                   {selectedCategoryId && (
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div>
-                          <span className="text-sm font-medium text-black">
-                            {selectedOffering?.category_name}
-                          </span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">Service selected</span>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCategoryDeselect}
-                        className="text-xs"
-                      >
-                        Change Category
-                      </Button>
-                    </div>
-                  )}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Left Side: Category Information Card */}
+                      <div className="space-y-4">
+                        <Card className="h-fit">
+                          <CardHeader>
+                            <div className="flex justify-between items-center w-full mb-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCategoryDeselect}
+                                className="text-xs w-full"
+                              >
+                                Change freelancer service
+                              </Button>
+                            </div>
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3 bg-gray-50 rounded-md p-3">
+                                <div>
+                                  <CardTitle className="text-lg">{getSelectedOffering()?.subcategory_name}</CardTitle>
+                                  <CardDescription className="text-sm text-muted-foreground">{getSelectedOffering()?.category_name}</CardDescription>
+                                </div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {/* Service Details */}
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium">{t("freelancer.serviceDetails.hourlyRate")}</span>
+                                <span className="text-lg font-bold text-primary">€{getSelectedOffering()?.hourly_rate || freelancer.hourly_rate}</span>
+                              </div>
+                              
+                              {getSelectedOffering()?.experience_years && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-medium">{t("freelancer.serviceDetails.experience")}</span>
+                                  <span className="text-sm">{getSelectedOffering()?.experience_years} {getSelectedOffering()?.experience_years === 1 ? t("freelancer.year") : t("freelancer.years")}</span>
+                                </div>
+                              )}
 
-                  {/* Step 2: Calendar Section (only shown after category selection) */}
-                  {selectedCategoryId && (
-                    <div className="flex justify-center">
-                      <div className="w-full max-w-md">
+                              {getSelectedOffering()?.dba_status?.is_completed && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-medium">{t("freelancer.serviceDetails.dbaStatus")}</span>
+                                  <Badge variant="default" className="text-xs">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    {t("freelancer.serviceDetails.completed")}
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Service Description */}
+                            {getSelectedOffering()?.description && (
+                              <div>
+                                <h4 className="text-sm font-medium mb-2">{t("freelancer.serviceDetails.serviceDescription")}</h4>
+                                <p className="text-sm text-muted-foreground">{getSelectedOffering()?.description}</p>
+                              </div>
+                            )}
+
+                            {/* Booking Process Guide */}
+                            <div className="border-t pt-4">
+                              <h4 className="text-sm font-medium mb-3">{t("freelancer.bookingProcess.title")}</h4>
+                              <div className="space-y-2">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">1</div>
+                                  <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step1")}</p>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">2</div>
+                                  <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step2")}</p>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">3</div>
+                                  <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step3")}</p>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">4</div>
+                                  <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step4")}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Important Notes */}
+                            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                              <div className="flex items-start gap-2">
+                                <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <p className="text-xs font-medium text-blue-800">{t("freelancer.importantNotes.title")}</p>
+                                  <ul className="text-xs text-blue-700 mt-1 space-y-1">
+                                    <li>• {t("freelancer.importantNotes.paymentDirect")}</li>
+                                    <li>• {t("freelancer.importantNotes.dbaCompliance")}</li>
+                                    <li>• {t("freelancer.importantNotes.imageUpload")}</li>
+                                    <li>• {t("freelancer.importantNotes.cancellationPolicy")}</li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Right Side: Calendar and Booking Form */}
+                      <div className="space-y-4">
                         <Card>
                           <CardContent className="p-6">
                             {!showBookingForm ? (
