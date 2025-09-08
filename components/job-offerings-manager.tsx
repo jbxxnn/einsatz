@@ -8,14 +8,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/lib/toast"
-import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Loader, GripVertical, Shield, CheckCircle, Clock } from "lucide-react"
+import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Loader, GripVertical, Shield, CheckCircle, Clock, Package, DollarSign } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import JobCategorySelector from "@/components/job-category-selector"
 import JobSubcategorySelector from "@/components/job-subcategory-selector"
 import AvailabilityCalendar from "@/components/availability-calendar"
 import FreelancerDBAQuestionnaire from "@/components/freelancer-dba-questionnaire"
+import JobOfferingPackagesManager from "@/components/job-offering-packages-manager"
 
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
@@ -57,12 +59,14 @@ function SortableTableRow({
   offering, 
   onDelete,
   onDbaClick,
+  onManagePackages,
   dbaStatus,
   loadingDbaStatus
 }: { 
   offering: JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }
   onDelete: (id: string) => void
   onDbaClick: (categoryId: string, categoryName: string) => void
+  onManagePackages: (offering: JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }) => void
   dbaStatus?: any
   loadingDbaStatus: boolean
 }) {
@@ -104,7 +108,18 @@ function SortableTableRow({
         {offering.subcategory_name || "-"}
       </TableCell>
       <TableCell>
-        €{offering.hourly_rate}/hour
+        <div className="text-sm">
+          {offering.pricing_type === "packages" ? (
+            <>
+              <div className="font-medium text-green-600">Multiple Packages</div>
+              <div className="text-xs text-gray-500">Click "Manage" to view</div>
+            </>
+          ) : (
+            <div className="font-medium text-green-600">
+              €{offering.hourly_rate}/hour
+            </div>
+          )}
+        </div>
       </TableCell>
       <TableCell>
         {offering.experience_years ? `${offering.experience_years} ${offering.experience_years === 1 ? "year" : "years"}` : "-"}
@@ -136,6 +151,17 @@ function SortableTableRow({
       </TableCell>
       <TableCell className="text-right">
         <div className="flex gap-2 justify-end items-center">
+          {offering.pricing_type === "packages" && (
+            <Button 
+              variant="outline"
+              size="sm" 
+              onClick={() => onManagePackages(offering)}
+            >
+              <Package className="h-4 w-4 mr-2" />
+              Manage Packages
+            </Button>
+          )}
+
           <Button 
             variant={dbaStatus?.completion?.is_completed ? "secondary" : "outline"}
             size="sm" 
@@ -163,6 +189,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [offerings, setOfferings] = useState<(JobOffering & { category_name: string; subcategory_name?: string; display_order?: number })[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null)
+  const [pricingType, setPricingType] = useState<"hourly" | "packages">("hourly")
   const [hourlyRate, setHourlyRate] = useState("")
   const [description, setDescription] = useState("")
   const [experienceYears, setExperienceYears] = useState("")
@@ -174,6 +201,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [selectedDbaCategoryName, setSelectedDbaCategoryName] = useState<string>("")
   const [dbaStatuses, setDbaStatuses] = useState<Record<string, any>>({})
   const [loadingDbaStatus, setLoadingDbaStatus] = useState(false)
+  const [packagesDialogOpen, setPackagesDialogOpen] = useState(false)
+  const [selectedOfferingForPackages, setSelectedOfferingForPackages] = useState<(JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }) | null>(null)
 
 
   // Drag and drop sensors
@@ -293,7 +322,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           freelancer_id: freelancerId,
           category_id: selectedCategoryId,
           subcategory_id: selectedSubcategoryId,
-          hourly_rate: Number.parseFloat(hourlyRate) || 45.00,
+          pricing_type: pricingType,
+          hourly_rate: pricingType === "hourly" ? Number.parseFloat(hourlyRate) || 45.00 : null,
           description: description,
           experience_years: experienceYears ? Number.parseFloat(experienceYears) : null,
           is_available_now: false,
@@ -325,6 +355,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       // Reset form
       setSelectedCategoryId(null)
       setSelectedSubcategoryId(null)
+      setPricingType("hourly")
       setHourlyRate("")
       setDescription("")
       setExperienceYears("")
@@ -394,6 +425,11 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
     setAvailabilityDialogOpen(true)
   }
 
+  const openPackagesDialog = (offering: JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }) => {
+    setSelectedOfferingForPackages(offering)
+    setPackagesDialogOpen(true)
+  }
+
   // Reset subcategory when category changes
   useEffect(() => {
     setSelectedSubcategoryId(null)
@@ -430,7 +466,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                     <TableRow className="text-xs text-black">
                       <TableHead>{t("jobOfferings.category")}</TableHead>
                       <TableHead>{t("jobOfferings.subcategory")}</TableHead>
-                      <TableHead>{t("jobOfferings.hourlyRate")}</TableHead>
+                      <TableHead>Pricing</TableHead>
                       <TableHead>{t("jobOfferings.experienceYears")}</TableHead>
                       <TableHead>DBA Status</TableHead>
                       <TableHead className="text-right">{t("jobOfferings.actions")}</TableHead>
@@ -452,6 +488,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                               setSelectedDbaCategoryName(categoryName)
                               setDbaDialogOpen(true)
                             }}
+                            onManagePackages={openPackagesDialog}
                             dbaStatus={dbaStatuses[offering.category_id]}
                             loadingDbaStatus={loadingDbaStatus}
                           />
@@ -515,18 +552,55 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="hourlyRate" className="text-xs text-black">{t("jobOfferings.cardHourlyRate")}</Label>
-                <Input
-                  id="hourlyRate"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="45.00"
-                  value={hourlyRate}
-                  onChange={(e) => setHourlyRate(e.target.value)}
-                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-                />
+                <Label className="text-xs text-black">Pricing Type</Label>
+                <RadioGroup 
+                  value={pricingType} 
+                  onValueChange={(value: "hourly" | "packages") => setPricingType(value)}
+                  className="flex gap-6"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="hourly" id="hourly" />
+                    <Label htmlFor="hourly" className="text-xs text-black cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" />
+                        Fixed Hourly Rate
+                      </div>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="packages" id="packages" />
+                    <Label htmlFor="packages" className="text-xs text-black cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        Multiple Packages
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
+
+              {pricingType === "hourly" && (
+                <div className="space-y-2">
+                  <Label htmlFor="hourlyRate" className="text-xs text-black">Hourly Rate (€)</Label>
+                  <Input
+                    id="hourlyRate"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="45.00"
+                    value={hourlyRate}
+                    onChange={(e) => setHourlyRate(e.target.value)}
+                    className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+                  />
+                </div>
+              )}
+
+              {pricingType === "packages" && (
+                <div className="text-xs text-gray-600 p-3 bg-gray-50 rounded-lg">
+                  <p className="font-medium mb-1">💡 Package Pricing</p>
+                  <p>After creating this job offering, you'll be able to add multiple service packages with different prices and features.</p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="experienceYears" className="text-xs text-black">{t("jobOfferings.cardExperienceYears")}</Label>
@@ -565,14 +639,21 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                               {selectedSubcategoryId ? "Sample Subcategory" : "Sample Category"}
                             </span>
                             
-                            {/* Hourly Rate and Experience */}
+                            {/* Pricing and Experience */}
                             <div className="flex gap-4 mt-1">
-                              <span className="text-xs font-semibold">
-                                €{hourlyRate || "45"}/hour
-                              </span>
+                              {pricingType === "hourly" && hourlyRate && (
+                                <span className="text-xs font-semibold text-green-600">
+                                  €{hourlyRate}/hour
+                                </span>
+                              )}
+                              {pricingType === "packages" && (
+                                <span className="text-xs font-semibold text-green-600">
+                                  Multiple Packages
+                                </span>
+                              )}
                               {experienceYears && (
                                 <span className="text-xs">
-                                  {experienceYears} {experienceYears === "1" ? "year" : "years"}
+                                  {experienceYears} {experienceYears === "1" ? "year" : "years"} experience
                                 </span>
                               )}
                             </div>
@@ -646,6 +727,28 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               onSave={() => {
                 // Refresh DBA statuses when saved
                 fetchDBAStatuses([selectedDbaCategoryId])
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Packages Management Dialog */}
+      <Dialog open={packagesDialogOpen} onOpenChange={setPackagesDialogOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Manage Service Packages
+            </DialogTitle>
+          </DialogHeader>
+          {selectedOfferingForPackages && (
+            <JobOfferingPackagesManager
+              jobOfferingId={selectedOfferingForPackages.id}
+              categoryName={selectedOfferingForPackages.category_name}
+              onPackagesChange={() => {
+                // Optionally refresh offerings data
+                // This could trigger a refetch of the main offerings
               }}
             />
           )}

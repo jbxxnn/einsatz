@@ -359,6 +359,7 @@ export interface Database {
           subcategory_id: string | null
           hourly_rate: number | null
           fixed_rate: number | null
+          pricing_type: "hourly" | "packages"
           is_available_now: boolean
           description: string | null
           experience_years: number | null
@@ -374,6 +375,7 @@ export interface Database {
           subcategory_id?: string | null
           hourly_rate?: number | null
           fixed_rate?: number | null
+          pricing_type?: "hourly" | "packages"
           is_available_now?: boolean
           description?: string | null
           experience_years?: number | null
@@ -389,20 +391,7 @@ export interface Database {
           subcategory_id?: string | null
           hourly_rate?: number | null
           fixed_rate?: number | null
-          is_available_now?: boolean
-          description?: string | null
-          experience_years?: number | null
-          metadata?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          freelancer_id?: string
-          category_id?: string
-          subcategory_id?: string | null
-          hourly_rate?: number | null
-          fixed_rate?: number | null
+          pricing_type?: "hourly" | "packages"
           is_available_now?: boolean
           description?: string | null
           experience_years?: number | null
@@ -904,6 +893,41 @@ export interface Database {
           freelancer_acknowledged?: boolean
           resolution_started_at?: string | null
           resolution_completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      job_offering_packages: {
+        Row: {
+          id: string
+          job_offering_id: string
+          package_name: string
+          short_description: string | null
+          price: number
+          display_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          job_offering_id: string
+          package_name: string
+          short_description?: string | null
+          price: number
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          job_offering_id?: string
+          package_name?: string
+          short_description?: string | null
+          price?: number
+          display_order?: number
+          is_active?: boolean
           created_at?: string
           updated_at?: string
         }
