@@ -364,7 +364,7 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
                 </Avatar>
 
                 <div className={`max-w-xs lg:max-w-md ${isOwnMessage ? 'text-right' : 'text-left'}`}>
-                  <div className={`rounded-full px-3 py-2 ${
+                  <div className={`rounded-md px-3 py-2 ${
                     isOwnMessage 
                       ? 'bg-primary text-primary-foreground' 
                       : 'bg-muted'

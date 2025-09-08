@@ -391,7 +391,7 @@ export default function FreelancerProfile() {
     if (!freelancer || !selectedCategoryId) return null
     // First try to find exact match with subcategory
     if (selectedSubcategoryId) {
-      return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId && offering.subcategory_id === selectedSubcategoryId)
+    return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId && offering.subcategory_id === selectedSubcategoryId)
     }
     // If no subcategory selected, return the first offering for this category
     return freelancer.job_offerings.find((offering) => offering.category_id === selectedCategoryId)
@@ -636,14 +636,14 @@ export default function FreelancerProfile() {
                         <Card className="h-fit">
                           <CardHeader>
                             <div className="flex justify-between items-center w-full mb-4">
-                              <Button
-                                variant="outline"
-                                size="sm"
+                      <Button
+                        variant="outline"
+                        size="sm"
                                 onClick={handleCategoryDeselect}
                                 className="text-xs w-full"
-                              >
+                      >
                                 Change freelancer service
-                              </Button>
+                      </Button>
                             </div>
                             <div className="space-y-3">
                               <div className="flex items-center gap-3 bg-gray-50 rounded-md p-3">
@@ -685,8 +685,8 @@ export default function FreelancerProfile() {
                               <div>
                                 <h4 className="text-sm font-medium mb-2">{t("freelancer.serviceDetails.serviceDescription")}</h4>
                                 <p className="text-sm text-muted-foreground">{getSelectedOffering()?.description}</p>
-                              </div>
-                            )}
+                    </div>
+                  )}
 
                             {/* Booking Process Guide */}
                             <div className="border-t pt-4">

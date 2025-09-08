@@ -12,6 +12,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { toast } from '@/lib/toast'
 import { useRouter } from 'next/navigation'
 import { useOptimizedUser } from '@/components/optimized-user-provider'
+import { useTranslation } from '@/lib/i18n'
 
 
 const CustomRescheduleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -106,12 +107,14 @@ export function PreBookingDBAModal({
   const [showDisputeDetails, setShowDisputeDetails] = useState(false)
   const [freelancerAnswers, setFreelancerAnswers] = useState<any[]>([])
   const [disputeLoading, setDisputeLoading] = useState(false)
-  const [messageText, setMessageText] = useState('Hi! I have some questions about your DBA assessment for this job category. Can we discuss the answers?')
+  const [messageText, setMessageText] = useState('')
+  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([])
 
   
   const supabase = createClientComponentClient()
   const router = useRouter()
   const { user } = useOptimizedUser()
+  const { t } = useTranslation()
 
   const allCategories = [
     'independence',
@@ -126,12 +129,12 @@ export function PreBookingDBAModal({
   const categories = allCategories.filter(cat => questions[cat] && questions[cat].length > 0)
 
   const categoryTitles = {
-    independence: 'Independence & Autonomy',
-    work_relationship: 'Work Relationship',
-    financial_risk: 'Financial Risk',
-    benefits: 'Benefits & Employment',
-    work_environment: 'Work Environment',
-    professional_risk: 'Professional Risk'
+    independence: t('dbaModal.independence'),
+    work_relationship: t('dbaModal.workRelationship'),
+    financial_risk: t('dbaModal.financialRisk'),
+    benefits: t('dbaModal.benefits'),
+    work_environment: t('dbaModal.workEnvironment'),
+    professional_risk: t('dbaModal.professionalRisk')
   }
 
   useEffect(() => {
@@ -139,6 +142,11 @@ export function PreBookingDBAModal({
       fetchQuestions()
     }
   }, [isOpen])
+
+  // Set default message text when component mounts
+  useEffect(() => {
+    setMessageText(t('dbaModal.defaultMessage'))
+  }, [t])
 
   const fetchQuestions = async () => {
     try {
@@ -171,7 +179,7 @@ export function PreBookingDBAModal({
         setCurrentQuestionIndex(0)
       }
     } catch (error) {
-      toast.error('Failed to load DBA questions')
+      toast.error(t('dbaModal.failedToLoadDBAQuestions'))
     } finally {
       setLoading(false)
     }
@@ -221,7 +229,7 @@ export function PreBookingDBAModal({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to calculate combined DBA score')
+        throw new Error(t('dbaModal.failedToCalculateCombinedScore'))
       }
 
       const combinedResult = await response.json()
@@ -254,12 +262,12 @@ export function PreBookingDBAModal({
         risk_level: clientOnlyRiskLevel,
         has_freelancer_dba: false,
         max_possible_score: Object.values(questions).flat().length * 10,
-        error: 'Failed to get freelancer score'
+        error: t('dbaModal.failedToGetFreelancerScore')
       }
 
       setDbaResult(fallbackResult)
       setStep('assessment')
-      toast.error('Warning: Could not fetch freelancer DBA data. Showing client-only assessment.')
+      toast.error(t('dbaModal.warningCouldNotFetchFreelancerData'))
     } finally {
       setSubmitting(false)
     }
@@ -275,11 +283,13 @@ export function PreBookingDBAModal({
   const handleShowDispute = async () => {
     if (showDisputeDetails) {
       setShowDisputeDetails(false)
+      setSelectedAnswers([]) // Reset selections when hiding
       return
     }
 
     setDisputeLoading(true)
     setShowDisputeDetails(true)
+    setSelectedAnswers([]) // Reset selections when showing
     
     try {
       const url = `/api/client-dba/freelancer-answers?freelancer_id=${freelancerId}&job_category_id=${jobCategoryId}`
@@ -291,10 +301,10 @@ export function PreBookingDBAModal({
         setFreelancerAnswers(data.answers || [])
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        toast.error(`Failed to load freelancer answers: ${errorData.error || 'Unknown error'}`)
+        toast.error(`${t('dbaModal.failedToLoadFreelancerAnswers')}: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
-      toast.error('Failed to load freelancer answers - network error')
+      toast.error(t('dbaModal.failedToLoadFreelancerAnswers'))
     } finally {
       setDisputeLoading(false)
     }
@@ -302,7 +312,7 @@ export function PreBookingDBAModal({
 
   const handleStartConversation = async () => {
     if (!user) {
-      toast.error('Please log in to start a conversation')
+      toast.error(t('dbaModal.pleaseLogInToStartConversation'))
       return
     }
 
@@ -371,13 +381,27 @@ export function PreBookingDBAModal({
         }
       }
 
-      // Send initial DBA-related message
-      const { error: messageError } = await supabase
-        .rpc('add_message', {
-          p_conversation_id: conversationId,
-          p_sender_id: user.id,
-          p_content: messageText
+    // Prepare message with selected answers
+    let fullMessage = messageText
+    
+    if (selectedAnswers.length > 0) {
+      const selectedAnswersText = selectedAnswers
+        .map(id => {
+          const answer = freelancerAnswers.find(a => a.question_id === id)
+          return `\n📋 Q${id}: ${answer?.question_text}\n\n   A: ${answer?.selected_answer} (${answer?.answer_score} pts)`
         })
+        .join('')
+      
+      fullMessage = `${messageText}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📝 SELECTED ANSWERS FOR DISCUSSION\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${selectedAnswersText}`
+    }
+
+    // Send initial DBA-related message
+    const { error: messageError } = await supabase
+      .rpc('add_message', {
+        p_conversation_id: conversationId,
+        p_sender_id: user.id,
+        p_content: fullMessage
+      })
 
       if (messageError) {
         throw messageError
@@ -388,7 +412,7 @@ export function PreBookingDBAModal({
       router.push(`/messages?conversation=${conversationId}`)
 
     } catch (error) {
-      toast.error('Failed to start conversation. Please try going to Messages manually.')
+      toast.error(t('dbaModal.failedToStartConversation'))
       
       // Fallback: just redirect to messages
       onClose()
@@ -408,9 +432,9 @@ export function PreBookingDBAModal({
       }
     })
     
-    if (!question) return 'Loading...'
+    if (!question) return t('dbaModal.loadingText')
     
-    const answerText = (question as DBAQuestion).options_json[selectedIndex] || 'Unknown answer'
+    const answerText = (question as DBAQuestion).options_json[selectedIndex] || t('dbaModal.unknownAnswer')
     const score = (question as DBAQuestion).score_mapping[selectedIndex.toString()] || 0
     
     return `${answerText} (${score} pts)`
@@ -482,7 +506,7 @@ export function PreBookingDBAModal({
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Loading DBA Assessment</DialogTitle>
+            <DialogTitle>{t('dbaModal.loading')}</DialogTitle>
           </DialogHeader>
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -499,7 +523,7 @@ export function PreBookingDBAModal({
           <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <CustomRescheduleIcon className="h-5 w-5" />
-              DBA Assessment Complete
+              {t('dbaModal.assessmentComplete')}
             </DialogTitle>
           </DialogHeader>
 
@@ -507,24 +531,24 @@ export function PreBookingDBAModal({
             <Card>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between border-t pt-2">
-                  <span className="font-semibold">DBA Score:</span>
+                  <span className="font-semibold">{t('dbaModal.dbaScore')}:</span>
                   <span className="font-bold text-lg">{dbaResult.combined_score || dbaResult.total_score}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold">Risk Level:</span>
+                  <span className="font-semibold">{t('dbaModal.riskLevel')}:</span>
                   <Badge 
                     variant={dbaResult.risk_level === 'safe' ? 'default' : 'destructive'}
                     className="text-xs"
                   >
-                    {dbaResult.risk_level === 'safe' ? 'Low Risk' : 
-                     dbaResult.risk_level === 'doubtful' ? 'Medium Risk' : 'High Risk'}
+                    {dbaResult.risk_level === 'safe' ? t('dbaModal.lowRisk') : 
+                     dbaResult.risk_level === 'doubtful' ? t('dbaModal.mediumRisk') : t('dbaModal.highRisk')}
                   </Badge>
                 </div>
                 <div className="text-xs text-gray-500 mt-2">
                   {dbaResult.has_freelancer_dba 
-                    ? 'Risk assessment includes freelancer\'s DBA completion data' 
-                    : 'Warning: Freelancer has not completed DBA for this job category'}
+                    ? t('dbaModal.riskAssessmentIncludes')
+                    : t('dbaModal.warningFreelancerNoDBA')}
                 </div>
               </CardContent>
             </Card>
@@ -534,8 +558,8 @@ export function PreBookingDBAModal({
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
                   {dbaResult.risk_level === 'doubtful' 
-                    ? 'Medium risk detected. Please review the working relationship carefully.'
-                    : 'High risk detected. This working relationship may not comply with DBA regulations.'}
+                    ? t('dbaModal.mediumRiskDetected')
+                    : t('dbaModal.highRiskDetected')}
                 </AlertDescription>
               </Alert>
             )}
@@ -545,33 +569,65 @@ export function PreBookingDBAModal({
               <div className="space-y-4 mt-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Freelancer DBA Assessment</CardTitle>
+                    <CardTitle className="text-lg">{t('dbaModal.freelancerDbaAssessment')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {disputeLoading ? (
                       <div className="flex items-center justify-center py-8">
-                        <div className="text-sm text-gray-500 flex items-center">Loading freelancer answers <Loader className="h-4 w-4 ml-2 animate-spin" /></div>
+                        <div className="text-sm text-gray-500 flex items-center">{t('dbaModal.loadingFreelancerAnswers')} <Loader className="h-4 w-4 ml-2 animate-spin" /></div>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         {/* Freelancer Answers Display */}
                         {freelancerAnswers.length === 0 ? (
                           <div className="text-center py-8">
-                            <div className="text-gray-500 mb-2">No freelancer answers found</div>
-                            <div className="text-sm text-gray-400">The freelancer may not have completed their DBA assessment yet.</div>
+                            <div className="text-gray-500 mb-2">{t('dbaModal.noFreelancerAnswersFound')}</div>
+                            <div className="text-sm text-gray-400">{t('dbaModal.freelancerNotCompletedDBA')}</div>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            {freelancerAnswers.map((fAnswer: any) => (
-                              <div key={fAnswer.question_id} className="border rounded-lg p-4 bg-gray-50">
-                                <h5 className="font-medium mb-3 text-sm leading-tight">{fAnswer.question_text}</h5>
-                                
-                                <div className="bg-green-50 p-3 rounded border border-green-200">
-                                  <p className="text-sm font-medium text-green-800 mb-1">Freelancer's Answer:</p>
-                                  <p className="text-sm">{fAnswer.selected_answer} ({fAnswer.answer_score} pts)</p>
-                                </div>
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm text-gray-600">
+                                {t('dbaModal.selectAnswersToDiscuss')}
+                              </p>
+                              <div className="text-xs text-gray-500">
+                                {selectedAnswers.length} {t('dbaModal.selected')}
                               </div>
-                            ))}
+                            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              {freelancerAnswers.map((fAnswer: any) => (
+                                <div key={fAnswer.question_id} className={`border rounded-lg p-4 transition-colors ${
+                                  selectedAnswers.includes(fAnswer.question_id) 
+                                    ? 'bg-blue-50 border-blue-200' 
+                                    : 'bg-gray-50 border-gray-200'
+                                }`}>
+                                  <div className="flex items-start gap-3">
+                                    <input
+                                      type="checkbox"
+                                      id={`answer-${fAnswer.question_id}`}
+                                      checked={selectedAnswers.includes(fAnswer.question_id)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedAnswers(prev => [...prev, fAnswer.question_id])
+                                        } else {
+                                          setSelectedAnswers(prev => prev.filter(id => id !== fAnswer.question_id))
+                                        }
+                                      }}
+                                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                      aria-label={`${t('dbaModal.selectAnswerForQuestion')} ${fAnswer.question_id}`}
+                                    />
+                                    <div className="flex-1">
+                                      <h5 className="font-medium mb-3 text-sm leading-tight">{fAnswer.question_text}</h5>
+                                      
+                                      <div className="bg-green-50 p-3 rounded border border-green-200">
+                                        <p className="text-sm font-medium text-green-800 mb-1">{t('dbaModal.freelancersAnswer')}</p>
+                                        <p className="text-sm">{fAnswer.selected_answer} ({fAnswer.answer_score} pts)</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -582,18 +638,18 @@ export function PreBookingDBAModal({
                 {/* Message Section */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Contact Freelancer</CardTitle>
+                    <CardTitle className="text-lg">{t('dbaModal.contactFreelancer')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <p className="text-sm text-gray-600">
-                        If you have questions about the freelancer's DBA assessment or need to discuss any details, you can message them through our messaging system.
+                        {t('dbaModal.contactFreelancerDescription')}
                       </p>
                       <div className="space-y-3">
                         <div className="flex gap-2">
                           <input
                             type="text"
-                            placeholder="Type your message here..."
+                            placeholder={t('dbaModal.typeMessagePlaceholder')}
                             className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                             value={messageText}
                             onChange={(e) => setMessageText(e.target.value)}
@@ -605,11 +661,14 @@ export function PreBookingDBAModal({
                             disabled={!messageText.trim()}
                           >
                             <MessageSquare className="h-4 w-4 mr-2" />
-                            Send
+                            {t('dbaModal.send')}
                           </Button>
                         </div>
                         <div className="text-xs text-gray-500 text-center">
-                          Type your message above, then click Send to start a conversation with the freelancer
+                          {selectedAnswers.length > 0 
+                            ? `${selectedAnswers.length} ${t('dbaModal.selectedAnswersMessage')}`
+                            : t('dbaModal.typeMessageDefault')
+                          }
                         </div>
                       </div>
                     </div>
@@ -624,12 +683,12 @@ export function PreBookingDBAModal({
             {dbaResult.risk_level === 'safe' ? (
               <Button onClick={handleProceed} className="flex-1">
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Proceed with Booking
+                {t('dbaModal.proceedWithBooking')}
               </Button>
             ) : (
               <>
                 <Button variant="outline" onClick={onClose} className="flex-1">
-                  Cancel Booking
+                  {t('dbaModal.cancelBooking')}
                 </Button>
                 {dbaResult.risk_level === 'high_risk' && dbaResult.has_freelancer_dba && (
                   <Button 
@@ -640,7 +699,7 @@ export function PreBookingDBAModal({
                   >
                     <CustomMessagesIcon className="h-4 w-4 mr-2" />
 
-                    {showDisputeDetails ? 'Hide Details' : disputeLoading ? 'Loading...' : 'Dispute Freelancer DBA'}
+                    {showDisputeDetails ? t('dbaModal.hideDetails') : disputeLoading ? t('dbaModal.loading') : t('dbaModal.disputeFreelancerDBA')}
                   </Button>
                 )}
                 
@@ -649,14 +708,14 @@ export function PreBookingDBAModal({
                     variant="outline" 
                     disabled
                     className="flex-1"
-                    title="Freelancer has not completed DBA assessment for this job category"
+                    title={t('dbaModal.warningFreelancerNoDBA')}
                   >
                     <AlertTriangle className="h-4 w-4 mr-2" />
-                    No DBA Data Available
+                    {t('dbaModal.noDbaDataAvailable')}
                   </Button>
                 )}
                 <Button onClick={handleProceed} className="flex-1">
-                  Proceed Anyway
+                  {t('dbaModal.proceedAnyway')}
                 </Button>
               </>
             )}
@@ -675,7 +734,7 @@ export function PreBookingDBAModal({
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <CustomRescheduleIcon className="h-5 w-5" />
-            DBA Compliance Assessment
+            {t('dbaModal.dbaComplianceAssessment')}
           </DialogTitle>
         </DialogHeader>
 
@@ -683,7 +742,7 @@ export function PreBookingDBAModal({
           {/* Progress */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Progress</span>
+              <span>{t('dbaModal.progress')}</span>
               <span>{getTotalAnswered()} of {totalQuestions}</span>
             </div>
             <Progress value={getProgress()} className="w-full" />
@@ -740,7 +799,7 @@ export function PreBookingDBAModal({
             disabled={isFirstQuestion()}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Previous
+            {t('dbaModal.previous')}
           </Button>
 
           {isLastQuestion() && getTotalAnswered() === totalQuestions ? (
@@ -748,14 +807,14 @@ export function PreBookingDBAModal({
               onClick={handleSubmit}
               disabled={submitting}
             >
-              {submitting ? 'Processing...' : 'Complete Assessment'}
+              {submitting ? t('dbaModal.processing') : t('dbaModal.completeAssessment')}
             </Button>
           ) : (
             <Button
               onClick={handleNext}
               disabled={!canProceedToNext()}
             >
-              Next
+              {t('dbaModal.next')}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           )}
