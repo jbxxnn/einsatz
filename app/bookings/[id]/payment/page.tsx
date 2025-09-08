@@ -394,21 +394,40 @@ export default function PaymentPage() {
                   <CardTitle>{t("payments.orderSummary")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("payments.hourlyRate")}</span>
-                    <span>€{booking.hourly_rate.toFixed(2)}</span>
-                  </div>
+                  {booking.package_id ? (
+                    // Package pricing display
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Service Package</span>
+                        <span>{booking.package_name}</span>
+                      </div>
+                      {booking.package_description && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Package Details</span>
+                          <span className="text-sm">{booking.package_description}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    // Hourly pricing display
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{t("payments.hourlyRate")}</span>
+                        <span>€{booking.hourly_rate?.toFixed(2) || '0.00'}</span>
+                      </div>
 
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("payments.duration")}</span>
-                    <span>
-                      {(
-                        (new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) /
-                        3600000
-                      ).toFixed(1)}{" "}
-                      hours
-                    </span>
-                  </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{t("payments.duration")}</span>
+                        <span>
+                          {(
+                            (new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) /
+                            3600000
+                          ).toFixed(1)}{" "}
+                          hours
+                        </span>
+                      </div>
+                    </>
+                  )}
 
                   <div className="border-t pt-4">
                     <div className="flex justify-between font-bold">

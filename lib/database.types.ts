@@ -119,7 +119,7 @@ export interface Database {
           start_time: string
           end_time: string
           location: string | null
-          hourly_rate: number
+          hourly_rate: number | null
           total_amount: number
           payment_status: "unpaid" | "paid" | "refunded"
           payment_intent_id: string | null
@@ -127,6 +127,9 @@ export interface Database {
           updated_at: string
           category_id: string | null
           payment_method: "online" | "offline" | null
+          package_id: string | null
+          package_name: string | null
+          package_description: string | null
         }
         Insert: {
           id?: string
@@ -142,7 +145,7 @@ export interface Database {
           start_time: string
           end_time: string
           location?: string | null
-          hourly_rate: number
+          hourly_rate?: number | null
           total_amount: number
           payment_status?: "unpaid" | "paid" | "refunded"
           payment_intent_id?: string | null
@@ -150,6 +153,9 @@ export interface Database {
           updated_at?: string
           category_id?: string | null
           payment_method?: "online" | "offline" | null
+          package_id?: string | null
+          package_name?: string | null
+          package_description?: string | null
         }
         Update: {
           id?: string
@@ -165,7 +171,7 @@ export interface Database {
           start_time?: string
           end_time?: string
           location?: string | null
-          hourly_rate?: number
+          hourly_rate?: number | null
           total_amount?: number
           payment_status?: "unpaid" | "paid" | "refunded"
           payment_intent_id?: string | null
@@ -173,6 +179,9 @@ export interface Database {
           updated_at?: string
           category_id?: string | null
           payment_method?: "online" | "offline" | null
+          package_id?: string | null
+          package_name?: string | null
+          package_description?: string | null
         }
       }
       reviews: {

@@ -95,6 +95,45 @@ BEGIN
     END IF;
 END $$;
 
+-- Make hourly_rate nullable and add package fields to bookings table
+DO $$ 
+BEGIN
+    -- First, make hourly_rate nullable
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'bookings' 
+        AND column_name = 'hourly_rate'
+        AND is_nullable = 'NO'
+    ) THEN
+        ALTER TABLE public.bookings 
+        ALTER COLUMN hourly_rate DROP NOT NULL;
+        
+        COMMENT ON COLUMN public.bookings.hourly_rate IS 'Hourly rate for hourly pricing, NULL for package pricing';
+    END IF;
+    
+    -- Add package fields if they don't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'bookings' 
+        AND column_name = 'package_id'
+    ) THEN
+        ALTER TABLE public.bookings 
+        ADD COLUMN package_id uuid,
+        ADD COLUMN package_name text,
+        ADD COLUMN package_description text;
+        
+        -- Add foreign key constraint for package_id
+        ALTER TABLE public.bookings 
+        ADD CONSTRAINT bookings_package_id_fkey 
+        FOREIGN KEY (package_id) REFERENCES public.job_offering_packages(id);
+        
+        -- Add comments
+        COMMENT ON COLUMN public.bookings.package_id IS 'ID of the selected service package (if package pricing)';
+        COMMENT ON COLUMN public.bookings.package_name IS 'Name of the selected service package (for display)';
+        COMMENT ON COLUMN public.bookings.package_description IS 'Description of the selected service package (for display)';
+    END IF;
+END $$;
+
 -- Add comment explaining the table
 COMMENT ON TABLE public.job_offering_packages IS 'Stores multiple service packages for each job offering, allowing freelancers to offer different pricing tiers';
 COMMENT ON COLUMN public.job_offering_packages.package_name IS 'Name of the service package (e.g., "Basic Logo Design", "Premium Brand Package")';

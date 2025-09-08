@@ -42,7 +42,7 @@ export default function RootLayout({
       <body className={`${GeistSans.className} min-h-screen flex flex-col`}>
         <OptimizedSupabaseProvider>
           <OptimizedUserProvider>
-            <QueryProvider>
+            {/* <QueryProvider> */}
               <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
                 {/* <OptimizedHeader /> */}
                 <main className="flex-1">
@@ -50,9 +50,9 @@ export default function RootLayout({
                 </main>
                 {/* <Footer /> */}
                 <Toaster />
-                <PerformanceMonitor />
+                {/* <PerformanceMonitor /> */}
               </ThemeProvider>
-            </QueryProvider>
+            {/* </QueryProvider> */}
           </OptimizedUserProvider>
         </OptimizedSupabaseProvider>
       </body>

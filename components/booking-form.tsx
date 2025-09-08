@@ -95,6 +95,16 @@ interface BookingFormProps {
       category_id: string
       category_name: string
       subcategory_name?: string
+      pricing_type: "hourly" | "packages"
+      hourly_rate: number | null
+      job_offering_packages?: Array<{
+        id: string
+        package_name: string
+        short_description: string | null
+        price: number
+        display_order: number
+        is_active: boolean
+      }>
       dba_status?: {
         is_completed: boolean
         risk_level: string
@@ -134,6 +144,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [uploadedImages, setUploadedImages] = useState<Array<{url: string, path: string, file?: File}>>([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [tempImages, setTempImages] = useState<File[]>([])
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null)
+  const [selectedPackage, setSelectedPackage] = useState<any>(null)
 
   const { t } = useTranslation()
 
@@ -142,6 +154,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     if (!selectedCategoryId || !freelancer.job_offerings) return null
     const offering = freelancer.job_offerings.find(offering => offering.category_id === selectedCategoryId)
     return offering?.dba_status || null
+  }, [selectedCategoryId, freelancer.job_offerings])
+
+  // Get current job offering details
+  const currentOffering = useMemo(() => {
+    if (!selectedCategoryId || !freelancer.job_offerings) return null
+    return freelancer.job_offerings.find(offering => offering.category_id === selectedCategoryId)
   }, [selectedCategoryId, freelancer.job_offerings])
 
   // Calculate valid end times based on selected start time
@@ -201,12 +219,23 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   }, [selectedStartTime])
 
   useEffect(() => {
-    // Set hourly rate based on selected category or default
+    // Set pricing based on selected category or default
     if (selectedCategoryId && freelancer.job_offerings) {
       const offering = freelancer.job_offerings.find((o: any) => o.category_id === selectedCategoryId)
       if (offering) {
         setHourlyRate(offering.hourly_rate)
         setCategoryName(offering.category_name)
+        
+        // Reset package selection when category changes
+        setSelectedPackageId(null)
+        setSelectedPackage(null)
+        
+        // If it's package pricing, select the first package by default
+        if (offering.pricing_type === "packages" && offering.job_offering_packages?.length > 0) {
+          const firstPackage = offering.job_offering_packages[0]
+          setSelectedPackageId(firstPackage.id)
+          setSelectedPackage(firstPackage)
+        }
       }
     } else {
       setHourlyRate(freelancer.hourly_rate)
@@ -332,9 +361,15 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   }
 
   const calculateTotal = () => {
-    const hours = calculateHours()
-    const rate = hourlyRate || freelancer.hourly_rate || 0
-    return hours * rate
+    if (currentOffering?.pricing_type === "packages" && selectedPackage) {
+      // For packages, use the fixed package price
+      return selectedPackage.price
+    } else {
+      // For hourly pricing, calculate based on hours
+      const hours = calculateHours()
+      const rate = hourlyRate || freelancer.hourly_rate || 0
+      return hours * rate
+    }
   }
 
   const formatTime = (time: string) => {
@@ -505,7 +540,10 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           location,
-          hourly_rate: hourlyRate || freelancer.hourly_rate || 0,
+          hourly_rate: currentOffering?.pricing_type === "packages" ? null : (hourlyRate || freelancer.hourly_rate || 0),
+          package_id: currentOffering?.pricing_type === "packages" ? selectedPackageId : null,
+          package_name: currentOffering?.pricing_type === "packages" ? selectedPackage?.package_name : null,
+          package_description: currentOffering?.pricing_type === "packages" ? selectedPackage?.short_description : null,
           total_amount: calculateTotal(),
           status: "pending",
           payment_status: "unpaid",
@@ -615,6 +653,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       return
     }
 
+    // For package pricing, ensure a package is selected
+    if (currentOffering?.pricing_type === "packages" && !selectedPackageId) {
+      toast.error("Please select a service package before starting DBA assessment")
+      return
+    }
+
     // DBA is always available now
 
     setShowDBAModal(true)
@@ -644,6 +688,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
     if (!description.trim()) {
       toast.error("Please enter a job description before creating the booking")
+      return
+    }
+
+    // For package pricing, ensure a package is selected
+    if (currentOffering?.pricing_type === "packages" && !selectedPackageId) {
+      toast.error("Please select a service package before creating the booking")
       return
     }
 
@@ -694,7 +744,10 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
           location,
-          hourly_rate: hourlyRate || freelancer.hourly_rate || 0,
+          hourly_rate: currentOffering?.pricing_type === "packages" ? null : (hourlyRate || freelancer.hourly_rate || 0),
+          package_id: currentOffering?.pricing_type === "packages" ? selectedPackageId : null,
+          package_name: currentOffering?.pricing_type === "packages" ? selectedPackage?.package_name : null,
+          package_description: currentOffering?.pricing_type === "packages" ? selectedPackage?.short_description : null,
           total_amount: calculateTotal(),
           status: "pending",
           payment_status: "unpaid",
@@ -780,7 +833,25 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       {categoryName && (
         <div className="mb-2">
           <p className="font-medium">{categoryName} {t("bookingform.service")}</p>
-          <p className="text-sm text-muted-foreground text-black">€{hourlyRate} {t("freelancer.filters.hour")}</p>
+          {currentOffering?.pricing_type === "packages" ? (
+            // Package pricing display
+            (() => {
+              const activePackages = currentOffering?.job_offering_packages?.filter((p: any) => p.is_active) || []
+              return activePackages.length > 0 ? (
+                <p className="text-sm text-muted-foreground text-black">
+                  {activePackages.length === 1 
+                    ? `€${activePackages[0].price} package`
+                    : `From €${Math.min(...activePackages.map((p: any) => p.price))} packages`
+                  }
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground text-black">Packages available</p>
+              )
+            })()
+          ) : (
+            // Hourly pricing display
+            <p className="text-sm text-muted-foreground text-black">€{hourlyRate} {t("freelancer.filters.hour")}</p>
+          )}
         </div>
       )}
 
@@ -890,12 +961,57 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             </div>
 
             {/* Duration Display */}
-            {selectedStartTime && selectedEndTime && (
+            {selectedStartTime && selectedEndTime && currentOffering?.pricing_type === "hourly" && (
                 <div className="text-xs text-black">
                 {t("bookingform.duration")}: {calculateHours()} {calculateHours() === 1 ? t("bookingform.hour") : t("bookingform.hours")}
               </div>
             )}
 
+            {/* Package Selection - only show for package pricing */}
+            {currentOffering?.pricing_type === "packages" && currentOffering.job_offering_packages && currentOffering.job_offering_packages.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs text-black">Select Service Package</Label>
+                <div className="grid gap-3">
+                  {currentOffering.job_offering_packages.map((pkg: any) => (
+                    <div
+                      key={pkg.id}
+                      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                        selectedPackageId === pkg.id
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      onClick={() => {
+                        setSelectedPackageId(pkg.id)
+                        setSelectedPackage(pkg)
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border-2 ${
+                              selectedPackageId === pkg.id
+                                ? "border-primary bg-primary"
+                                : "border-gray-300"
+                            }`}>
+                              {selectedPackageId === pkg.id && (
+                                <div className="w-2 h-2 bg-white rounded-full m-0.5" />
+                              )}
+                            </div>
+                            <h4 className="font-medium text-sm text-black">{pkg.package_name}</h4>
+                          </div>
+                          {pkg.short_description && (
+                            <p className="text-xs text-gray-600 mt-1 ml-6">{pkg.short_description}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-green-600">€{pkg.price}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
         )}
@@ -1002,18 +1118,37 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
 
       <div className="border-t pt-4 mt-4">
-        <div className="flex justify-between mb-2">
-          <span className="text-xs text-black">{t("bookingform.duration")}</span>
-          <span className="text-xs text-black">{calculateHours()} {t("bookingform.hours")}</span>
-        </div>
-        <div className="flex justify-between mb-2">
-          <span className="text-xs text-black">{t("bookingform.hourlyRate")}</span>
-          <span className="text-xs text-black">€{hourlyRate || freelancer.hourly_rate || 0}</span>
-        </div>
-        <div className="flex justify-between font-bold">
-          <span className="text-xs text-black">{t("bookingform.total")}</span>
-          <span className="text-xs text-black">€{calculateTotal().toFixed(2)}</span>
-        </div>
+        {currentOffering?.pricing_type === "packages" ? (
+          // Package pricing summary
+          <>
+            {selectedPackage && (
+              <div className="flex justify-between mb-2">
+                <span className="text-xs text-black">Selected Package</span>
+                <span className="text-xs text-black">{selectedPackage.package_name}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold">
+              <span className="text-xs text-black">{t("bookingform.total")}</span>
+              <span className="text-xs text-black">€{calculateTotal().toFixed(2)}</span>
+            </div>
+          </>
+        ) : (
+          // Hourly pricing summary
+          <>
+            <div className="flex justify-between mb-2">
+              <span className="text-xs text-black">{t("bookingform.duration")}</span>
+              <span className="text-xs text-black">{calculateHours()} {t("bookingform.hours")}</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span className="text-xs text-black">{t("bookingform.hourlyRate")}</span>
+              <span className="text-xs text-black">€{hourlyRate || freelancer.hourly_rate || 0}</span>
+            </div>
+            <div className="flex justify-between font-bold">
+              <span className="text-xs text-black">{t("bookingform.total")}</span>
+              <span className="text-xs text-black">€{calculateTotal().toFixed(2)}</span>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="space-y-2 border-t pt-4">
@@ -1150,11 +1285,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       <Button
         type="submit"
         className="w-full"
-        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || (!dbaCompleted && !dbaSkipped) || !!bookingId}
+        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || (!dbaCompleted && !dbaSkipped) || !!bookingId || (currentOffering?.pricing_type === "packages" && !selectedPackageId)}
       >
         {loading ? t("bookingform.processing") : bookingId ? 'Booking Created - Proceed to Payment' : 
          dbaCompleted ? 'Booking Created - Proceed to Payment' : 
          dbaSkipped ? 'Booking Created - Proceed to Payment' : 
+         currentOffering?.pricing_type === "packages" && !selectedPackageId ? 'Please Select a Package' :
          'Complete DBA or Skip to Proceed'}
       </Button>
 
@@ -1184,14 +1320,29 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           <CardTitle className="text-sm text-black">{t("bookingform.bookingSummary")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex justify-between">
-            <span className="text-xs text-black">{t("bookingform.duration")}</span>
-            <span className="text-xs text-black">{calculateHours()} {t("bookingform.hours")}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-xs text-black">{t("bookingform.hourlyRate")}</span>
-            <span className="text-xs text-black">€{hourlyRate || freelancer.hourly_rate || 0}</span>
-          </div>
+          {currentOffering?.pricing_type === "packages" ? (
+            // Package pricing summary
+            <>
+              {selectedPackage && (
+                <div className="flex justify-between">
+                  <span className="text-xs text-black">Selected Package</span>
+                  <span className="text-xs text-black">{selectedPackage.package_name}</span>
+                </div>
+              )}
+            </>
+          ) : (
+            // Hourly pricing summary
+            <>
+              <div className="flex justify-between">
+                <span className="text-xs text-black">{t("bookingform.duration")}</span>
+                <span className="text-xs text-black">{calculateHours()} {t("bookingform.hours")}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-xs text-black">{t("bookingform.hourlyRate")}</span>
+                <span className="text-xs text-black">€{hourlyRate || freelancer.hourly_rate || 0}</span>
+              </div>
+            </>
+          )}
           <div className="flex justify-between font-bold text-lg">
             <span className="text-xs text-black">{t("bookingform.total")}</span>
             <span className="text-xs text-black">€{calculateTotal().toFixed(2)}</span>

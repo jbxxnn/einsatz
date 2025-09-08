@@ -19,9 +19,18 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
     category_id?: string
     category_name: string
     subcategory_name?: string
+    pricing_type: "hourly" | "packages"
     hourly_rate?: number
     experience_years?: number
     description?: string
+    job_offering_packages?: Array<{
+      id: string
+      package_name: string
+      short_description: string | null
+      price: number
+      display_order: number
+      is_active: boolean
+    }>
     dba_status?: {
       risk_level: string
       risk_percentage: number
@@ -483,17 +492,37 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                                 {offering.subcategory_name}
                               </span>
                               
-                              {/* Hourly Rate and Experience */}
+                              {/* Pricing and Experience */}
                               <div className="flex gap-4 mt-1">
-                                {offering.hourly_rate && (
-                                                                      <span className="text-xs font-normal">
-                                  {t("freelancers.tooltips.rate", { rate: offering.hourly_rate })}
-                                </span>
+                                {offering.pricing_type === "packages" ? (
+                                  // Package pricing display
+                                  (() => {
+                                    const activePackages = offering.job_offering_packages?.filter(p => p.is_active) || []
+                                    return activePackages.length > 0 ? (
+                                      <span className="text-xs font-normal">
+                                        {activePackages.length === 1 
+                                          ? `€${activePackages[0].price} package`
+                                          : `From €${Math.min(...activePackages.map(p => p.price))} packages`
+                                        }
+                                      </span>
+                                    ) : (
+                                      <span className="text-xs font-normal text-gray-500">
+                                        Packages available
+                                      </span>
+                                    )
+                                  })()
+                                ) : (
+                                  // Hourly pricing display
+                                  offering.hourly_rate && (
+                                    <span className="text-xs font-normal">
+                                      {t("freelancers.tooltips.rate", { rate: offering.hourly_rate })}
+                                    </span>
+                                  )
                                 )}
                                 {offering.experience_years && (
-                                                                      <span className="text-xs">
-                                  {t("freelancers.tooltips.yearsExp", { years: offering.experience_years })}
-                                </span>
+                                  <span className="text-xs">
+                                    {t("freelancers.tooltips.yearsExp", { years: offering.experience_years })}
+                                  </span>
                                 )}
                               </div>
                               

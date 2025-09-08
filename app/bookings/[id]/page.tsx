@@ -554,20 +554,39 @@ export default function BookingDetailsPage() {
               <div className="border-t pt-4">
                 <h3 className="text-xs font-medium text-black mb-2">{t("booking.id.paymentDetails")}</h3>
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-xs text-black">{t("booking.id.hourlyRate")}</span>
-                    <span className="text-xs text-black">€{booking.hourly_rate.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-xs text-black">{t("booking.id.duration")}</span>
-                    <span className="text-xs text-black">
-                      {(
-                        (new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) /
-                        3600000
-                      ).toFixed(1)}{" "}
-                      {t("booking.id.hours")}
-                    </span>
-                  </div>
+                  {booking.package_id ? (
+                    // Package pricing display
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-xs text-black">Service Package</span>
+                        <span className="text-xs text-black">{booking.package_name}</span>
+                      </div>
+                      {booking.package_description && (
+                        <div className="flex justify-between">
+                          <span className="text-xs text-black">Package Details</span>
+                          <span className="text-xs text-black">{booking.package_description}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    // Hourly pricing display
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-xs text-black">{t("booking.id.hourlyRate")}</span>
+                        <span className="text-xs text-black">€{booking.hourly_rate?.toFixed(2) || '0.00'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-xs text-black">{t("booking.id.duration")}</span>
+                        <span className="text-xs text-black">
+                          {(
+                            (new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) /
+                            3600000
+                          ).toFixed(1)}{" "}
+                          {t("booking.id.hours")}
+                        </span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between font-medium">
                     <span className="text-xs text-black">{t("booking.id.total")}</span>
                     <span className="text-xs text-black">€{booking.total_amount.toFixed(2)}</span>

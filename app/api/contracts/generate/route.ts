@@ -138,8 +138,22 @@ async function generateContractPDF(data: {
     doc.text(`${isDutch ? 'Datum' : 'Date'}: ${new Date(data.booking.start_time).toLocaleDateString(isDutch ? 'nl-NL' : 'en-US')}`, 20, 160)
     doc.text(`${isDutch ? 'Tijd' : 'Time'}: ${new Date(data.booking.start_time).toLocaleTimeString(isDutch ? 'nl-NL' : 'en-US', { hour: '2-digit', minute: '2-digit' })} - ${new Date(data.booking.end_time).toLocaleTimeString(isDutch ? 'nl-NL' : 'en-US', { hour: '2-digit', minute: '2-digit' })}`, 20, 170)
     doc.text(`${isDutch ? 'Locatie' : 'Location'}: ${data.booking.location || 'Not specified'}`, 20, 180)
-    doc.text(`${isDutch ? 'Uurtarief' : 'Hourly Rate'}: €${data.booking.hourly_rate.toFixed(2)}`, 20, 190)
-    doc.text(`${isDutch ? 'Totaal Bedrag' : 'Total Amount'}: €${data.booking.total_amount.toFixed(2)}`, 20, 200)
+    
+    // Show pricing information based on pricing type
+    if (data.booking.package_id) {
+      // Package pricing
+      doc.text(`${isDutch ? 'Service Pakket' : 'Service Package'}: ${data.booking.package_name || 'Package'}`, 20, 190)
+      if (data.booking.package_description) {
+        doc.text(`${isDutch ? 'Pakket Details' : 'Package Details'}: ${data.booking.package_description}`, 20, 200)
+        doc.text(`${isDutch ? 'Totaal Bedrag' : 'Total Amount'}: €${data.booking.total_amount.toFixed(2)}`, 20, 210)
+      } else {
+        doc.text(`${isDutch ? 'Totaal Bedrag' : 'Total Amount'}: €${data.booking.total_amount.toFixed(2)}`, 20, 200)
+      }
+    } else {
+      // Hourly pricing
+      doc.text(`${isDutch ? 'Uurtarief' : 'Hourly Rate'}: €${data.booking.hourly_rate?.toFixed(2) || '0.00'}`, 20, 190)
+      doc.text(`${isDutch ? 'Totaal Bedrag' : 'Total Amount'}: €${data.booking.total_amount.toFixed(2)}`, 20, 200)
+    }
     
     // Terms and Conditions Section
     doc.setFontSize(18)

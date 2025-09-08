@@ -49,7 +49,15 @@ export async function GET(request: Request) {
         job_offerings:freelancer_job_offerings!freelancer_job_offerings_freelancer_id_fkey(
           *,
           job_categories(id, name),
-          job_subcategories(id, name)
+          job_subcategories(id, name),
+          job_offering_packages(
+            id,
+            package_name,
+            short_description,
+            price,
+            display_order,
+            is_active
+          )
         )
       `)
       .eq("user_type", "freelancer")

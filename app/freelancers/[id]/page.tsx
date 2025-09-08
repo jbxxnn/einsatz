@@ -29,6 +29,14 @@ type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row
     risk_level: string
     risk_percentage: number
   } | null
+  job_offering_packages?: Array<{
+    id: string
+    package_name: string
+    short_description: string | null
+    price: number
+    display_order: number
+    is_active: boolean
+  }>
 }
 
 
@@ -225,15 +233,24 @@ export default function FreelancerProfile() {
           throw error
         }
 
-        // Fetch job offerings
+        // Fetch job offerings with packages
         const { data: offeringsData, error: offeringsError } = await supabase
           .from("freelancer_job_offerings")
           .select(`
           *,
           job_categories (id, name, icon),
-          job_subcategories (id, name)
+          job_subcategories (id, name),
+          job_offering_packages (
+            id,
+            package_name,
+            short_description,
+            price,
+            display_order,
+            is_active
+          )
         `)
           .eq("freelancer_id", params.id)
+          .order("display_order", { ascending: true, nullsFirst: false })
 
         if (offeringsError) {
           throw offeringsError
@@ -255,13 +272,14 @@ export default function FreelancerProfile() {
           })
         })
 
-        // Format job offerings with DBA status
+        // Format job offerings with DBA status and packages
         const formattedOfferings = offeringsData.map((offering) => ({
           ...offering,
           category_name: offering.job_categories.name,
           icon: offering.job_categories.icon,
           subcategory_name: offering.job_subcategories.name,
-          dba_status: dbaMap.get(offering.category_id) || null
+          dba_status: dbaMap.get(offering.category_id) || null,
+          job_offering_packages: offering.job_offering_packages?.filter((pkg: any) => pkg.is_active) || []
         }))
 
         // Check real-time availability
@@ -601,10 +619,30 @@ export default function FreelancerProfile() {
                               <h4 className="font-bold text-black text-sm">{offering.subcategory_name}</h4>
                             </div>
                             
-                            {/* Hourly rate */}
+                            {/* Pricing */}
                             <div className="flex items-center space-x-2">
                               <CustomPaymentsIcon className="h-4 w-4 text-[#33CC99]" />
-                              <span className="font-bold text-black text-sm">€{offering.hourly_rate} p/hr</span>
+                              {offering.pricing_type === "packages" ? (
+                                // Package pricing display
+                                (() => {
+                                  const activePackages = offering.job_offering_packages?.filter(p => p.is_active) || []
+                                  return activePackages.length > 0 ? (
+                                    <span className="font-bold text-black text-sm">
+                                      {activePackages.length === 1 
+                                        ? `€${activePackages[0].price} package`
+                                        : `From €${Math.min(...activePackages.map(p => p.price))} packages`
+                                      }
+                                    </span>
+                                  ) : (
+                                    <span className="font-bold text-black text-sm text-gray-500">
+                                      Packages available
+                                    </span>
+                                  )
+                                })()
+                              ) : (
+                                // Hourly pricing display
+                                <span className="font-bold text-black text-sm">€{offering.hourly_rate} p/hr</span>
+                              )}
                             </div>
                             
                             {/* Description */}
@@ -658,8 +696,28 @@ export default function FreelancerProfile() {
                             {/* Service Details */}
                             <div className="space-y-3">
                               <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium">{t("freelancer.serviceDetails.hourlyRate")}</span>
-                                <span className="text-lg font-bold text-primary">€{getSelectedOffering()?.hourly_rate || freelancer.hourly_rate}</span>
+                                <span className="text-sm font-medium">
+                                  {getSelectedOffering()?.pricing_type === "packages" 
+                                    ? "Service Packages" 
+                                    : t("freelancer.serviceDetails.hourlyRate")
+                                  }
+                                </span>
+                                <span className="text-lg font-bold text-primary">
+                                  {getSelectedOffering()?.pricing_type === "packages" ? (
+                                    (() => {
+                                      const activePackages = getSelectedOffering()?.job_offering_packages?.filter(p => p.is_active) || []
+                                      return activePackages.length > 0 ? (
+                                        activePackages.length === 1 
+                                          ? `€${activePackages[0].price} package`
+                                          : `From €${Math.min(...activePackages.map(p => p.price))} packages`
+                                      ) : (
+                                        "Packages available"
+                                      )
+                                    })()
+                                  ) : (
+                                    `€${getSelectedOffering()?.hourly_rate || freelancer.hourly_rate}`
+                                  )}
+                                </span>
                               </div>
                               
                               {getSelectedOffering()?.experience_years && (

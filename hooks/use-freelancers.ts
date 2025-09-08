@@ -6,8 +6,17 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
     id: string
     category_name: string
     subcategory_name?: string
+    pricing_type: "hourly" | "packages"
     hourly_rate?: number
     experience_years?: number
+    job_offering_packages?: Array<{
+      id: string
+      package_name: string
+      short_description: string | null
+      price: number
+      display_order: number
+      is_active: boolean
+    }>
     dba_status?: {
       risk_level: string
       risk_percentage: number
