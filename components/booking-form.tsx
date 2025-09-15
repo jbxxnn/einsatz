@@ -571,9 +571,17 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           package_description: currentOffering?.pricing_type === "packages" ? selectedPackage?.short_description : null,
           package_quantities: currentOffering?.pricing_type === "packages" && selectedPackageData ? 
             selectedPackageData.items.reduce((acc, itemData) => {
-              acc[itemData.item.id] = itemData.quantity
+              acc[itemData.item.id] = {
+                offering: itemData.item.offering,
+                price_per_unit: itemData.item.price_per_unit,
+                unit_type: itemData.item.unit_type,
+                quantity_type: itemData.item.quantity_type,
+                fixed_quantity: itemData.item.fixed_quantity,
+                quantity: itemData.quantity,
+                total: itemData.total
+              }
               return acc
-            }, {} as Record<string, number>) : null,
+            }, {} as Record<string, any>) : null,
           total_amount: calculateTotal(),
           status: "pending",
           payment_status: "unpaid",
@@ -780,9 +788,17 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           package_description: currentOffering?.pricing_type === "packages" ? selectedPackage?.short_description : null,
           package_quantities: currentOffering?.pricing_type === "packages" && selectedPackageData ? 
             selectedPackageData.items.reduce((acc, itemData) => {
-              acc[itemData.item.id] = itemData.quantity
+              acc[itemData.item.id] = {
+                offering: itemData.item.offering,
+                price_per_unit: itemData.item.price_per_unit,
+                unit_type: itemData.item.unit_type,
+                quantity_type: itemData.item.quantity_type,
+                fixed_quantity: itemData.item.fixed_quantity,
+                quantity: itemData.quantity,
+                total: itemData.total
+              }
               return acc
-            }, {} as Record<string, number>) : null,
+            }, {} as Record<string, any>) : null,
           total_amount: calculateTotal(),
           status: "pending",
           payment_status: "unpaid",

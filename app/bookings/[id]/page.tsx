@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Calendar, CheckCircle, Clock, MapPin, Star, XCircle, FileText, Download, Eye } from "lucide-react"
+import { ArrowLeft, Calendar, CheckCircle, Clock, MapPin, Star, XCircle, FileText, Download, Eye, Package, Euro } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { format } from "date-fns"
@@ -148,6 +148,7 @@ export default function BookingDetailsPage() {
   const [downloadingPDF, setDownloadingPDF] = useState(false)
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null)
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [packageItems, setPackageItems] = useState<Record<string, any>>({})
   useEffect(() => {
     const fetchBooking = async () => {
       setLoading(true)
@@ -223,6 +224,47 @@ export default function BookingDetailsPage() {
       
       if (conversationData) {
         setConversationId(conversationData.id)
+      }
+      
+      // Fetch package item details if this is a package booking with old format data
+      if (data.package_id && data.package_quantities) {
+        const quantities = data.package_quantities as Record<string, any>
+        const itemIds = Object.keys(quantities)
+        
+        // Check if we have old format (just quantities) or new format (full item data)
+        const firstItem = Object.values(quantities)[0]
+        if (typeof firstItem === 'number') {
+          // Old format - fetch item details from database
+          try {
+            const { data: itemsData, error: itemsError } = await supabase
+              .from("job_offering_package_items")
+              .select("*")
+              .in("id", itemIds)
+            
+            if (!itemsError && itemsData) {
+              // Create enhanced package quantities with full item data
+              const enhancedQuantities: Record<string, any> = {}
+              itemsData.forEach(item => {
+                const quantity = quantities[item.id] || 1
+                enhancedQuantities[item.id] = {
+                  offering: item.offering,
+                  price_per_unit: item.price_per_unit,
+                  unit_type: item.unit_type,
+                  quantity_type: item.quantity_type,
+                  fixed_quantity: item.fixed_quantity,
+                  quantity: quantity,
+                  total: item.price_per_unit * quantity
+                }
+              })
+              setPackageItems(enhancedQuantities)
+            }
+          } catch (error) {
+            console.error("Error fetching package items:", error)
+          }
+        } else {
+          // New format - use existing data
+          setPackageItems(quantities)
+        }
       }
       
       setLoading(false)
@@ -555,16 +597,141 @@ export default function BookingDetailsPage() {
                 <h3 className="text-xs font-medium text-black mb-2">{t("booking.id.paymentDetails")}</h3>
                 <div className="space-y-2">
                   {booking.package_id ? (
-                    // Package pricing display
+                    // Package pricing display with detailed breakdown
                     <>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-xs text-black">Service Package</span>
-                        <span className="text-xs text-black">{booking.package_name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-black font-medium">{booking.package_name}</span>
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs">
+                            Package
+                          </Badge>
+                        </div>
                       </div>
                       {booking.package_description && (
                         <div className="flex justify-between">
                           <span className="text-xs text-black">Package Details</span>
                           <span className="text-xs text-black">{booking.package_description}</span>
+                        </div>
+                      )}
+                      
+                      {/* Package Items Breakdown */}
+                      {(booking.package_quantities || Object.keys(packageItems).length > 0) && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Package className="h-4 w-4 text-gray-600" />
+                              <h4 className="text-xs font-medium text-black">Package Items</h4>
+                            </div>
+                            {(() => {
+                              const items = Object.keys(packageItems).length > 0 
+                                ? Object.values(packageItems) 
+                                : Object.values(booking.package_quantities as Record<string, any>)
+                              const fixedCount = items.filter((item: any) => item.quantity_type === 'fixed').length
+                              const variableCount = items.filter((item: any) => item.quantity_type === 'variable').length
+                              return (
+                                <div className="flex gap-2 text-xs">
+                                  {fixedCount > 0 && (
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                      {fixedCount} Fixed
+                                    </Badge>
+                                  )}
+                                  {variableCount > 0 && (
+                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                      {variableCount} Variable
+                                    </Badge>
+                                  )}
+                                </div>
+                              )
+                            })()}
+                          </div>
+                          <div className="space-y-3">
+                            {Object.entries(Object.keys(packageItems).length > 0 ? packageItems : booking.package_quantities as Record<string, any>).map(([itemId, itemData]) => {
+                              
+                              // Handle old format where only quantity was stored
+                              if (typeof itemData === 'number') {
+                                return (
+                                  <div key={itemId} className="bg-gray-50 rounded-lg p-3">
+                                    <div className="flex justify-between items-start">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className="text-sm font-medium text-black">
+                                            Item {itemId.substring(0, 8)}
+                                          </span>
+                                          <Badge variant="outline" className="text-xs bg-gray-50 text-gray-700 border-gray-200">
+                                            Legacy
+                                          </Badge>
+                                        </div>
+                                        <div className="text-gray-500 text-xs">
+                                          Quantity: {itemData}
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="text-sm font-medium text-black mb-1">
+                                          {itemData} units
+                                        </div>
+                                        <div className="flex items-center gap-1 text-gray-500 font-semibold">
+                                          <Euro className="h-3 w-3" />
+                                          N/A
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              
+                              return (
+                              <div key={itemId} className="bg-gray-50 rounded-lg p-3">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-sm font-medium text-black">
+                                        {itemData.offering || `Item ${itemId.substring(0, 8)}`}
+                                      </span>
+                                      <Badge 
+                                        variant="outline" 
+                                        className={`text-xs ${
+                                          itemData.quantity_type === 'fixed' 
+                                            ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                                            : 'bg-green-50 text-green-700 border-green-200'
+                                        }`}
+                                      >
+                                        {itemData.quantity_type === 'fixed' ? 'Fixed' : 'Variable'}
+                                      </Badge>
+                                    </div>
+                                    <div className="text-gray-500 text-xs">
+                                      €{itemData.price_per_unit || 0}/{itemData.unit_type || 'unit'}
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium text-black mb-1">
+                                      {itemData.quantity || 0} {itemData.unit_type || 'unit'}
+                                    </div>
+                                    <div className="flex items-center gap-1 text-green-600 font-semibold">
+                                      <Euro className="h-3 w-3" />
+                                      {(itemData.total || 0).toFixed(2)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Fallback for packages without detailed quantities */}
+                      {!booking.package_quantities && booking.package_id && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Package className="h-4 w-4 text-gray-600" />
+                            <h4 className="text-xs font-medium text-black">Package Details</h4>
+                          </div>
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <p className="text-xs text-gray-600">
+                              Package details will be available after booking confirmation.
+                            </p>
+                          </div>
                         </div>
                       )}
                     </>
@@ -587,9 +754,12 @@ export default function BookingDetailsPage() {
                       </div>
                     </>
                   )}
-                  <div className="flex justify-between font-medium">
-                    <span className="text-xs text-black">{t("booking.id.total")}</span>
-                    <span className="text-xs text-black">€{booking.total_amount.toFixed(2)}</span>
+                  <div className="flex justify-between font-medium pt-2 border-t border-gray-200">
+                    <span className="text-sm font-semibold text-black">{t("booking.id.total")}</span>
+                    <div className="flex items-center gap-1 text-green-600 font-bold">
+                      <Euro className="h-4 w-4" />
+                      <span className="text-lg">€{booking.total_amount.toFixed(2)}</span>
+                    </div>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-xs text-black">{t("booking.id.paymentStatus")}</span>
