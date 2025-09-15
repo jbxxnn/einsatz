@@ -1170,3 +1170,4 @@ LEFT JOIN public.job_subcategories s ON c.id = s.category_id
 GROUP BY c.id, c.name_en, c.name_nl
 ORDER BY c.name_en;
 
+

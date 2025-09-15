@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/lib/toast"
-import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Loader, GripVertical, Shield, CheckCircle, Clock, Package, DollarSign } from "lucide-react"
+import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Loader, GripVertical, Shield, CheckCircle, Clock, Package, DollarSign, Calculator } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -17,7 +17,8 @@ import JobCategorySelector from "@/components/job-category-selector"
 import JobSubcategorySelector from "@/components/job-subcategory-selector"
 import AvailabilityCalendar from "@/components/availability-calendar"
 import FreelancerDBAQuestionnaire from "@/components/freelancer-dba-questionnaire"
-import JobOfferingPackagesManager from "@/components/job-offering-packages-manager"
+import JobOfferingPackagesManagerV2 from "@/components/job-offering-packages-manager-v2"
+import PackageItemsManager from "@/components/package-items-manager"
 
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
@@ -203,6 +204,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [loadingDbaStatus, setLoadingDbaStatus] = useState(false)
   const [packagesDialogOpen, setPackagesDialogOpen] = useState(false)
   const [selectedOfferingForPackages, setSelectedOfferingForPackages] = useState<(JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }) | null>(null)
+  const [packageItemsDialogOpen, setPackageItemsDialogOpen] = useState(false)
+  const [selectedPackageForItems, setSelectedPackageForItems] = useState<{ id: string; name: string } | null>(null)
+  const [packagesRefreshTrigger, setPackagesRefreshTrigger] = useState(0)
 
 
   // Drag and drop sensors
@@ -428,6 +432,11 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const openPackagesDialog = (offering: JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }) => {
     setSelectedOfferingForPackages(offering)
     setPackagesDialogOpen(true)
+  }
+
+  const openPackageItemsDialog = (packageId: string, packageName: string) => {
+    setSelectedPackageForItems({ id: packageId, name: packageName })
+    setPackageItemsDialogOpen(true)
   }
 
   // Reset subcategory when category changes
@@ -743,12 +752,41 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
             </DialogTitle>
           </DialogHeader>
           {selectedOfferingForPackages && (
-            <JobOfferingPackagesManager
+            <JobOfferingPackagesManagerV2
               jobOfferingId={selectedOfferingForPackages.id}
               categoryName={selectedOfferingForPackages.category_name}
               onPackagesChange={() => {
                 // Optionally refresh offerings data
                 // This could trigger a refetch of the main offerings
+              }}
+              onManageItems={openPackageItemsDialog}
+              refreshTrigger={packagesRefreshTrigger}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Package Items Management Dialog */}
+      <Dialog open={packageItemsDialogOpen} onOpenChange={setPackageItemsDialogOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5" />
+              Manage Package Items
+            </DialogTitle>
+          </DialogHeader>
+          {selectedPackageForItems && (
+            <PackageItemsManager
+              packageId={selectedPackageForItems.id}
+              packageName={selectedPackageForItems.name}
+              onItemsChange={(totalPrice) => {
+                // Update package total price when items change
+                console.log('Package total updated:', totalPrice)
+              }}
+              onSaveAndClose={() => {
+                setPackageItemsDialogOpen(false)
+                // Trigger refresh of packages data
+                setPackagesRefreshTrigger(prev => prev + 1)
               }}
             />
           )}

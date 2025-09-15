@@ -14,11 +14,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/lib/toast"
-import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2, FileText, ChevronRight, ChevronLeft, Shield, Upload, X, Image as ImageIcon } from "lucide-react"
+import { ArrowLeft, Calendar, MapPin, Info, AlertCircle, CheckCircle, HelpCircle, Loader2, FileText, ChevronRight, ChevronLeft, Shield, Upload, X, Image as ImageIcon, Euro } from "lucide-react"
 import { format, addDays } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
 import { PreBookingDBAModal } from './pre-booking-dba-modal'
+import PackageSelectionStep from './package-selection-step'
 
 
 
@@ -114,12 +115,21 @@ interface BookingFormProps {
   }
   selectedDate: Date | undefined
   selectedCategoryId?: string | null
+  selectedPackageData?: {
+    package: any
+    items: Array<{
+      item: any
+      quantity: number
+      total: number
+    }>
+    totalPrice: number
+  } | null
   onBack: () => void
 }
 
-type BookingStep = 'details' | 'payment'
+type BookingStep = 'package' | 'details' | 'payment'
 
-export default function BookingForm({ freelancer, selectedDate, selectedCategoryId, onBack }: BookingFormProps) {
+export default function BookingForm({ freelancer, selectedDate, selectedCategoryId, selectedPackageData, onBack }: BookingFormProps) {
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(false)
@@ -144,10 +154,25 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [uploadedImages, setUploadedImages] = useState<Array<{url: string, path: string, file?: File}>>([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [tempImages, setTempImages] = useState<File[]>([])
-  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null)
-  const [selectedPackage, setSelectedPackage] = useState<any>(null)
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(selectedPackageData?.package.id || null)
+  const [selectedPackage, setSelectedPackage] = useState<any>(selectedPackageData?.package || null)
 
   const { t } = useTranslation()
+
+  // Package selection is now handled in the parent component
+  // This function is kept for compatibility but should not be used
+  const handlePackageSelect = (packageData: {
+    package: any
+    items: Array<{
+      item: any
+      quantity: number
+      total: number
+    }>
+    totalPrice: number
+  }) => {
+    // This should not be called anymore as package selection is handled in parent
+    console.warn("handlePackageSelect should not be called - package selection is handled in parent")
+  }
 
   // Get freelancer's DBA status for the selected category
   const freelancerDbaStatus = useMemo(() => {
@@ -361,9 +386,9 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   }
 
   const calculateTotal = () => {
-    if (currentOffering?.pricing_type === "packages" && selectedPackage) {
-      // For packages, use the fixed package price
-      return selectedPackage.price
+    if (currentOffering?.pricing_type === "packages" && selectedPackageData) {
+      // For packages, use the calculated total from selected package data
+      return selectedPackageData.totalPrice
     } else {
       // For hourly pricing, calculate based on hours
       const hours = calculateHours()
@@ -544,6 +569,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           package_id: currentOffering?.pricing_type === "packages" ? selectedPackageId : null,
           package_name: currentOffering?.pricing_type === "packages" ? selectedPackage?.package_name : null,
           package_description: currentOffering?.pricing_type === "packages" ? selectedPackage?.short_description : null,
+          package_quantities: currentOffering?.pricing_type === "packages" && selectedPackageData ? 
+            selectedPackageData.items.reduce((acc, itemData) => {
+              acc[itemData.item.id] = itemData.quantity
+              return acc
+            }, {} as Record<string, number>) : null,
           total_amount: calculateTotal(),
           status: "pending",
           payment_status: "unpaid",
@@ -654,7 +684,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     }
 
     // For package pricing, ensure a package is selected
-    if (currentOffering?.pricing_type === "packages" && !selectedPackageId) {
+    if (currentOffering?.pricing_type === "packages" && !selectedPackageData) {
       toast.error("Please select a service package before starting DBA assessment")
       return
     }
@@ -692,7 +722,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     }
 
     // For package pricing, ensure a package is selected
-    if (currentOffering?.pricing_type === "packages" && !selectedPackageId) {
+    if (currentOffering?.pricing_type === "packages" && !selectedPackageData) {
       toast.error("Please select a service package before creating the booking")
       return
     }
@@ -748,6 +778,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           package_id: currentOffering?.pricing_type === "packages" ? selectedPackageId : null,
           package_name: currentOffering?.pricing_type === "packages" ? selectedPackage?.package_name : null,
           package_description: currentOffering?.pricing_type === "packages" ? selectedPackage?.short_description : null,
+          package_quantities: currentOffering?.pricing_type === "packages" && selectedPackageData ? 
+            selectedPackageData.items.reduce((acc, itemData) => {
+              acc[itemData.item.id] = itemData.quantity
+              return acc
+            }, {} as Record<string, number>) : null,
           total_amount: calculateTotal(),
           status: "pending",
           payment_status: "unpaid",
@@ -813,45 +848,89 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   }
 
   const getStepProgress = () => {
-    switch (currentStep) {
-      case 'details': return 50
-      case 'payment': return 100
-      default: return 0
+    if (currentOffering?.pricing_type === "hourly") {
+      // Hourly flow: details -> payment
+      switch (currentStep) {
+        case 'details': return 50
+        case 'payment': return 100
+        default: return 0
+      }
+    } else if (selectedPackageData) {
+      // Package pre-selected flow: details -> payment
+      switch (currentStep) {
+        case 'details': return 50
+        case 'payment': return 100
+        default: return 0
+      }
+    } else {
+      // Package flow without pre-selection: package -> details -> payment
+      switch (currentStep) {
+        case 'package': return 33
+        case 'details': return 66
+        case 'payment': return 100
+        default: return 0
+      }
     }
   }
 
   const getStepTitle = () => {
     switch (currentStep) {
+      case 'package': return "Select Service Package"
       case 'details': return t("bookingform.stepDetails")
       case 'payment': return t("bookingform.stepPayment")
       default: return ''
     }
   }
 
+  const renderPackageStep = () => (
+    <div className="space-y-4">
+      {selectedCategoryId && (
+        <PackageSelectionStep
+          freelancerId={freelancer.id}
+          categoryId={selectedCategoryId}
+          categoryName={categoryName}
+          onPackageSelect={handlePackageSelect}
+          selectedPackage={selectedPackage}
+        />
+      )}
+    </div>
+  )
+
   const renderDetailsStep = () => (
     <form onSubmit={(e) => { e.preventDefault(); handleCreateBooking(); }} className="space-y-4">
-      {categoryName && (
-        <div className="mb-2">
-          <p className="font-medium">{categoryName} {t("bookingform.service")}</p>
-          {currentOffering?.pricing_type === "packages" ? (
-            // Package pricing display
-            (() => {
-              const activePackages = currentOffering?.job_offering_packages?.filter((p: any) => p.is_active) || []
-              return activePackages.length > 0 ? (
-                <p className="text-sm text-muted-foreground text-black">
-                  {activePackages.length === 1 
-                    ? `€${activePackages[0].price} package`
-                    : `From €${Math.min(...activePackages.map((p: any) => p.price))} packages`
-                  }
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground text-black">Packages available</p>
-              )
-            })()
-          ) : (
-            // Hourly pricing display
-            <p className="text-sm text-muted-foreground text-black">€{hourlyRate} {t("freelancer.filters.hour")}</p>
+      {selectedPackageData && (
+        <div className="mb-4 p-4 border rounded-lg bg-gray-50">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-black">{selectedPackageData.package.package_name}</h3>
+            <div className="flex items-center gap-1 text-green-600 font-bold">
+              <Euro className="h-4 w-4" />
+              {selectedPackageData.totalPrice.toFixed(2)}
+            </div>
+          </div>
+          {selectedPackageData.package.short_description && (
+            <p className="text-sm text-gray-600 mb-3">{selectedPackageData.package.short_description}</p>
           )}
+          
+          {/* Package Items Breakdown */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-black">Package Details:</h4>
+            {selectedPackageData.items.map((itemData, index) => (
+              <div key={index} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <Badge className={`text-xs ${
+                    itemData.item.type === 'labour' ? 'bg-blue-100 text-blue-800' :
+                    itemData.item.type === 'materials' ? 'bg-green-100 text-green-800' :
+                    'bg-purple-100 text-purple-800'
+                  }`}>
+                    {itemData.item.type.charAt(0).toUpperCase() + itemData.item.type.slice(1)}
+                  </Badge>
+                  <span className="text-black">{itemData.item.offering}</span>
+                  <span className="text-gray-500">({itemData.quantity} {itemData.item.unit_type})</span>
+                </div>
+                <span className="font-medium text-green-600">€{itemData.total.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -967,51 +1046,6 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
               </div>
             )}
 
-            {/* Package Selection - only show for package pricing */}
-            {currentOffering?.pricing_type === "packages" && currentOffering.job_offering_packages && currentOffering.job_offering_packages.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-xs text-black">Select Service Package</Label>
-                <div className="grid gap-3">
-                  {currentOffering.job_offering_packages.map((pkg: any) => (
-                    <div
-                      key={pkg.id}
-                      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                        selectedPackageId === pkg.id
-                          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                      onClick={() => {
-                        setSelectedPackageId(pkg.id)
-                        setSelectedPackage(pkg)
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-4 h-4 rounded-full border-2 ${
-                              selectedPackageId === pkg.id
-                                ? "border-primary bg-primary"
-                                : "border-gray-300"
-                            }`}>
-                              {selectedPackageId === pkg.id && (
-                                <div className="w-2 h-2 bg-white rounded-full m-0.5" />
-                              )}
-                            </div>
-                            <h4 className="font-medium text-sm text-black">{pkg.package_name}</h4>
-                          </div>
-                          {pkg.short_description && (
-                            <p className="text-xs text-gray-600 mt-1 ml-6">{pkg.short_description}</p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-green-600">€{pkg.price}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
           </div>
         )}
@@ -1285,12 +1319,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       <Button
         type="submit"
         className="w-full"
-        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || (!dbaCompleted && !dbaSkipped) || !!bookingId || (currentOffering?.pricing_type === "packages" && !selectedPackageId)}
+        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || (!dbaCompleted && !dbaSkipped) || !!bookingId || (currentOffering?.pricing_type === "packages" && !selectedPackageData)}
       >
         {loading ? t("bookingform.processing") : bookingId ? 'Booking Created - Proceed to Payment' : 
          dbaCompleted ? 'Booking Created - Proceed to Payment' : 
          dbaSkipped ? 'Booking Created - Proceed to Payment' : 
-         currentOffering?.pricing_type === "packages" && !selectedPackageId ? 'Please Select a Package' :
+         currentOffering?.pricing_type === "packages" && !selectedPackageData ? 'Please Select a Package' :
          'Complete DBA or Skip to Proceed'}
       </Button>
 
@@ -1320,15 +1354,32 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           <CardTitle className="text-sm text-black">{t("bookingform.bookingSummary")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {currentOffering?.pricing_type === "packages" ? (
+          {currentOffering?.pricing_type === "packages" && selectedPackageData ? (
             // Package pricing summary
             <>
-              {selectedPackage && (
-                <div className="flex justify-between">
-                  <span className="text-xs text-black">Selected Package</span>
-                  <span className="text-xs text-black">{selectedPackage.package_name}</span>
-                </div>
-              )}
+              <div className="flex justify-between mb-2">
+                <span className="text-xs text-black">Selected Package</span>
+                <span className="text-xs text-black">{selectedPackageData.package.package_name}</span>
+              </div>
+              {/* Package Items Breakdown */}
+              <div className="space-y-1 border-t pt-2">
+                {selectedPackageData.items.map((itemData, index) => (
+                  <div key={index} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <Badge className={`text-xs ${
+                        itemData.item.type === 'labour' ? 'bg-blue-100 text-blue-800' :
+                        itemData.item.type === 'materials' ? 'bg-green-100 text-green-800' :
+                        'bg-purple-100 text-purple-800'
+                      }`}>
+                        {itemData.item.type.charAt(0).toUpperCase() + itemData.item.type.slice(1)}
+                      </Badge>
+                      <span className="text-black">{itemData.item.offering}</span>
+                      <span className="text-gray-500">({itemData.quantity} {itemData.item.unit_type})</span>
+                    </div>
+                    <span className="font-medium text-green-600">€{itemData.total.toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
             </>
           ) : (
             // Hourly pricing summary
@@ -1419,13 +1470,18 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">{getStepTitle()}</h2>
-            <Badge variant="outline">Step {currentStep === 'details' ? 1 : 2} of 2</Badge>
+            <Badge variant="outline">Step {
+              currentStep === 'package' ? 1 : 
+              currentStep === 'details' ? (currentOffering?.pricing_type === "hourly" ? 1 : (selectedPackageData ? 1 : 2)) : 
+              (currentOffering?.pricing_type === "hourly" ? 2 : (selectedPackageData ? 2 : 3))
+            } of {currentOffering?.pricing_type === "hourly" ? 2 : (selectedPackageData ? 2 : 3)}</Badge>
           </div>
           <Progress value={getStepProgress()} className="h-2" />
         </div>
       </div>
 
       {/* Step Content */}
+      {currentStep === 'package' && currentOffering?.pricing_type === "packages" && !selectedPackageData && renderPackageStep()}
       {currentStep === 'details' && renderDetailsStep()}
       {currentStep === 'payment' && renderPaymentStep()}
 

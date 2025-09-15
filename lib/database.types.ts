@@ -130,6 +130,7 @@ export interface Database {
           package_id: string | null
           package_name: string | null
           package_description: string | null
+          package_quantities: Json | null
         }
         Insert: {
           id?: string
@@ -156,6 +157,7 @@ export interface Database {
           package_id?: string | null
           package_name?: string | null
           package_description?: string | null
+          package_quantities?: Json | null
         }
         Update: {
           id?: string
@@ -182,6 +184,7 @@ export interface Database {
           package_id?: string | null
           package_name?: string | null
           package_description?: string | null
+          package_quantities?: Json | null
         }
       }
       reviews: {
@@ -939,6 +942,70 @@ export interface Database {
           is_active?: boolean
           created_at?: string
           updated_at?: string
+        }
+      }
+      job_offering_package_items: {
+        Row: {
+          id: string
+          package_id: string
+          type: "labour" | "materials" | "others"
+          offering: string
+          price_per_unit: number
+          unit_type: string
+          quantity_type: "fixed" | "variable"
+          fixed_quantity: number | null
+          display_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          package_id: string
+          type: "labour" | "materials" | "others"
+          offering: string
+          price_per_unit: number
+          unit_type: string
+          quantity_type: "fixed" | "variable"
+          fixed_quantity?: number | null
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          package_id?: string
+          type?: "labour" | "materials" | "others"
+          offering?: string
+          price_per_unit?: number
+          unit_type?: string
+          quantity_type?: "fixed" | "variable"
+          fixed_quantity?: number | null
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      unit_types: {
+        Row: {
+          id: string
+          name: string
+          symbol: string
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          symbol: string
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          symbol?: string
+          description?: string | null
+          created_at?: string
         }
       }
     }

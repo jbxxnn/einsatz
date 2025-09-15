@@ -13,6 +13,7 @@ import { MapPin, Star, Clock, CheckCircle, Info, MessageCircle, Shield, Award, Z
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
 import BookingForm from "@/components/booking-form"
+import LeftPackageSelection from "@/components/left-package-selection"
 import { useTranslation } from "@/lib/i18n"
 import { getCoverTemplate } from "@/lib/cover-templates"
 import OptimizedHeader from "@/components/optimized-header"
@@ -203,6 +204,15 @@ export default function FreelancerProfile() {
   const [showBookingForm, setShowBookingForm] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null)
+  const [selectedPackageData, setSelectedPackageData] = useState<{
+    package: any
+    items: Array<{
+      item: any
+      quantity: number
+      total: number
+    }>
+    totalPrice: number
+  } | null>(null)
   const [reviews, setReviews] = useState<any[]>([])
   const [completedJobs, setCompletedJobs] = useState<number>(0)
   const [activeTab, setActiveTab] = useState<'services' | 'reviews'>('services')
@@ -396,6 +406,7 @@ export default function FreelancerProfile() {
   // Clear category from URL when deselected
   const handleCategoryDeselect = () => {
     setSelectedCategoryId(null)
+    setSelectedPackageData(null)
     // Remove category from URL
     const newSearchParams = new URLSearchParams(searchParams.toString())
     newSearchParams.delete('category')
@@ -403,6 +414,18 @@ export default function FreelancerProfile() {
       ? `/freelancers/${params.id}?${newSearchParams.toString()}`
       : `/freelancers/${params.id}`
     router.push(newUrl, { scroll: false })
+  }
+
+  const handlePackageSelect = (packageData: {
+    package: any
+    items: Array<{
+      item: any
+      quantity: number
+      total: number
+    }>
+    totalPrice: number
+  }) => {
+    setSelectedPackageData(packageData)
   }
   
   const getSelectedOffering = () => {
@@ -693,50 +716,42 @@ export default function FreelancerProfile() {
                             </div>
                           </CardHeader>
                           <CardContent className="space-y-4">
-                            {/* Service Details */}
-                            <div className="space-y-3">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium">
-                                  {getSelectedOffering()?.pricing_type === "packages" 
-                                    ? "Service Packages" 
-                                    : t("freelancer.serviceDetails.hourlyRate")
-                                  }
-                                </span>
-                                <span className="text-lg font-bold text-primary">
-                                  {getSelectedOffering()?.pricing_type === "packages" ? (
-                                    (() => {
-                                      const activePackages = getSelectedOffering()?.job_offering_packages?.filter(p => p.is_active) || []
-                                      return activePackages.length > 0 ? (
-                                        activePackages.length === 1 
-                                          ? `€${activePackages[0].price} package`
-                                          : `From €${Math.min(...activePackages.map(p => p.price))} packages`
-                                      ) : (
-                                        "Packages available"
-                                      )
-                                    })()
-                                  ) : (
-                                    `€${getSelectedOffering()?.hourly_rate || freelancer.hourly_rate}`
-                                  )}
-                                </span>
-                              </div>
-                              
-                              {getSelectedOffering()?.experience_years && (
+                            {/* Package Selection or Service Details */}
+                            {getSelectedOffering()?.pricing_type === "packages" ? (
+                              <LeftPackageSelection
+                                freelancerId={params.id as string}
+                                categoryId={selectedCategoryId!}
+                                categoryName={getSelectedOffering()?.category_name || ""}
+                                onPackageSelect={handlePackageSelect}
+                                selectedPackageData={selectedPackageData}
+                              />
+                            ) : (
+                              <div className="space-y-3">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-sm font-medium">{t("freelancer.serviceDetails.experience")}</span>
-                                  <span className="text-sm">{getSelectedOffering()?.experience_years} {getSelectedOffering()?.experience_years === 1 ? t("freelancer.year") : t("freelancer.years")}</span>
+                                  <span className="text-sm font-medium">{t("freelancer.serviceDetails.hourlyRate")}</span>
+                                  <span className="text-lg font-bold text-primary">
+                                    €{getSelectedOffering()?.hourly_rate || freelancer.hourly_rate}
+                                  </span>
                                 </div>
-                              )}
+                                
+                                {getSelectedOffering()?.experience_years && (
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium">{t("freelancer.serviceDetails.experience")}</span>
+                                    <span className="text-sm">{getSelectedOffering()?.experience_years} {getSelectedOffering()?.experience_years === 1 ? t("freelancer.year") : t("freelancer.years")}</span>
+                                  </div>
+                                )}
 
-                              {getSelectedOffering()?.dba_status?.is_completed && (
-                                <div className="flex justify-between items-center">
-                                  <span className="text-sm font-medium">{t("freelancer.serviceDetails.dbaStatus")}</span>
-                                  <Badge variant="default" className="text-xs">
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    {t("freelancer.serviceDetails.completed")}
-                                  </Badge>
-                                </div>
-                              )}
-                            </div>
+                                {getSelectedOffering()?.dba_status?.is_completed && (
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium">{t("freelancer.serviceDetails.dbaStatus")}</span>
+                                    <Badge variant="default" className="text-xs">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      {t("freelancer.serviceDetails.completed")}
+                                    </Badge>
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
                             {/* Service Description */}
                             {getSelectedOffering()?.description && (
@@ -750,22 +765,45 @@ export default function FreelancerProfile() {
                             <div className="border-t pt-4">
                               <h4 className="text-sm font-medium mb-3">{t("freelancer.bookingProcess.title")}</h4>
                               <div className="space-y-2">
-                                <div className="flex items-start gap-2">
-                                  <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">1</div>
-                                  <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step1")}</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">2</div>
-                                  <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step2")}</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">3</div>
-                                  <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step3")}</p>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                  <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">4</div>
-                                  <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step4")}</p>
-                                </div>
+                                {getSelectedOffering()?.pricing_type === "packages" ? (
+                                  <>
+                                    <div className="flex items-start gap-2">
+                                      <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">1</div>
+                                      <p className="text-xs text-muted-foreground">Select and customize your service package</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                      <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">2</div>
+                                      <p className="text-xs text-muted-foreground">Select your preferred date and time from the calendar</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                      <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">3</div>
+                                      <p className="text-xs text-muted-foreground">Complete DBA assessment or skip (based on freelancer's status)</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                      <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">4</div>
+                                      <p className="text-xs text-muted-foreground">Review and confirm your booking</p>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="flex items-start gap-2">
+                                      <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">1</div>
+                                      <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step1")}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                      <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">2</div>
+                                      <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step2")}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                      <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">3</div>
+                                      <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step3")}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                      <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">4</div>
+                                      <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step4")}</p>
+                                    </div>
+                                  </>
+                                )}
                               </div>
                             </div>
 
@@ -804,10 +842,16 @@ export default function FreelancerProfile() {
 
                                 <Button
                                   className="w-full bg-[#33CC99] hover:bg-[#2BB88A] text-white"
-                                  disabled={!selectedDate}
+                                  disabled={
+                                    !selectedDate || 
+                                    (getSelectedOffering()?.pricing_type === "packages" && !selectedPackageData)
+                                  }
                                   onClick={() => setShowBookingForm(true)}
                                 >
-                                  {t("freelancer.continueToBooking")}
+                                  {getSelectedOffering()?.pricing_type === "packages" && !selectedPackageData
+                                    ? "Please select a package first"
+                                    : t("freelancer.continueToBooking")
+                                  }
                                 </Button>
                               </div>
                             ) : (
@@ -816,6 +860,7 @@ export default function FreelancerProfile() {
                                 selectedDate={selectedDate}
                                 onBack={() => setShowBookingForm(false)}
                                 selectedCategoryId={selectedCategoryId}
+                                selectedPackageData={selectedPackageData}
                               />
                             )}
                           </CardContent>
