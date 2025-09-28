@@ -54,6 +54,30 @@ export default function PaymentsPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [activeTab, setActiveTab] = useState("invoices")
 
+  // Redirect to login if no profile found - with more patient logic
+  useEffect(() => {
+    // Don't redirect if we're still loading
+    if (isProfileLoading) {
+      return;
+    }
+
+    // Don't redirect if we have a profile
+    if (profile) {
+      return;
+    }
+
+    // Add a small delay to prevent race conditions during session restoration
+    const redirectTimeout = setTimeout(() => {
+      // Double-check loading states before redirecting
+      if (!isProfileLoading && !profile) {
+        console.log("Redirecting to login - no profile found after loading completed");
+        window.location.href = "/login";
+      }
+    }, 100); // 100ms delay to allow for session restoration
+
+    return () => clearTimeout(redirectTimeout);
+  }, [isProfileLoading, profile]);
+
   useEffect(() => {
     if (!profile) return;
     const fetchInvoices = async () => {
@@ -119,10 +143,7 @@ export default function PaymentsPage() {
       <SidebarProvider className="w-full">
         <div className="flex min-h-screen bg-muted/30 w-full">
           <Sidebar>
-            {/* Show minimal sidebar during loading */}
-            <div className="p-4">
-              <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
-            </div>
+            <ModernSidebarNav profile={null} />
           </Sidebar>
           <SidebarInset className="w-full">
             <OptimizedHeader />

@@ -173,10 +173,7 @@ export default function MessagesPage() {
       <SidebarProvider className="w-full">
         <div className="flex min-h-screen bg-muted/30 w-full">
           <Sidebar>
-            {/* Show minimal sidebar during loading */}
-            <div className="p-4">
-              <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
-            </div>
+            <ModernSidebarNav profile={null} />
           </Sidebar>
           
           <SidebarInset className="w-full">

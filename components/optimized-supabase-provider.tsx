@@ -18,20 +18,35 @@ export function OptimizedSupabaseProvider({ children }: { children: React.ReactN
   const [supabase] = useState(() => createClientComponentClient<Database>())
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [hasCheckedSession, setHasCheckedSession] = useState(false)
 
   useEffect(() => {
-    // Set a timeout to prevent long loading states
+    // Set a longer timeout to match profile loading timeout
     const timeoutId = setTimeout(() => {
-      if (isLoading) setIsLoading(false)
-    }, 1000) // 1 second max loading time for critical UI
+      if (isLoading) {
+        console.warn("Session loading timed out")
+        setIsLoading(false)
+      }
+    }, 3000) // 3 seconds to allow proper session restoration
 
     const getSession = async () => {
       try {
         const { data } = await supabase.auth.getSession()
         setSession(data.session)
+        setHasCheckedSession(true)
+        
+        // If we have a session, we can stop loading immediately
+        if (data.session) {
+          setIsLoading(false)
+          clearTimeout(timeoutId)
+        } else {
+          // Even if no session, we've checked and can stop loading
+          setIsLoading(false)
+          clearTimeout(timeoutId)
+        }
       } catch (error) {
         console.error("Error fetching session:", error)
-      } finally {
+        setHasCheckedSession(true)
         setIsLoading(false)
         clearTimeout(timeoutId)
       }
@@ -43,6 +58,12 @@ export function OptimizedSupabaseProvider({ children }: { children: React.ReactN
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      setHasCheckedSession(true)
+      // Stop loading when we get a definitive session state (even if null)
+      if (isLoading) {
+        setIsLoading(false)
+        clearTimeout(timeoutId)
+      }
     })
 
     return () => {

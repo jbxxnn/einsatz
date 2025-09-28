@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { useOptimizedSupabase } from "./optimized-supabase-provider"
-import { User, Briefcase, Calendar, Clock, CreditCard, Settings, LogOut, Home, Loader, TrendingUp } from "lucide-react"
+import { User, Briefcase, Calendar, Clock, CreditCard, Settings, LogOut, Home, Loader, TrendingUp, Sidebar } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
@@ -23,7 +23,7 @@ import {
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
 interface ModernSidebarNavProps {
-  profile: Profile
+  profile: Profile | null
 }
 
 // Add the custom Home SVG as a React component
@@ -141,6 +141,19 @@ export default function ModernSidebarNav({ profile }: ModernSidebarNavProps) {
   const { supabase } = useOptimizedSupabase()
   const { t } = useTranslation()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  // Return early if no profile
+  if (!profile) {
+    return (
+      <Sidebar>
+        <SidebarContent>
+          <div className="flex items-center justify-center h-16">
+            <Loader className="h-4 w-4 animate-spin" />
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    )
+  }
   
   const isActive = (path: string) => {
     // For profile, only match exact path to avoid conflicts with sub-pages

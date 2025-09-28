@@ -108,6 +108,17 @@ export function OptimizedUserProvider({ children }: { children: React.ReactNode 
       return
     }
 
+    // If we have a user but session is still loading, wait a bit more
+    if (currentUser && isSessionLoading) {
+      const waitTimeout = setTimeout(() => {
+        // If session is still loading after 500ms, proceed anyway
+        if (isSessionLoading) {
+          console.warn("Proceeding with profile loading despite session still loading")
+        }
+      }, 500)
+      return () => clearTimeout(waitTimeout)
+    }
+
     // Check cache first for instant loading
     const cachedProfile = getCachedProfile(currentUser.id)
     if (cachedProfile) {
@@ -117,14 +128,14 @@ export function OptimizedUserProvider({ children }: { children: React.ReactNode 
       // Still fetch fresh data in background
     }
 
-    // Set a shorter timeout to prevent long loading states
+    // Set a timeout that matches session loading timeout
     const timeoutId = setTimeout(() => {
       // Only timeout if we're not still loading the session
       if (isProfileLoading && !isSessionLoading) {
         setIsProfileLoading(false)
         console.warn("Profile loading timed out")
       }
-    }, 2000) // Increased to 2s to give more time for session restoration
+    }, 3000) // 3 seconds to match session loading timeout
 
     const fetchProfile = async () => {
       // Don't fetch if we already have cached data and it's recent

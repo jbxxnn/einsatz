@@ -455,7 +455,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         </div>
         <div className="p-6">
           {loading ? (
-            <div className="flex justify-center items-center min-h-screen w-full">
+            <div className="flex justify-center items-center w-full">
               <Loader className="h-8 w-8 animate-spin" />
             </div>
           ) : offerings.length === 0 ? (

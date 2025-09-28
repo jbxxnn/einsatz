@@ -53,6 +53,30 @@ export default function SettingsPage() {
     sms: false,
   })
 
+  // Redirect to login if no profile found - with more patient logic
+  useEffect(() => {
+    // Don't redirect if we're still loading
+    if (isLoading || isProfileLoading) {
+      return;
+    }
+
+    // Don't redirect if we have a profile
+    if (profile) {
+      return;
+    }
+
+    // Add a small delay to prevent race conditions during session restoration
+    const redirectTimeout = setTimeout(() => {
+      // Double-check loading states before redirecting
+      if (!isLoading && !isProfileLoading && !profile) {
+        console.log("Redirecting to login - no profile found after loading completed");
+        window.location.href = "/login";
+      }
+    }, 100); // 100ms delay to allow for session restoration
+
+    return () => clearTimeout(redirectTimeout);
+  }, [isLoading, isProfileLoading, profile]);
+
   // Load notification settings from profile metadata
   useEffect(() => {
     if (profile?.metadata && typeof profile.metadata === "object" && (profile.metadata as any).notifications) {
@@ -129,10 +153,7 @@ export default function SettingsPage() {
       <SidebarProvider className="w-full">
         <div className="flex min-h-screen bg-muted/30 w-full">
           <Sidebar>
-            {/* Show minimal sidebar during loading */}
-            <div className="p-4">
-              <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
-            </div>
+            <ModernSidebarNav profile={null} />
           </Sidebar>
           <SidebarInset className="w-full">
             <OptimizedHeader />

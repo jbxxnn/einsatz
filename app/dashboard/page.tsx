@@ -1011,11 +1011,28 @@ export default function DashboardPage() {
     sms: false,
   })
 
-  // Redirect to login if no profile found - must be at top level
+  // Redirect to login if no profile found - with more patient logic
   useEffect(() => {
-    if (!isLoading && !isProfileLoading && !profile) {
-      router.push("/login");
+    // Don't redirect if we're still loading
+    if (isLoading || isProfileLoading) {
+      return;
     }
+
+    // Don't redirect if we have a profile
+    if (profile) {
+      return;
+    }
+
+    // Add a small delay to prevent race conditions during session restoration
+    const redirectTimeout = setTimeout(() => {
+      // Double-check loading states before redirecting
+      if (!isLoading && !isProfileLoading && !profile) {
+        console.log("Redirecting to login - no profile found after loading completed");
+        router.push("/login");
+      }
+    }, 100); // 100ms delay to allow for session restoration
+
+    return () => clearTimeout(redirectTimeout);
   }, [isLoading, isProfileLoading, profile, router]);
 
   // Load notification settings from profile metadata
@@ -1097,22 +1114,38 @@ export default function DashboardPage() {
             </Sidebar>
             
             <SidebarInset className="w-full">
-              <div className="flex justify-center items-center min-h-screen w-full">
-                <Loader className="h-8 w-8 animate-spin" />
-                                </div>
+              <div className="flex flex-col justify-center items-center min-h-screen w-full">
+                <Loader className="h-8 w-8 animate-spin mb-4" />
+                <p className="text-sm text-muted-foreground">
+                  {isLoading ? "Loading session..." : "Loading profile..."}
+                </p>
+              </div>
             </SidebarInset>
-                              </div>
+          </div>
         </SidebarProvider>
       )
   }
 
-  // Show loading or redirect message if no profile
+  // Show loading or redirect message if no profile (with better UX)
   if (!profile) {
     return (
-      <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">{t("dashboard.redirectingToLogin")}</h1>
-        <p className="text-gray-600">{t("dashboard.pleaseWait")}</p>
-      </div>
+      <SidebarProvider className="w-full">
+        <div className="flex min-h-screen bg-muted/30 w-full">
+          <Sidebar>
+            <ModernSidebarNav profile={null} />
+          </Sidebar>
+          
+          <SidebarInset className="w-full">
+            <div className="flex flex-col justify-center items-center min-h-screen w-full">
+              <div className="text-center">
+                <Loader className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <h1 className="text-xl font-semibold mb-2">{t("dashboard.redirectingToLogin")}</h1>
+                <p className="text-muted-foreground">{t("dashboard.pleaseWait")}</p>
+              </div>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     );
   }
 

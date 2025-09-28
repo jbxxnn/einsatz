@@ -43,6 +43,30 @@ export default function AvailabilityPage() {
   const { t } = useTranslation()
   const { profile, isLoading: isProfileLoading } = useOptimizedUser()
 
+  // Redirect to login if no profile found - with more patient logic
+  React.useEffect(() => {
+    // Don't redirect if we're still loading
+    if (isProfileLoading) {
+      return;
+    }
+
+    // Don't redirect if we have a profile
+    if (profile) {
+      return;
+    }
+
+    // Add a small delay to prevent race conditions during session restoration
+    const redirectTimeout = setTimeout(() => {
+      // Double-check loading states before redirecting
+      if (!isProfileLoading && !profile) {
+        console.log("Redirecting to login - no profile found after loading completed");
+        router.push("/login");
+      }
+    }, 100); // 100ms delay to allow for session restoration
+
+    return () => clearTimeout(redirectTimeout);
+  }, [isProfileLoading, profile, router]);
+
   // Check if user is freelancer and redirect if not
   React.useEffect(() => {
     if (profile && profile.user_type !== "freelancer") {
@@ -56,10 +80,7 @@ export default function AvailabilityPage() {
       <SidebarProvider className="w-full">
         <div className="flex min-h-screen bg-muted/30 w-full">
           <Sidebar>
-            {/* Show minimal sidebar during loading */}
-            <div className="p-4">
-              <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
-            </div>
+            <ModernSidebarNav profile={null} />
           </Sidebar>
           <SidebarInset className="w-full">
             <OptimizedHeader />
@@ -74,10 +95,22 @@ export default function AvailabilityPage() {
 
   if (!profile) {
     return (
-      <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">{t("availability.profileNotFound")}</h1>
-        <Button onClick={() => router.push("/")}>{t("availability.goToHome")}</Button>
-      </div>
+      <SidebarProvider className="w-full">
+        <div className="flex min-h-screen bg-muted/30 w-full">
+          <Sidebar>
+            <ModernSidebarNav profile={null} />
+          </Sidebar>
+          
+          <SidebarInset className="w-full">
+            <div className="flex flex-col justify-center items-center min-h-screen">
+              <div className="text-center">
+                <h1 className="text-xl font-semibold mb-2">{t("availability.profileNotFound")}</h1>
+                <Button onClick={() => router.push("/")}>{t("availability.goToHome")}</Button>
+              </div>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     )
   }
 

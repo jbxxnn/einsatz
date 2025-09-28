@@ -124,11 +124,28 @@ export default function ProfilePage() {
   const [showCoverSelector, setShowCoverSelector] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Redirect to login if no profile found - must be at top level
+  // Redirect to login if no profile found - with more patient logic
   React.useEffect(() => {
-    if (!isProfileLoading && !profile) {
-      router.push("/login");
+    // Don't redirect if we're still loading
+    if (isProfileLoading) {
+      return;
     }
+
+    // Don't redirect if we have a profile
+    if (profile) {
+      return;
+    }
+
+    // Add a small delay to prevent race conditions during session restoration
+    const redirectTimeout = setTimeout(() => {
+      // Double-check loading states before redirecting
+      if (!isProfileLoading && !profile) {
+        console.log("Redirecting to login - no profile found after loading completed");
+        router.push("/login");
+      }
+    }, 100); // 100ms delay to allow for session restoration
+
+    return () => clearTimeout(redirectTimeout);
   }, [isProfileLoading, profile, router]);
 
   // Initialize form state from profile data
@@ -319,10 +336,7 @@ export default function ProfilePage() {
       <SidebarProvider className="w-full">
         <div className="flex min-h-screen bg-muted/30 w-full">
           <Sidebar>
-            {/* Show minimal sidebar during loading */}
-            <div className="p-4">
-              <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
-            </div>
+            <ModernSidebarNav profile={null} />
           </Sidebar>
           
           <SidebarInset className="w-full">
@@ -338,10 +352,23 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">{t("profile.redirectingToLogin")}</h1>
-        <p className="text-gray-600">{t("profile.pleaseWait")}</p>
-      </div>
+      <SidebarProvider className="w-full">
+        <div className="flex min-h-screen bg-muted/30 w-full">
+          <Sidebar>
+            <ModernSidebarNav profile={null} />
+          </Sidebar>
+          
+          <SidebarInset className="w-full">
+            <div className="flex flex-col justify-center items-center min-h-screen">
+              <div className="text-center">
+                <Loader className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <h1 className="text-xl font-semibold mb-2">{t("profile.redirectingToLogin")}</h1>
+                <p className="text-muted-foreground">{t("profile.pleaseWait")}</p>
+              </div>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     );
   }
 
