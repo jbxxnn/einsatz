@@ -61,10 +61,10 @@ export default function Home() {
           {/* Navigation */}
           <nav className="hidden md:flex items-center gap-2">
             <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
-              <a href="/freelancers"><span className="text-xs">Find Freelancers</span></a>
+              <a href="/freelancers"><span className="text-xs">{t("home.navigation.findFreelancers")}</span></a>
             </div>
             <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
-              <a href="#"><span className="text-xs">Learn more</span></a>
+              <a href="#"><span className="text-xs">{t("home.navigation.learnMore")}</span></a>
             </div>
           </nav>
 
@@ -72,12 +72,12 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Link href="/login">
               <Button variant="ghost" className="text-[#1A302B] bg-[#ecf7e9] hover:bg-[#33CC99] px-10 rounded-lg">
-                Login
+{t("home.navigation.login")}
               </Button>
             </Link>
             <Link href="/register">
             <Button className="bg-[#33CC99] text-[#1A302B] hover:bg-[#ecf7e9] px-10 rounded-lg">
-              Open an account
+{t("home.navigation.openAccount")}
             </Button>
             </Link>
           </div>
@@ -94,23 +94,22 @@ export default function Home() {
           
           {/* Main Headline */}
           <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
-            Let's change{' '}
-            <span className="italic text-[#33CC99]">freelancing</span>{' '}
-            for the{' '}
-            <span className="italic text-[#F2C94C]">better</span>
+            {t("home.mainHero.title")}{' '}
+            <span className="italic text-[#33CC99]">{t("home.mainHero.freelancing")}</span>{' '}
+            {t("home.mainHero.titlePart2")}{' '}
+            <span className="italic text-[#F2C94C]">{t("home.mainHero.better")}</span>
           </h1>
           
           {/* Description */}
           <p className="text-lg font-light text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            Connect with skilled professionals and build amazing projects together. 
-            We're making freelance work accessible to everyone.
+            {t("home.mainHero.description")}
           </p>
           
           {/* CTA Button */}
           <div className="pt-4">
             <Link href="/register">
               <Button size="lg" className="bg-[#33CC99] text-[#1A302B] hover:bg-[#2BB88A] px-8 py-4 text-lg font-semibold rounded-lg">
-                Get Started
+{t("home.mainHero.getStarted")}
               </Button>
             </Link>
           </div>
@@ -191,13 +190,13 @@ export default function Home() {
           {/* Section Header */}
           <div className="text-center mb-16">
             <div className="text-sm uppercase tracking-wider text-[#33CC99] font-semibold mb-4">
-              Our Freelancers
+              {t("home.freelancers.title")}
             </div>
             <h2 className="text-4xl lg:text-5xl font-bold leading-tight text-gray-900 mb-6">
-              Amazing people behind
+              {t("home.freelancers.subtitle")}
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Our talented freelancers have years of combined experience across various industries and skills.
+              {t("home.freelancers.description")}
             </p>
           </div>
 
@@ -229,11 +228,11 @@ export default function Home() {
             </BentoGrid>
           ) : error ? (
             <div className="text-center text-gray-500 mb-16">
-              Unable to load freelancers
+              {t("home.freelancers.unableToLoad")}
             </div>
           ) : freelancers.length === 0 ? (
             <div className="text-center text-gray-500 mb-16">
-              No freelancers available
+              {t("home.freelancers.noneAvailable")}
             </div>
           ) : (
             <BentoGrid className="mb-16">
@@ -242,7 +241,7 @@ export default function Home() {
                   <BentoGridItem
                     title={`${freelancer.first_name} ${freelancer.last_name}`}
                     hour={freelancer.hourly_rate}
-                    description={freelancer.job_offerings?.map((job: any) => job.category_name).join(', ') || 'Freelancer'}
+                    description={freelancer.job_offerings?.map((job: any) => job.category_name).join(', ') || t("home.freelancers.freelancer")}
                     header={
                       <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-lg bg-dot-black/[0.2] flex-col space-y-2">
                         {/* Profile Image */}
@@ -314,20 +313,17 @@ export default function Home() {
             // Left Side - Title
             <div className="flex-1">
               <div className="text-sm uppercase tracking-wider text-[#33CC99] font-semibold mb-4">
-                Why Choose Einsatz
+                {t("home.whyChoose.title")}
               </div>
               <h2 className="text-4xl lg:text-5xl font-bold leading-tight text-gray-900">
-                Our values reflect
-                <br />
-                experience
+                {t("home.whyChoose.subtitle")}
               </h2>
             </div>
             
             // Right Side - Description
             <div className="flex-1">
               <p className="text-lg text-gray-600 leading-relaxed">
-                We provide a comprehensive freelance platform that prioritizes security, 
-                transparency, and seamless booking experiences for both freelancers and clients.
+                {t("home.whyChoose.description")}
               </p>
             </div>
           </div>
@@ -345,20 +341,19 @@ export default function Home() {
               
               // Title
               <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">
-                Direct Booking
+                {t("home.whyChoose.directBooking.title")}
               </h3>
               
               // Description
               <p className="text-gray-600 text-center mb-6">
-                Skip the middleman and connect directly with skilled freelancers. 
-                Our streamlined booking process ensures quick, efficient project initiation.
+                {t("home.whyChoose.directBooking.description")}
               </p>
               
               // Action Button
               <div className="flex justify-center">
                 <button 
                   className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
-                  aria-label="Learn more about Direct Booking"
+                  aria-label={t("home.whyChoose.directBooking.ariaLabel")}
                 >
                   <svg className="w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7V17" />
@@ -378,20 +373,19 @@ export default function Home() {
               
               // Title
               <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">
-                Security within the DBA Act
+                {t("home.whyChoose.dbaSecurity.title")}
               </h3>
               
               // Description
               <p className="text-gray-600 text-center mb-6">
-                Full compliance with the Dutch Business Act (DBA) ensures legal protection 
-                and secure transactions for all parties involved in freelance work.
+                {t("home.whyChoose.dbaSecurity.description")}
               </p>
               
               // Action Button
               <div className="flex justify-center">
                 <button 
                   className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors"
-                  aria-label="Learn more about DBA Act Security"
+                  aria-label={t("home.whyChoose.dbaSecurity.ariaLabel")}
                 >
                   <svg className="w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7V17" />
@@ -414,20 +408,19 @@ export default function Home() {
               
               // Title
               <h3 className="text-xl font-bold text-[#33CC99] mb-4 text-center">
-                Secure Platform
+                {t("home.whyChoose.securePlatform.title")}
               </h3>
               
               // Description
               <p className="text-[#1A302B] text-center mb-6">
-                Advanced security measures protect your data and transactions. 
-                Our platform ensures safe, reliable connections between freelancers and clients.
+                {t("home.whyChoose.securePlatform.description")}
               </p>
               
               // Action Button
               <div className="flex justify-center">
                 <button 
                   className="w-10 h-10 bg-[#33CC99] rounded-full flex items-center justify-center hover:bg-[#2BB88A] transition-colors"
-                  aria-label="Learn more about Secure Platform"
+                  aria-label={t("home.whyChoose.securePlatform.ariaLabel")}
                 >
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7V17" />
@@ -453,42 +446,41 @@ export default function Home() {
             </div>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Connecting skilled professionals with businesses.<br />
-                Building the future of freelance work.
+                {t("home.footer.description")}
               </p>
             </div>
 
             {/* Navigation Links */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Account</h4>
+              <h4 className="font-semibold text-gray-900 mb-4">{t("home.footer.account")}</h4>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="/profile" className="hover:text-[#33CC99] transition-colors">Profile</a></li>
-                <li><a href="/dashboard" className="hover:text-[#33CC99] transition-colors">Dashboard</a></li>
-                <li><a href="/bookings" className="hover:text-[#33CC99] transition-colors">Bookings</a></li>
-                <li><a href="/payments" className="hover:text-[#33CC99] transition-colors">Payments</a></li>
-                <li><a href="/settings" className="hover:text-[#33CC99] transition-colors">Settings</a></li>
+                <li><a href="/profile" className="hover:text-[#33CC99] transition-colors">{t("home.footer.profile")}</a></li>
+                <li><a href="/dashboard" className="hover:text-[#33CC99] transition-colors">{t("home.footer.dashboard")}</a></li>
+                <li><a href="/bookings" className="hover:text-[#33CC99] transition-colors">{t("home.footer.bookings")}</a></li>
+                <li><a href="/payments" className="hover:text-[#33CC99] transition-colors">{t("home.footer.payments")}</a></li>
+                <li><a href="/settings" className="hover:text-[#33CC99] transition-colors">{t("home.footer.settings")}</a></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Help</h4>
+              <h4 className="font-semibold text-gray-900 mb-4">{t("home.footer.help")}</h4>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="/support" className="hover:text-[#33CC99] transition-colors">Support</a></li>
-                <li><a href="/faq" className="hover:text-[#33CC99] transition-colors">FAQ</a></li>
-                <li><a href="/blog" className="hover:text-[#33CC99] transition-colors">Blog</a></li>
-                <li><a href="/contact" className="hover:text-[#33CC99] transition-colors">Contact</a></li>
-                <li><a href="/community" className="hover:text-[#33CC99] transition-colors">Community</a></li>
+                <li><a href="/support" className="hover:text-[#33CC99] transition-colors">{t("home.footer.support")}</a></li>
+                <li><a href="/faq" className="hover:text-[#33CC99] transition-colors">{t("home.footer.faq")}</a></li>
+                <li><a href="/blog" className="hover:text-[#33CC99] transition-colors">{t("home.footer.blog")}</a></li>
+                <li><a href="/contact" className="hover:text-[#33CC99] transition-colors">{t("home.footer.contact")}</a></li>
+                <li><a href="/community" className="hover:text-[#33CC99] transition-colors">{t("home.footer.community")}</a></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Platform</h4>
+              <h4 className="font-semibold text-gray-900 mb-4">{t("home.footer.platform")}</h4>
               <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="/freelancers" className="hover:text-[#33CC99] transition-colors">Find Freelancers</a></li>
-                <li><a href="/job-offerings" className="hover:text-[#33CC99] transition-colors">Job Offerings</a></li>
-                <li><a href="/categories" className="hover:text-[#33CC99] transition-colors">Categories</a></li>
-                <li><a href="/dba" className="hover:text-[#33CC99] transition-colors">DBA Compliance</a></li>
-                <li><a href="/security" className="hover:text-[#33CC99] transition-colors">Security</a></li>
+                <li><a href="/freelancers" className="hover:text-[#33CC99] transition-colors">{t("home.footer.findFreelancers")}</a></li>
+                <li><a href="/job-offerings" className="hover:text-[#33CC99] transition-colors">{t("home.footer.jobOfferings")}</a></li>
+                <li><a href="/categories" className="hover:text-[#33CC99] transition-colors">{t("home.footer.categories")}</a></li>
+                <li><a href="/dba" className="hover:text-[#33CC99] transition-colors">{t("home.footer.dbaCompliance")}</a></li>
+                <li><a href="/security" className="hover:text-[#33CC99] transition-colors">{t("home.footer.security")}</a></li>
               </ul>
             </div>
           </div>
@@ -500,16 +492,16 @@ export default function Home() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               {/* Copyright */}
               <div className="text-sm text-gray-500">
-                © Einsatz Platform 2024. All rights reserved.
+                {t("home.footer.copyright")}
               </div>
 
               {/* Legal Links */}
               <div className="flex items-center gap-6 text-sm text-gray-600">
-                <a href="/privacy" className="hover:text-[#33CC99] transition-colors">Privacy Policy</a>
+                <a href="/privacy" className="hover:text-[#33CC99] transition-colors">{t("home.footer.privacyPolicy")}</a>
                 <div className="w-px h-4 bg-gray-300"></div>
-                <a href="/terms" className="hover:text-[#33CC99] transition-colors">Terms of Use</a>
+                <a href="/terms" className="hover:text-[#33CC99] transition-colors">{t("home.footer.termsOfUse")}</a>
                 <div className="w-px h-4 bg-gray-300"></div>
-                <a href="/disclosure" className="hover:text-[#33CC99] transition-colors">Disclosure</a>
+                <a href="/disclosure" className="hover:text-[#33CC99] transition-colors">{t("home.footer.disclosure")}</a>
               </div>
             </div>
           </div>
@@ -520,7 +512,7 @@ export default function Home() {
       <div className="fixed bottom-8 right-8">
         <button 
           className="w-12 h-12 bg-[#33CC99] rounded-full flex items-center justify-center shadow-lg hover:bg-[#2BB88A] transition-colors"
-          aria-label="Support chat"
+          aria-label={t("home.footer.supportChat")}
         >
           <MessageCircle className="w-6 h-6 text-[#1A302B]" />
         </button>

@@ -72,6 +72,74 @@
       "description": "Word vandaag nog lid van ons platform en ervaar de toekomst van freelanceservices",
       "findFreelancer": "Vind een Freelancer",
       "becomeFreelancer": "Word Freelancer"
+    },
+    "navigation": {
+      "findFreelancers": "Vind Freelancers",
+      "learnMore": "Meer informatie",
+      "login": "Inloggen",
+      "openAccount": "Account aanmaken"
+    },
+    "mainHero": {
+      "title": "Laten we",
+      "titlePart2": "veranderen voor",
+      "freelancing": "freelancing",
+      "better": "beter",
+      "description": "Leg contact met bekwame professionals en bouw geweldige projecten samen. We maken freelance werk toegankelijk voor iedereen.",
+      "getStarted": "Aan de Slag"
+    },
+    "freelancers": {
+      "title": "Onze Freelancers",
+      "subtitle": "Geweldige mensen achter",
+      "description": "Onze getalenteerde freelancers hebben jaren gecombineerde ervaring in verschillende branches en vaardigheden.",
+      "unableToLoad": "Kan freelancers niet laden",
+      "noneAvailable": "Geen freelancers beschikbaar",
+      "freelancer": "Freelancer"
+    },
+    "whyChoose": {
+      "title": "Waarom Einsatz Kiezen",
+      "subtitle": "Onze waarden weerspiegelen ervaring",
+      "description": "We bieden een uitgebreid freelance platform dat prioriteit geeft aan veiligheid, transparantie en naadloze boekingservaringen voor zowel freelancers als klanten.",
+      "directBooking": {
+        "title": "Direct Boeken",
+        "description": "Sla de tussenpersoon over en leg direct contact met bekwame freelancers. Ons gestroomlijnde boekingsproces zorgt voor snelle, efficiënte projectinitiatie.",
+        "ariaLabel": "Meer informatie over Direct Boeken"
+      },
+      "dbaSecurity": {
+        "title": "Veiligheid binnen de DBA Wet",
+        "description": "Volledige naleving van de Nederlandse Business Act (DBA) zorgt voor juridische bescherming en veilige transacties voor alle partijen die betrokken zijn bij freelance werk.",
+        "ariaLabel": "Meer informatie over DBA Wet Veiligheid"
+      },
+      "securePlatform": {
+        "title": "Veilig Platform",
+        "description": "Geavanceerde beveiligingsmaatregelen beschermen je gegevens en transacties. Ons platform zorgt voor veilige, betrouwbare verbindingen tussen freelancers en klanten.",
+        "ariaLabel": "Meer informatie over Veilig Platform"
+      }
+    },
+    "footer": {
+      "description": "Bekwame professionals verbinden met bedrijven. Bouwen aan de toekomst van freelance werk.",
+      "account": "Account",
+      "profile": "Profiel",
+      "dashboard": "Dashboard",
+      "bookings": "Boekingen",
+      "payments": "Betalingen",
+      "settings": "Instellingen",
+      "help": "Hulp",
+      "support": "Ondersteuning",
+      "faq": "FAQ",
+      "blog": "Blog",
+      "contact": "Contact",
+      "community": "Gemeenschap",
+      "platform": "Platform",
+      "findFreelancers": "Vind Freelancers",
+      "jobOfferings": "Werk Aanbiedingen",
+      "categories": "Categorieën",
+      "dbaCompliance": "DBA Naleving",
+      "security": "Veiligheid",
+      "copyright": "© Einsatz Platform 2024. Alle rechten voorbehouden.",
+      "privacyPolicy": "Privacybeleid",
+      "termsOfUse": "Gebruiksvoorwaarden",
+      "disclosure": "Openbaarmaking",
+      "supportChat": "Ondersteuning chat"
     }
   },
   "freelancer": {
@@ -1041,7 +1109,64 @@
     "decline": "Afwijzen",
     "markAsCompleted": "Markeren als voltooid",
     "upcoming": "Aankomend",
-    "past": "Verleden"
+    "past": "Verleden",
+    "images": {
+      "maxImagesAllowed": "Maximaal 5 afbeeldingen toegestaan",
+      "invalidFileType": "Ongeldig bestandstype. Alleen JPG, JPEG, PNG en WEBP zijn toegestaan.",
+      "fileSizeTooLarge": "Bestandsgrootte te groot. Maximale grootte is 2MB.",
+      "imagesAddedSuccessfully": "afbeelding(en) succesvol toegevoegd",
+      "imageRemovedSuccessfully": "Afbeelding succesvol verwijderd",
+      "failedToDeleteImage": "Fout bij het verwijderen van afbeelding",
+      "failedToRemoveImage": "Fout bij het verwijderen van afbeelding",
+      "uploadFailed": "Upload mislukt",
+      "failedToUploadImages": "Fout bij het uploaden van afbeeldingen",
+      "clickToUpload": "Klik om te uploaden",
+      "dragAndDrop": "of sleep en zet neer",
+      "supportedFormats": "PNG, JPG, JPEG, WEBP (MAX. 2MB elk, 5 afbeeldingen max)",
+      "uploadingImages": "Afbeeldingen uploaden...",
+      "imagesUploaded": "afbeeldingen geüpload",
+      "jobImages": "Werk Afbeeldingen (Optioneel)",
+      "jobImage": "Werk afbeelding",
+      "removeImage": "Afbeelding verwijderen"
+    },
+    "validation": {
+      "enterLocationBeforeDBA": "Voer een locatie in voordat je de DBA-beoordeling start",
+      "enterJobDescriptionBeforeDBA": "Voer een werkbeschrijving in voordat je de DBA-beoordeling start",
+      "selectPackageBeforeDBA": "Selecteer eerst een servicepakket voordat je de DBA-beoordeling start",
+      "enterLocationBeforeBooking": "Voer een locatie in voordat je de boeking maakt",
+      "enterJobDescriptionBeforeBooking": "Voer een werkbeschrijving in voordat je de boeking maakt",
+      "selectPackageBeforeBooking": "Selecteer eerst een servicepakket voordat je de boeking maakt",
+      "completeOrSkipDBA": "Voltooi de DBA-beoordeling of sla deze over om door te gaan met de boeking.",
+      "freelancerDbaNotCompleted": "De freelancer heeft hun DBA voor deze werk categorie niet voltooid. Sla de DBA over om door te gaan met de boeking."
+    },
+    "dba": {
+      "complianceCheck": "DBA Nalevingscontrole",
+      "completed": "Voltooid",
+      "skipped": "Overgeslagen",
+      "freelancerCompletedDescription": "De freelancer heeft hun DBA-beoordeling voor deze werk categorie voltooid. Je kunt je eigen DBA-beoordeling voltooien of deze overslaan (je draagt juridische risico's).",
+      "reviewDBA": "DBA-beoordeling bekijken",
+      "completeDBA": "DBA-controle voltooien",
+      "skipDBA": "DBA overslaan",
+      "freelancerDbaNotCompleted": "Freelancer DBA niet voltooid",
+      "freelancerDbaNotCompletedDescription": "De freelancer heeft hun DBA-beoordeling voor deze werk categorie niet voltooid. Je draagt alle juridische verantwoordelijkheid als je doorgaat zonder DBA.",
+      "dbaSkippedProceedWithRisk": "DBA overgeslagen - Ga door met risico",
+      "proceedWithoutDBA": "Ga door zonder DBA (je draagt juridische risico's)",
+      "riskLevel": "Risiconiveau:",
+      "combinedScore": "Gecombineerde score:",
+      "yourScore": "Jouw score:",
+      "points": "punten"
+    },
+    "buttons": {
+      "selectServicePackage": "Selecteer Servicepakket",
+      "bookingCreatedProceedToPayment": "Boeking aangemaakt - Ga door naar betaling",
+      "pleaseSelectPackage": "Selecteer een pakket",
+      "completeDBAOrSkip": "Voltooi DBA of sla over om door te gaan"
+    },
+    "api": {
+      "failedToSubmitDBA": "Fout bij het indienen van DBA-beoordeling:",
+      "serverError": "Serverfout",
+      "unknownError": "Onbekende fout"
+    }
   },
   "payments": {
     "title": "Betalingen",

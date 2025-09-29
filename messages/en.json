@@ -72,6 +72,74 @@
       "description": "Join our platform today and experience the future of freelance services",
       "findFreelancer": "Find a Freelancer",
       "becomeFreelancer": "Become a Freelancer"
+    },
+    "navigation": {
+      "findFreelancers": "Find Freelancers",
+      "learnMore": "Learn more",
+      "login": "Login",
+      "openAccount": "Open an account"
+    },
+    "mainHero": {
+      "title": "Let's change",
+      "titlePart2": "for the",
+      "freelancing": "freelancing",
+      "better": "better",
+      "description": "Connect with skilled professionals and build amazing projects together. We're making freelance work accessible to everyone.",
+      "getStarted": "Get Started"
+    },
+    "freelancers": {
+      "title": "Our Freelancers",
+      "subtitle": "Amazing people behind",
+      "description": "Our talented freelancers have years of combined experience across various industries and skills.",
+      "unableToLoad": "Unable to load freelancers",
+      "noneAvailable": "No freelancers available",
+      "freelancer": "Freelancer"
+    },
+    "whyChoose": {
+      "title": "Why Choose Einsatz",
+      "subtitle": "Our values reflect experience",
+      "description": "We provide a comprehensive freelance platform that prioritizes security, transparency, and seamless booking experiences for both freelancers and clients.",
+      "directBooking": {
+        "title": "Direct Booking",
+        "description": "Skip the middleman and connect directly with skilled freelancers. Our streamlined booking process ensures quick, efficient project initiation.",
+        "ariaLabel": "Learn more about Direct Booking"
+      },
+      "dbaSecurity": {
+        "title": "Security within the DBA Act",
+        "description": "Full compliance with the Dutch Business Act (DBA) ensures legal protection and secure transactions for all parties involved in freelance work.",
+        "ariaLabel": "Learn more about DBA Act Security"
+      },
+      "securePlatform": {
+        "title": "Secure Platform",
+        "description": "Advanced security measures protect your data and transactions. Our platform ensures safe, reliable connections between freelancers and clients.",
+        "ariaLabel": "Learn more about Secure Platform"
+      }
+    },
+    "footer": {
+      "description": "Connecting skilled professionals with businesses. Building the future of freelance work.",
+      "account": "Account",
+      "profile": "Profile",
+      "dashboard": "Dashboard",
+      "bookings": "Bookings",
+      "payments": "Payments",
+      "settings": "Settings",
+      "help": "Help",
+      "support": "Support",
+      "faq": "FAQ",
+      "blog": "Blog",
+      "contact": "Contact",
+      "community": "Community",
+      "platform": "Platform",
+      "findFreelancers": "Find Freelancers",
+      "jobOfferings": "Job Offerings",
+      "categories": "Categories",
+      "dbaCompliance": "DBA Compliance",
+      "security": "Security",
+      "copyright": "© Einsatz Platform 2024. All rights reserved.",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfUse": "Terms of Use",
+      "disclosure": "Disclosure",
+      "supportChat": "Support chat"
     }
   },
   "freelancer": {
@@ -1041,7 +1109,64 @@
     "decline": "Decline",
     "markAsCompleted": "Mark as Completed",
     "upcoming": "Upcoming",
-    "past": "Past"
+    "past": "Past",
+    "images": {
+      "maxImagesAllowed": "Maximum 5 images allowed",
+      "invalidFileType": "Invalid file type. Only JPG, JPEG, PNG, and WEBP are allowed.",
+      "fileSizeTooLarge": "File size too large. Maximum size is 2MB.",
+      "imagesAddedSuccessfully": "image(s) added successfully",
+      "imageRemovedSuccessfully": "Image removed successfully",
+      "failedToDeleteImage": "Failed to delete image",
+      "failedToRemoveImage": "Failed to remove image",
+      "uploadFailed": "Upload failed",
+      "failedToUploadImages": "Failed to upload images",
+      "clickToUpload": "Click to upload",
+      "dragAndDrop": "or drag and drop",
+      "supportedFormats": "PNG, JPG, JPEG, WEBP (MAX. 2MB each, 5 images max)",
+      "uploadingImages": "Uploading images...",
+      "imagesUploaded": "images uploaded",
+      "jobImages": "Job Images (Optional)",
+      "jobImage": "Job image",
+      "removeImage": "Remove image"
+    },
+    "validation": {
+      "enterLocationBeforeDBA": "Please enter a location before starting DBA assessment",
+      "enterJobDescriptionBeforeDBA": "Please enter a job description before starting DBA assessment",
+      "selectPackageBeforeDBA": "Please select a service package before starting DBA assessment",
+      "enterLocationBeforeBooking": "Please enter a location before creating the booking",
+      "enterJobDescriptionBeforeBooking": "Please enter a job description before creating the booking",
+      "selectPackageBeforeBooking": "Please select a service package before creating the booking",
+      "completeOrSkipDBA": "Please either complete the DBA assessment or skip it to proceed with the booking.",
+      "freelancerDbaNotCompleted": "The freelancer hasn't completed their DBA for this job category. Please skip DBA to proceed with the booking."
+    },
+    "dba": {
+      "complianceCheck": "DBA Compliance Check",
+      "completed": "Completed",
+      "skipped": "Skipped",
+      "freelancerCompletedDescription": "The freelancer has completed their DBA assessment for this job category. You can either complete your own DBA assessment or skip it (you will bear legal risks).",
+      "reviewDBA": "Review DBA Assessment",
+      "completeDBA": "Complete DBA Check",
+      "skipDBA": "Skip DBA",
+      "freelancerDbaNotCompleted": "Freelancer DBA Not Completed",
+      "freelancerDbaNotCompletedDescription": "The freelancer hasn't completed their DBA assessment for this job category. You will bear all legal responsibility if you proceed without DBA.",
+      "dbaSkippedProceedWithRisk": "DBA Skipped - Proceed with Risk",
+      "proceedWithoutDBA": "Proceed without DBA (You bear legal risks)",
+      "riskLevel": "Risk Level:",
+      "combinedScore": "Combined Score:",
+      "yourScore": "Your Score:",
+      "points": "points"
+    },
+    "buttons": {
+      "selectServicePackage": "Select Service Package",
+      "bookingCreatedProceedToPayment": "Booking Created - Proceed to Payment",
+      "pleaseSelectPackage": "Please Select a Package",
+      "completeDBAOrSkip": "Complete DBA or Skip to Proceed"
+    },
+    "api": {
+      "failedToSubmitDBA": "Failed to submit DBA assessment:",
+      "serverError": "Server error",
+      "unknownError": "Unknown error"
+    }
   },
   "payments": {
     "title": "Payments",

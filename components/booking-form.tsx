@@ -418,7 +418,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     
     // Validate file count
     if (tempImages.length + fileArray.length > 5) {
-      toast.error("Maximum 5 images allowed")
+      toast.error(t("bookingform.images.maxImagesAllowed"))
       return
     }
 
@@ -426,12 +426,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     for (const file of fileArray) {
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
       if (!allowedTypes.includes(file.type)) {
-        toast.error(`${file.name}: Invalid file type. Only JPG, JPEG, PNG, and WEBP are allowed.`)
+        toast.error(`${file.name}: ${t("bookingform.images.invalidFileType")}`)
         return
       }
 
       if (file.size > 2 * 1024 * 1024) {
-        toast.error(`${file.name}: File size too large. Maximum size is 2MB.`)
+        toast.error(`${file.name}: ${t("bookingform.images.fileSizeTooLarge")}`)
         return
       }
     }
@@ -448,7 +448,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     }))
 
     setUploadedImages(prev => [...prev, ...previewImages])
-    toast.success(`${fileArray.length} image(s) added successfully`)
+    toast.success(`${fileArray.length} ${t("bookingform.images.imagesAddedSuccessfully")}`)
   }
 
   const handleImageRemove = async (imageIndex: number) => {
@@ -466,7 +466,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       // Revoke object URL to free memory
       URL.revokeObjectURL(imageToRemove.url)
       
-      toast.success('Image removed successfully')
+      toast.success(t("bookingform.images.imageRemovedSuccessfully"))
     } else {
       // If it's an uploaded image (after booking creation)
       try {
@@ -475,13 +475,13 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         })
 
         if (!response.ok) {
-          throw new Error('Failed to delete image')
+          throw new Error(t("bookingform.images.failedToDeleteImage"))
         }
 
         setUploadedImages(prev => prev.filter((_, index) => index !== imageIndex))
-        toast.success('Image removed successfully')
+        toast.success(t("bookingform.images.imageRemovedSuccessfully"))
       } catch (error: any) {
-        toast.error(error.message || 'Failed to remove image')
+        toast.error(error.message || t("bookingform.images.failedToRemoveImage"))
       }
     }
   }
@@ -504,7 +504,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
         if (!response.ok) {
           const errorData = await response.json()
-          throw new Error(errorData.error || 'Upload failed')
+          throw new Error(errorData.error || t("bookingform.images.uploadFailed"))
         }
 
         return response.json()
@@ -525,7 +525,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       setTempImages([]) // Clear temp images
       return uploadedImageUrls
     } catch (error: any) {
-      toast.error(error.message || 'Failed to upload images')
+      toast.error(error.message || t("bookingform.images.failedToUploadImages"))
       return []
     } finally {
       setUploadingImages(false)
@@ -645,8 +645,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(`Failed to submit DBA assessment: ${errorData.error || 'Server error'}`)
+        const errorData = await response.json().catch(() => ({ error: t("bookingform.api.unknownError") }))
+        throw new Error(`${t("bookingform.api.failedToSubmitDBA")} ${errorData.error || t("bookingform.api.serverError")}`)
       }
 
       const serverResult = await response.json()
@@ -682,18 +682,18 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     }
 
     if (!location.trim()) {
-      toast.error("Please enter a location before starting DBA assessment")
+      toast.error(t("bookingform.validation.enterLocationBeforeDBA"))
       return
     }
 
     if (!description.trim()) {
-      toast.error("Please enter a job description before starting DBA assessment")
+      toast.error(t("bookingform.validation.enterJobDescriptionBeforeDBA"))
       return
     }
 
     // For package pricing, ensure a package is selected
     if (currentOffering?.pricing_type === "packages" && !selectedPackageData) {
-      toast.error("Please select a service package before starting DBA assessment")
+      toast.error(t("bookingform.validation.selectPackageBeforeDBA"))
       return
     }
 
@@ -720,18 +720,18 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     }
 
     if (!location.trim()) {
-      toast.error("Please enter a location before creating the booking")
+      toast.error(t("bookingform.validation.enterLocationBeforeBooking"))
       return
     }
 
     if (!description.trim()) {
-      toast.error("Please enter a job description before creating the booking")
+      toast.error(t("bookingform.validation.enterJobDescriptionBeforeBooking"))
       return
     }
 
     // For package pricing, ensure a package is selected
     if (currentOffering?.pricing_type === "packages" && !selectedPackageData) {
-      toast.error("Please select a service package before creating the booking")
+      toast.error(t("bookingform.validation.selectPackageBeforeBooking"))
       return
     }
 
@@ -739,13 +739,13 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     if (freelancerDbaStatus?.is_completed) {
       // Freelancer completed DBA - client can skip or complete DBA
       if (!dbaCompleted && !dbaSkipped) {
-        toast.error("Please either complete the DBA assessment or skip it to proceed with the booking.")
+        toast.error(t("bookingform.validation.completeOrSkipDBA"))
         return
       }
     } else {
       // Freelancer didn't complete DBA - client can only skip DBA
       if (!dbaSkipped) {
-        toast.error("The freelancer hasn't completed their DBA for this job category. Please skip DBA to proceed with the booking.")
+        toast.error(t("bookingform.validation.freelancerDbaNotCompleted"))
         return
       }
     }
@@ -891,7 +891,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
   const getStepTitle = () => {
     switch (currentStep) {
-      case 'package': return "Select Service Package"
+      case 'package': return t("bookingform.buttons.selectServicePackage")
       case 'details': return t("bookingform.stepDetails")
       case 'payment': return t("bookingform.stepPayment")
       default: return ''
@@ -1096,7 +1096,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
       {/* Image Upload Section */}
       <div className="space-y-2">
-        <Label className="text-xs text-black">Job Images (Optional)</Label>
+        <Label className="text-xs text-black">{t("bookingform.images.jobImages")}</Label>
         <div className="border rounded-md p-3">
           {/* Upload Area */}
           <div className="space-y-3">
@@ -1108,10 +1108,10 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <Upload className="w-8 h-8 mb-4 text-gray-500" />
                   <p className="mb-2 text-sm text-gray-500">
-                    <span className="font-semibold">Click to upload</span> or drag and drop
+                    <span className="font-semibold">{t("bookingform.images.clickToUpload")}</span> {t("bookingform.images.dragAndDrop")}
                   </p>
                   <p className="text-xs text-gray-500">
-                    PNG, JPG, JPEG, WEBP (MAX. 2MB each, 5 images max)
+                    {t("bookingform.images.supportedFormats")}
                   </p>
                 </div>
                 <input
@@ -1130,7 +1130,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             {uploadingImages && (
               <div className="flex items-center justify-center py-2">
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                <span className="text-sm text-gray-600">Uploading images...</span>
+                <span className="text-sm text-gray-600">{t("bookingform.images.uploadingImages")}</span>
               </div>
             )}
 
@@ -1145,7 +1145,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                       className="w-full h-24 object-cover rounded-md border"
                     />
                     <button
-                      title="Remove image"
+                      title={t("bookingform.images.removeImage")}
                       type="button"
                       onClick={() => handleImageRemove(index)}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1159,7 +1159,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
             {/* Image Count */}
             <div className="text-xs text-gray-500 text-center">
-              {uploadedImages.length}/5 images uploaded
+              {uploadedImages.length}/5 {t("bookingform.images.imagesUploaded")}
             </div>
           </div>
         </div>
@@ -1237,18 +1237,18 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CustomRescheduleIcon className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium">DBA Compliance Check</span>
+              <span className="text-sm font-medium">{t("bookingform.dba.complianceCheck")}</span>
             </div>
             {dbaCompleted && (
               <Badge variant="default" className="text-xs">
                 <CheckCircle className="h-3 w-3 mr-1" />
-                Completed
+                {t("bookingform.dba.completed")}
               </Badge>
             )}
             {dbaSkipped && (
               <Badge variant="outline" className="text-xs text-orange-600 border-orange-200">
                 <AlertCircle className="h-3 w-3 mr-1" />
-                Skipped
+                {t("bookingform.dba.skipped")}
               </Badge>
             )}
           </div>
@@ -1257,7 +1257,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             // Freelancer completed DBA - client can choose to complete or skip
             <div className="space-y-3">
               <p className="text-xs text-gray-600">
-                The freelancer has completed their DBA assessment for this job category. You can either complete your own DBA assessment or skip it (you will bear legal risks).
+                {t("bookingform.dba.freelancerCompletedDescription")}
               </p>
               <div className="flex gap-2">
                 <Button
@@ -1268,7 +1268,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                   className="flex-1"
                 >
                   <CustomRescheduleIcon2 className="h-4 w-4 mr-2" />
-                  {dbaCompleted ? 'Review DBA Assessment' : 'Complete DBA Check'}
+                  {dbaCompleted ? t("bookingform.dba.reviewDBA") : t("bookingform.dba.completeDBA")}
                 </Button>
                 <Button
                   type="button"
@@ -1278,7 +1278,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                   className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50"
                 >
                   <AlertCircle className="h-4 w-4 mr-2" />
-                  Skip DBA
+                  {t("bookingform.dba.skipDBA")}
                 </Button>
               </div>
             </div>
@@ -1290,11 +1290,10 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                   <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-orange-800">
-                      Freelancer DBA Not Completed
+                      {t("bookingform.dba.freelancerDbaNotCompleted")}
                     </p>
                     <p className="text-xs text-orange-700 mt-1">
-                      The freelancer hasn't completed their DBA assessment for this job category. 
-                      You will bear all legal responsibility if you proceed without DBA.
+                      {t("bookingform.dba.freelancerDbaNotCompletedDescription")}
                     </p>
                   </div>
                 </div>
@@ -1307,7 +1306,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                 className="w-full text-orange-600 border-orange-200 hover:bg-orange-50"
               >
                 <AlertCircle className="h-4 w-4 mr-2" />
-                {dbaSkipped ? 'DBA Skipped - Proceed with Risk' : 'Proceed without DBA (You bear legal risks)'}
+                {dbaSkipped ? t("bookingform.dba.dbaSkippedProceedWithRisk") : t("bookingform.dba.proceedWithoutDBA")}
               </Button>
             </div>
           )}
@@ -1316,7 +1315,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         {dbaCompleted && dbaResult && (
           <div className="text-xs p-2 rounded-md border bg-gray-50">
             <div className="flex items-center justify-between">
-              <span>Risk Level:</span>
+              <span>{t("bookingform.dba.riskLevel")}</span>
               <Badge 
                 variant={dbaResult.risk_level === 'safe' ? 'default' : 'destructive'}
                 className="text-xs"
@@ -1326,8 +1325,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             </div>
             <div className="text-xs text-gray-600 mt-1">
               {dbaResult.combined_score ?
-                `Combined Score: ${dbaResult.combined_score} points` :
-                `Your Score: ${dbaResult.total_score} points`}
+                `${t("bookingform.dba.combinedScore")} ${dbaResult.combined_score} ${t("bookingform.dba.points")}` :
+                `${t("bookingform.dba.yourScore")} ${dbaResult.total_score} ${t("bookingform.dba.points")}`}
             </div>
           </div>
         )}
@@ -1337,11 +1336,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         className="w-full"
         disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || (!dbaCompleted && !dbaSkipped) || !!bookingId || (currentOffering?.pricing_type === "packages" && !selectedPackageData)}
       >
-        {loading ? t("bookingform.processing") : bookingId ? 'Booking Created - Proceed to Payment' : 
-         dbaCompleted ? 'Booking Created - Proceed to Payment' : 
-         dbaSkipped ? 'Booking Created - Proceed to Payment' : 
-         currentOffering?.pricing_type === "packages" && !selectedPackageData ? 'Please Select a Package' :
-         'Complete DBA or Skip to Proceed'}
+        {loading ? t("bookingform.processing") : bookingId ? t("bookingform.buttons.bookingCreatedProceedToPayment") : 
+         dbaCompleted ? t("bookingform.buttons.bookingCreatedProceedToPayment") : 
+         dbaSkipped ? t("bookingform.buttons.bookingCreatedProceedToPayment") : 
+         currentOffering?.pricing_type === "packages" && !selectedPackageData ? t("bookingform.buttons.pleaseSelectPackage") :
+         t("bookingform.buttons.completeDBAOrSkip")}
       </Button>
 
       <p className="text-xs text-center text-muted-foreground">
@@ -1420,14 +1419,14 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             <div className="border-t pt-4">
               <div className="flex items-center gap-2 mb-2">
                 <ImageIcon className="h-4 w-4 text-gray-500" />
-                <span className="text-xs text-black font-medium">Job Images ({uploadedImages.length})</span>
+                <span className="text-xs text-black font-medium">{t("bookingform.images.jobImages")} ({uploadedImages.length})</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {uploadedImages.map((image, index) => (
                   <img
                     key={index}
                     src={image.url}
-                    alt={`Job image ${index + 1}`}
+                    alt={`${t("bookingform.images.jobImage")} ${index + 1}`}
                     className="w-full h-16 object-cover rounded border"
                   />
                 ))}
