@@ -21,6 +21,7 @@ import { Suspense } from "react"
 import LanguageSwitcher from "@/components/language-switcher"
 import { useTranslation } from "@/lib/i18n"
 import MessagesNotificationBadge from "@/components/messages-notification-badge"
+import { Menu, X } from "lucide-react"
 
 
 
@@ -236,19 +237,46 @@ function AuthSection() {
     return <UserDropdown />
 }
 
-export default function OptimizedHeader() {
+interface OptimizedHeaderProps {
+  isMobileMenuOpen?: boolean
+  setIsMobileMenuOpen?: (open: boolean) => void
+}
+
+export default function OptimizedHeader({ isMobileMenuOpen = false, setIsMobileMenuOpen }: OptimizedHeaderProps = {}) {
+  const { t } = useTranslation()
+  
   return (
     <header className="border-b">
       <div className="container flex h-16 items-center justify-between py-4">
         <div className="flex items-center gap-6 md:gap-10">
+          {/* Mobile Hamburger Menu Button */}
+          {setIsMobileMenuOpen && (
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          )}
+          
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-xl font-bold">Einsatz</span>
           </Link>
-          <PublicNavLinks />
-          <Suspense fallback={null}>
-            <AuthNavLinks />
-          </Suspense>
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-6">
+            <PublicNavLinks />
+            <Suspense fallback={null}>
+              <AuthNavLinks />
+            </Suspense>
+          </div>
         </div>
+        
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
           <Suspense fallback={<LoginButtons />}>

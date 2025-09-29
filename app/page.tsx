@@ -3,7 +3,8 @@
 import { useTranslation } from "@/lib/i18n"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowRight, HelpCircleIcon,LogOutIcon,  FolderIcon, SettingsIcon, MessageCircleIcon, MessageCircle, UserIcon } from "lucide-react"
+import { ArrowRight, HelpCircleIcon,LogOutIcon,  FolderIcon, SettingsIcon, MessageCircleIcon, MessageCircle, UserIcon, Menu, X } from "lucide-react"
+import { useState } from "react"
 import { useFreelancers } from "@/hooks/use-freelancers"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -31,6 +32,7 @@ export default function Home() {
   const { t } = useTranslation()
   const { data, error, isLoading } = useFreelancers({})
   const freelancers = (data as any)?.freelancers || []
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-[#0e2316] text-white relative overflow-hidden">
@@ -48,17 +50,17 @@ export default function Home() {
       {/* Content */}
       <div className="relative z-10">
       {/* Header */}
-      <header className="py-8 px-[7%] w-full">
-        <div className="flex items-center justify-between bg-[#0e2316] rounded-xl p-4 border border-[#3e4f454d]">
+      <header className="py-4 md:py-8 px-4 md:px-[7%] w-full relative">
+        <div className="flex items-center justify-between bg-[#0e2316] rounded-xl p-3 md:p-4 border border-[#3e4f454d]">
           {/* Logo */}
           <div className="flex items-center gap-2">
             <LogoIcon />
             <div>
-              <h1 className="text-xl font-bold font-mono">Einsatz</h1>
+              <h1 className="text-lg md:text-xl font-bold font-mono">Einsatz</h1>
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-2">
             <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
               <a href="/freelancers"><span className="text-xs">{t("home.navigation.findFreelancers")}</span></a>
@@ -68,20 +70,96 @@ export default function Home() {
             </div>
           </nav>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          {/* Desktop Action Buttons */}
+          <div className="hidden md:flex items-center gap-2">
             <Link href="/login">
               <Button variant="ghost" className="text-[#1A302B] bg-[#ecf7e9] hover:bg-[#33CC99] px-10 rounded-lg">
-{t("home.navigation.login")}
+                {t("home.navigation.login")}
               </Button>
             </Link>
             <Link href="/register">
-            <Button className="bg-[#33CC99] text-[#1A302B] hover:bg-[#ecf7e9] px-10 rounded-lg">
-{t("home.navigation.openAccount")}
-            </Button>
+              <Button className="bg-[#33CC99] text-[#1A302B] hover:bg-[#ecf7e9] px-10 rounded-lg">
+                {t("home.navigation.openAccount")}
+              </Button>
             </Link>
           </div>
+
+          {/* Mobile Hamburger Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg bg-[#3e4f4566] hover:bg-[#3e4f4588] transition-colors"
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-6 w-6 text-white" />
+            ) : (
+              <Menu className="h-6 w-6 text-white" />
+            )}
+          </button>
         </div>
+
+        {/* Mobile Slide-out Menu */}
+        <div className={`fixed inset-y-0 right-0 z-50 w-80 bg-[#0e2316] border-l border-[#3e4f454d] transform transition-transform duration-300 ease-in-out md:hidden ${
+          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}>
+          {/* Mobile Menu Header */}
+          <div className="flex items-center justify-between p-6 border-b border-[#3e4f454d]">
+            <div className="flex items-center gap-2">
+              <LogoIcon />
+              <h1 className="text-xl font-bold font-mono">Einsatz</h1>
+            </div>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2 rounded-lg bg-[#3e4f4566] hover:bg-[#3e4f4588] transition-colors"
+              aria-label="Close mobile menu"
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+          </div>
+
+          {/* Mobile Menu Content */}
+          <div className="flex flex-col h-full p-6">
+            {/* Navigation Links */}
+            <nav className="flex flex-col gap-4 mb-6">
+              <a 
+                href="/freelancers" 
+                className="flex items-center gap-3 p-4 rounded-lg bg-[#3e4f4566] hover:bg-[#3e4f4588] transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="text-white font-medium">{t("home.navigation.findFreelancers")}</span>
+              </a>
+              <a 
+                href="#" 
+                className="flex items-center gap-3 p-4 rounded-lg bg-[#3e4f4566] hover:bg-[#3e4f4588] transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="text-white font-medium">{t("home.navigation.learnMore")}</span>
+              </a>
+            </nav>
+
+            {/* Action Buttons - Positioned to stay visible */}
+            <div className="flex flex-col gap-3 mt-auto pb-32">
+              <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full text-[#1A302B] bg-[#ecf7e9] hover:bg-[#33CC99] py-3 rounded-lg font-medium">
+                  {t("home.navigation.login")}
+                </Button>
+              </Link>
+              <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button className="w-full bg-[#33CC99] text-[#1A302B] hover:bg-[#ecf7e9] py-3 rounded-lg font-medium">
+                  {t("home.navigation.openAccount")}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
       </header>
 
       {/* Hero Section */}

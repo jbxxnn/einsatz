@@ -29,7 +29,7 @@ import {
   SidebarInset
 } from "@/components/ui/sidebar"
 import ModernSidebarNav from "@/components/modern-sidebar-nav"
-import { Loader, Calendar, TrendingUp, Users, Clock, MessageSquare, User, Download, Settings, Star, MapPin, Clock as ClockIcon, MoreHorizontal, Target, Award, TrendingDown, Euro, CheckCircle } from "lucide-react"
+import { Loader, Calendar, TrendingUp, Users, Clock, MessageSquare, User, Download, Settings, Star, MapPin, Clock as ClockIcon, MoreHorizontal, Target, Award, TrendingDown, Euro, CheckCircle, Menu, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -1010,6 +1010,7 @@ export default function DashboardPage() {
     push: true,
     sms: false,
   })
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Redirect to login if no profile found - with more patient logic
   useEffect(() => {
@@ -1114,6 +1115,7 @@ export default function DashboardPage() {
             </Sidebar>
             
             <SidebarInset className="w-full">
+              <OptimizedHeader />
               <div className="flex flex-col justify-center items-center min-h-screen w-full">
                 <Loader className="h-8 w-8 animate-spin mb-4" />
                 <p className="text-sm text-muted-foreground">
@@ -1136,6 +1138,7 @@ export default function DashboardPage() {
           </Sidebar>
           
           <SidebarInset className="w-full">
+            <OptimizedHeader />
             <div className="flex flex-col justify-center items-center min-h-screen w-full">
               <div className="text-center">
                 <Loader className="h-8 w-8 animate-spin mx-auto mb-4" />
@@ -1155,12 +1158,28 @@ export default function DashboardPage() {
       
       <div className="flex min-h-screen bg-muted/30 w-full">
 
-        <Sidebar>
+        <Sidebar 
+          className={`fixed inset-y-0 left-0 z-50 w-64 md:relative md:translate-x-0 ${
+            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          } transition-transform duration-300 ease-in-out`}
+        >
           <ModernSidebarNav profile={profile} />
         </Sidebar>
         
         <SidebarInset className="w-full">
-          <OptimizedHeader />
+          <OptimizedHeader 
+            isMobileMenuOpen={isMobileMenuOpen}
+            setIsMobileMenuOpen={setIsMobileMenuOpen}
+          />
+          
+          {/* Mobile Overlay */}
+          {isMobileMenuOpen && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          )}
+          
           <div className="flex flex-col gap-6 p-6 pb-20 bg-[#f7f7f7] h-full">
                     {profile.user_type === "freelancer" && (
                 <FreelancerOnboardingProgress profile={profile} />
