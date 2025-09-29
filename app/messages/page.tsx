@@ -7,6 +7,7 @@ import { useOptimizedSupabase } from '@/components/optimized-supabase-provider'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/lib/toast'
+import { useTranslation } from '@/lib/i18n'
 import ConversationsList from '@/components/messages/conversations-list'
 import MessagesHeader from '@/components/messages/messages-header'
 import ChatInterface from '@/components/messages/chat-interface'
@@ -110,6 +111,7 @@ function ParticipantDetailsSkeleton() {
 }
 
 export default function MessagesPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
   const { profile, isLoading: isProfileLoading } = useOptimizedUser()
@@ -141,7 +143,7 @@ export default function MessagesPage() {
     const timeoutId = setTimeout(() => {
       // Double-check that we're still not loading and still don't have a profile
       if (!isProfileLoading && !profile) {
-        toast.error("Please log in to view messages")
+        toast.error(t("messages.pleaseLogInToViewMessages"))
         router.push("/login")
       }
     }, 1000) // 1 second delay for stability
@@ -190,8 +192,8 @@ export default function MessagesPage() {
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Profile not found</h1>  
-        <Button onClick={() => router.push("/")}>Go to Home</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("messages.profileNotFound")}</h1>  
+        <Button onClick={() => router.push("/")}>{t("messages.goToHome")}</Button>
       </div>
     )
   }
@@ -240,7 +242,7 @@ export default function MessagesPage() {
                         className="mr-2"
                       >
                         <ArrowLeftIcon className="w-4 h-4" />
-                        Back to conversations
+{t("messages.backToConversations")}
                       </Button>
                     </div>
                   </div>
@@ -261,8 +263,8 @@ export default function MessagesPage() {
 
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Pick up where you left off</h3>
-                      <p className="text-gray-500 text-sm">Select a conversation and chat away.</p>
+                      <h3 className="text-lg font-semibold text-gray-900">{t("messages.pickUpWhereYouLeftOff")}</h3>
+                      <p className="text-gray-500 text-sm">{t("messages.selectConversationAndChatAway")}</p>
                     </div>
                   </div>
                 </div>
@@ -277,7 +279,7 @@ export default function MessagesPage() {
                 </Suspense>
               ) : (
                 <div className="text-center text-sm text-gray-500 mt-8">
-                  <p>Select a conversation to see participant details</p>
+                  <p>{t("messages.selectConversationToSeeParticipantDetails")}</p>
                 </div>
               )}
             </div>
@@ -290,6 +292,7 @@ export default function MessagesPage() {
 
 // Participant Details Component
 function ParticipantDetails({ conversationId }: { conversationId: string }) {
+  const { t } = useTranslation()
   const { user } = useOptimizedUser()
   const { supabase } = useOptimizedSupabase()
   const [participant, setParticipant] = useState<any>(null)
@@ -345,7 +348,7 @@ function ParticipantDetails({ conversationId }: { conversationId: string }) {
   if (!participant) {
     return (
       <div className="text-center text-sm text-gray-500 mt-8">
-        <p>Participant not found</p>
+        <p>{t("messages.participantNotFound")}</p>
       </div>
     )
   }
@@ -379,15 +382,15 @@ function ParticipantDetails({ conversationId }: { conversationId: string }) {
       </div>
 
       <div className="space-y-4">
-        <h4 className="font-medium text-gray-900">About {participant.first_name}</h4>
+        <h4 className="font-medium text-gray-900">{t("messages.about")} {participant.first_name}</h4>
         <div className="space-y-2 text-sm text-gray-600">
           {participant.location && (
             <div>
-              <span className="font-medium">From:</span> {participant.location}
+              <span className="font-medium">{t("messages.from")}</span> {participant.location}
             </div>
           )}
           <div>
-            <span className="font-medium">On platform since:</span> {formatDate(participant.created_at)}
+            <span className="font-medium">{t("messages.onPlatformSince")}</span> {formatDate(participant.created_at)}
           </div>
         </div>
       </div>

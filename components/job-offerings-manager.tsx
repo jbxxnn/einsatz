@@ -112,8 +112,8 @@ function SortableTableRow({
         <div className="text-sm">
           {offering.pricing_type === "packages" ? (
             <>
-              <div className="font-medium text-green-600">Multiple Packages</div>
-              <div className="text-xs text-gray-500">Click "Manage" to view</div>
+              <div className="font-medium text-green-600">{t("jobOfferings.multiplePackages")}</div>
+              <div className="text-xs text-gray-500">{t("jobOfferings.clickManageToView")}</div>
             </>
           ) : (
             <div className="font-medium text-green-600">
@@ -130,22 +130,22 @@ function SortableTableRow({
           {loadingDbaStatus ? (
             <div className="flex items-center gap-2">
               <Loader className="h-4 w-4 animate-spin" />
-              <span className="text-xs text-gray-500">Checking...</span>
+              <span className="text-xs text-gray-500">{t("jobOfferings.checking")}</span>
             </div>
           ) : dbaStatus?.completion?.is_completed ? (
             <div className="flex items-center gap-1 text-green-600">
               <CheckCircle className="h-4 w-4" />
-              <span className="text-xs">Complete</span>
+              <span className="text-xs">{t("jobOfferings.complete")}</span>
             </div>
           ) : dbaStatus?.hasStarted ? (
             <div className="flex items-center gap-1 text-orange-600">
               <Clock className="h-4 w-4" />
-              <span className="text-xs">In Progress</span>
+              <span className="text-xs">{t("jobOfferings.inProgress")}</span>
             </div>
           ) : (
             <div className="flex items-center gap-1 text-gray-500">
               <Clock className="h-4 w-4" />
-              <span className="text-xs">Not Started</span>
+              <span className="text-xs">{t("jobOfferings.notStarted")}</span>
             </div>
           )}
         </div>
@@ -159,7 +159,7 @@ function SortableTableRow({
               onClick={() => onManagePackages(offering)}
             >
               <Package className="h-4 w-4 mr-2" />
-              Manage Packages
+              {t("jobOfferings.managePackages")}
             </Button>
           )}
 
@@ -169,7 +169,7 @@ function SortableTableRow({
             onClick={() => onDbaClick(offering.category_id, offering.category_name)}
           >
             <Shield className="h-4 w-4 mr-2" />
-            {dbaStatus?.completion?.is_completed ? 'Update DBA' : 'Start DBA'}
+            {dbaStatus?.completion?.is_completed ? t("jobOfferings.updateDba") : t("jobOfferings.startDba")}
           </Button>
 
           <Button variant="ghost" size="icon" onClick={() => onDelete(offering.id)}>
@@ -416,10 +416,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           }
         }
 
-        toast.success(t("jobOfferings.orderUpdated") || "Job offerings order updated")
+        toast.success(t("jobOfferings.orderUpdated"))
       } catch (error) {
         console.error("Error updating job offerings order:", error)
-        toast.error(t("jobOfferings.orderUpdateError") || "Failed to update order")
+        toast.error(t("jobOfferings.orderUpdateError"))
       }
     }
   }
@@ -475,9 +475,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                     <TableRow className="text-xs text-black">
                       <TableHead>{t("jobOfferings.category")}</TableHead>
                       <TableHead>{t("jobOfferings.subcategory")}</TableHead>
-                      <TableHead>Pricing</TableHead>
+                      <TableHead>{t("jobOfferings.pricing")}</TableHead>
                       <TableHead>{t("jobOfferings.experienceYears")}</TableHead>
-                      <TableHead>DBA Status</TableHead>
+                      <TableHead>{t("jobOfferings.dbaStatus")}</TableHead>
                       <TableHead className="text-right">{t("jobOfferings.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -561,7 +561,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs text-black">Pricing Type</Label>
+                <Label className="text-xs text-black">{t("jobOfferings.pricingType")}</Label>
                 <RadioGroup 
                   value={pricingType} 
                   onValueChange={(value: "hourly" | "packages") => setPricingType(value)}
@@ -581,7 +581,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                     <Label htmlFor="packages" className="text-xs text-black cursor-pointer">
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4" />
-                        Multiple Packages
+                        {t("jobOfferings.multiplePackages")}
                       </div>
                     </Label>
                   </div>
@@ -590,7 +590,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
 
               {pricingType === "hourly" && (
                 <div className="space-y-2">
-                  <Label htmlFor="hourlyRate" className="text-xs text-black">Hourly Rate (€)</Label>
+                  <Label htmlFor="hourlyRate" className="text-xs text-black">{t("jobOfferings.cardHourlyRate")}</Label>
                   <Input
                     id="hourlyRate"
                     type="number"
@@ -606,8 +606,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
 
               {pricingType === "packages" && (
                 <div className="text-xs text-gray-600 p-3 bg-gray-50 rounded-lg">
-                  <p className="font-medium mb-1">💡 Package Pricing</p>
-                  <p>After creating this job offering, you'll be able to add multiple service packages with different prices and features.</p>
+                  <p className="font-medium mb-1">💡 {t("jobOfferings.packagePricing")}</p>
+                  <p>{t("jobOfferings.packagePricingDescription")}</p>
                 </div>
               )}
 
@@ -629,7 +629,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                 <Label htmlFor="description" className="text-xs text-black">{t("jobOfferings.cardDescription")}</Label>
                 <Textarea
                   id="description"
-                  placeholder="Describe your experience and services for this job category"
+                  placeholder={t("jobOfferings.descriptionPlaceholder")}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
@@ -639,13 +639,13 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                 {/* Live Preview */}
                 {description && (
                   <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">Preview (as shown to clients):</Label>
+                    <Label className="text-xs text-gray-600">{t("jobOfferings.previewAsShownToClients")}</Label>
                     <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
                       <div className="flex flex-col gap-1">
                         <div className="text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200">
                           <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full">
                             <span className="font-bold">
-                              {selectedSubcategoryId ? "Sample Subcategory" : "Sample Category"}
+                              {selectedSubcategoryId ? t("jobOfferings.sampleSubcategory") : t("jobOfferings.sampleCategory")}
                             </span>
                             
                             {/* Pricing and Experience */}
@@ -657,12 +657,12 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                               )}
                               {pricingType === "packages" && (
                                 <span className="text-xs font-semibold text-green-600">
-                                  Multiple Packages
+                                  {t("jobOfferings.multiplePackages")}
                                 </span>
                               )}
                               {experienceYears && (
                                 <span className="text-xs">
-                                  {experienceYears} {experienceYears === "1" ? "year" : "years"} experience
+                                  {experienceYears} {experienceYears === "1" ? "year" : "years"} {t("jobOfferings.yearsExperience")}
                                 </span>
                               )}
                             </div>
@@ -679,7 +679,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                     </div>
                     {description.length > 80 && (
                       <div className="text-xs text-orange-600">
-                        ⚠️ Text will be truncated at 2 lines on the freelancers list
+                        ⚠️ {t("jobOfferings.textWillBeTruncated")}
                       </div>
                     )}
                   </div>
@@ -720,7 +720,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              DBA Assessment - {selectedDbaCategoryName}
+              {t("jobOfferings.dbaAssessmentTitle", { categoryName: selectedDbaCategoryName })}
             </DialogTitle>
           </DialogHeader>
           {selectedDbaCategoryId && (
@@ -748,7 +748,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              Manage Service Packages
+              {t("jobOfferings.manageServicePackages")}
             </DialogTitle>
           </DialogHeader>
           {selectedOfferingForPackages && (
@@ -772,7 +772,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
-              Manage Package Items
+              {t("jobOfferings.managePackageItems")}
             </DialogTitle>
           </DialogHeader>
           {selectedPackageForItems && (

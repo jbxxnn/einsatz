@@ -79,7 +79,7 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
           markMessagesAsRead(data.filter(m => m.sender_id !== user.id && !m.read).map(m => m.id))
         }
       } catch (error) {
-        console.error('Error fetching messages:', error)
+        console.error(t('messages.errorFetchingMessages'), error)
       } finally {
         setLoading(false)
       }
@@ -138,7 +138,7 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
         .neq('sender_id', user.id)
 
       if (error) {
-        console.error('Error marking messages as read:', error)
+        console.error(t('messages.errorMarkingMessagesAsRead'), error)
         return
       }
 
@@ -154,7 +154,7 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
         detail: { conversationId, messageIds }
       }))
     } catch (error) {
-      console.error('Error marking messages as read:', error)
+      console.error(t('messages.errorMarkingMessagesAsRead'), error)
     }
   }
 
@@ -176,7 +176,7 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
         .neq('sender_id', user.id)
 
       if (error) {
-        console.error('Error marking all messages as read:', error)
+        console.error(t('messages.errorMarkingAllMessagesAsRead'), error)
         return
       }
 
@@ -192,7 +192,7 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
         detail: { conversationId, messageIds: unreadMessages.map(m => m.id) }
       }))
     } catch (error) {
-      console.error('Error marking all messages as read:', error)
+      console.error(t('messages.errorMarkingAllMessagesAsRead'), error)
     }
   }
 
@@ -298,7 +298,7 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
         scrollToBottom()
       }, 100)
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error(t('messages.errorSendingMessage'), error)
     } finally {
       setSending(false)
     }
@@ -313,12 +313,12 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
 
   const handleAttachment = () => {
     // TODO: Implement file attachment
-    console.log('Attachment clicked')
+    console.log(t('messages.attachmentClicked'))
   }
 
   const handleEmoji = () => {
     // TODO: Implement emoji picker
-    console.log('Emoji clicked')
+    console.log(t('messages.emojiClicked'))
   }
 
   if (loading) {
@@ -397,7 +397,7 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
             }}
             className="absolute bottom-4 right-4 rounded-full w-12 h-12 p-0 shadow-lg bg-primary hover:bg-primary/90 text-white"
             size="sm"
-            title="Scroll to latest messages"
+            title={t('messages.scrollToLatestMessages')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -407,13 +407,13 @@ export default function ChatInterface({ conversationId }: ChatInterfaceProps) {
         
         {/* Scroll position indicator */}
         {/* <div className="absolute top-4 right-4 text-xs bg-black/50 text-white px-2 py-1 rounded">
-          {shouldAutoScroll ? '📍 At bottom' : '⬆️ Scrolled up'}
+          {shouldAutoScroll ? t('messages.atBottom') : t('messages.scrolledUp')}
         </div> */}
         
         {/* Auto-scroll indicator (for debugging)
             {process.env.NODE_ENV === 'development' && (
               <div className="absolute top-12 right-4 text-xs bg-black/50 text-white px-2 py-1 rounded">
-                Auto-scroll: {shouldAutoScroll ? 'ON' : 'OFF'}
+                {shouldAutoScroll ? t('messages.autoScrollOn') : t('messages.autoScrollOff')}
               </div>
             )} */}
       </div>

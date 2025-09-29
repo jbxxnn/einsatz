@@ -7,6 +7,7 @@ import { useOptimizedSupabase } from '@/components/optimized-supabase-provider'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/lib/toast'
+import { useTranslation } from '@/lib/i18n'
 import ChatInterface from '@/components/messages/chat-interface'
 import ChatHeader from '@/components/messages/chat-header'
 import { 
@@ -55,6 +56,7 @@ function ConversationSkeleton() {
 }
 
 export default function ConversationPage({ params }: ConversationPageProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const { profile, isLoading: isProfileLoading } = useOptimizedUser()
   const { supabase } = useOptimizedSupabase()
@@ -63,7 +65,7 @@ export default function ConversationPage({ params }: ConversationPageProps) {
   // Check if user is authenticated and redirect if not
   useEffect(() => {
     if (!isProfileLoading && !profile) {
-      toast.error("Please log in to view messages")
+      toast.error(t("messages.pleaseLogInToViewMessages"))
       router.push("/login")
     }
   }, [profile, isProfileLoading, router])
@@ -99,8 +101,8 @@ export default function ConversationPage({ params }: ConversationPageProps) {
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Profile not found</h1>  
-        <Button onClick={() => router.push("/")}>Go to Home</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("messages.profileNotFound")}</h1>  
+        <Button onClick={() => router.push("/")}>{t("messages.goToHome")}</Button>
       </div>
     )
   }

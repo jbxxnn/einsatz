@@ -63,7 +63,8 @@ function SortablePackageRow({
   onEdit,
   onDelete,
   onToggleActive,
-  onManageItems
+  onManageItems,
+  t
 }: { 
   package: JobOfferingPackage & { 
     items?: JobOfferingPackageItem[]
@@ -73,6 +74,7 @@ function SortablePackageRow({
   onDelete: (id: string) => void
   onToggleActive: (id: string, isActive: boolean) => void
   onManageItems: (pkg: JobOfferingPackage) => void
+  t: (key: string) => string
 }) {
   const {
     attributes,
@@ -129,7 +131,7 @@ function SortablePackageRow({
       <TableCell>
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${pkg.is_active ? 'bg-green-500' : 'bg-gray-400'}`} />
-          <span className="text-xs">{pkg.is_active ? 'Active' : 'Inactive'}</span>
+          <span className="text-xs">{pkg.is_active ? t("packages.active") : t("packages.inactive")}</span>
         </div>
       </TableCell>
       <TableCell className="text-right">
@@ -140,7 +142,7 @@ function SortablePackageRow({
             onClick={() => onManageItems(pkg)}
           >
             <Calculator className="h-4 w-4 mr-1" />
-            Items
+            {t("packages.items")}
           </Button>
           
           <Button 
@@ -156,7 +158,7 @@ function SortablePackageRow({
             size="sm" 
             onClick={() => onToggleActive(pkg.id, !pkg.is_active)}
           >
-            {pkg.is_active ? 'Deactivate' : 'Activate'}
+            {pkg.is_active ? t("packages.deactivate") : t("packages.activate")}
           </Button>
 
           <Button 
@@ -246,7 +248,7 @@ export default function JobOfferingPackagesManagerV2({
         setUnitTypes(unitTypesData || [])
       } catch (error) {
         console.error("Error fetching data:", error)
-        toast.error("Failed to load packages")
+        toast.error(t("packages.failedToLoadPackages"))
       } finally {
         setLoading(false)
       }
@@ -323,7 +325,7 @@ export default function JobOfferingPackagesManagerV2({
 
   const handleSavePackage = async () => {
     if (!packageName.trim() || !price.trim()) {
-      toast.error("Package name and price are required")
+      toast.error(t("packages.packageNameAndPriceRequired"))
       return
     }
 
@@ -350,7 +352,7 @@ export default function JobOfferingPackagesManagerV2({
         setPackages(packages.map(pkg => 
           pkg.id === editingPackage.id ? { ...pkg, ...packageData } : pkg
         ))
-        toast.success("Package updated successfully")
+        toast.success(t("packages.packageUpdatedSuccessfully"))
       } else {
         // Create new package
         const { data, error } = await supabase
@@ -362,7 +364,7 @@ export default function JobOfferingPackagesManagerV2({
         if (error) throw error
 
         setPackages([...packages, { ...data, items: [], calculated_total: data.price }])
-        toast.success("Package created successfully")
+        toast.success(t("packages.packageCreatedSuccessfully"))
       }
 
       setEditDialogOpen(false)
@@ -370,14 +372,14 @@ export default function JobOfferingPackagesManagerV2({
       onPackagesChange?.()
     } catch (error) {
       console.error("Error saving package:", error)
-      toast.error("Failed to save package")
+      toast.error(t("packages.failedToSavePackage"))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDeletePackage = async (packageId: string) => {
-    if (!confirm("Are you sure you want to delete this package?")) return
+    if (!confirm(t("packages.confirmDelete"))) return
 
     try {
       const { error } = await supabase
@@ -388,11 +390,11 @@ export default function JobOfferingPackagesManagerV2({
       if (error) throw error
 
       setPackages(packages.filter(pkg => pkg.id !== packageId))
-      toast.success("Package deleted successfully")
+      toast.success(t("packages.packageDeletedSuccessfully"))
       onPackagesChange?.()
     } catch (error) {
       console.error("Error deleting package:", error)
-      toast.error("Failed to delete package")
+      toast.error(t("packages.failedToDeletePackage"))
     }
   }
 
@@ -408,11 +410,11 @@ export default function JobOfferingPackagesManagerV2({
       setPackages(packages.map(pkg => 
         pkg.id === packageId ? { ...pkg, is_active: isActive } : pkg
       ))
-      toast.success(`Package ${isActive ? 'activated' : 'deactivated'} successfully`)
+      toast.success(isActive ? t("packages.packageActivatedSuccessfully") : t("packages.packageDeactivatedSuccessfully"))
       onPackagesChange?.()
     } catch (error) {
       console.error("Error toggling package status:", error)
-      toast.error("Failed to update package status")
+      toast.error(t("packages.failedToUpdatePackageStatus"))
     }
   }
 
@@ -437,11 +439,11 @@ export default function JobOfferingPackagesManagerV2({
           if (error) throw error
         }
 
-        toast.success("Package order updated")
+        toast.success(t("packages.packageOrderUpdated"))
         onPackagesChange?.()
       } catch (error) {
         console.error("Error updating package order:", error)
-        toast.error("Failed to update package order")
+        toast.error(t("packages.failedToUpdatePackageOrder"))
       }
     }
   }
@@ -458,12 +460,12 @@ export default function JobOfferingPackagesManagerV2({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Service Packages - {categoryName}</h3>
-          <p className="text-sm text-gray-600">Create detailed pricing packages with line items</p>
+          <h3 className="text-lg font-semibold">{t("packages.title")} - {categoryName}</h3>
+          <p className="text-sm text-gray-600">{t("packages.subtitle")}</p>
         </div>
         <Button onClick={() => openEditDialog()}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Package
+          {t("packages.addPackage")}
         </Button>
       </div>
 
@@ -471,11 +473,11 @@ export default function JobOfferingPackagesManagerV2({
         <Card>
           <CardContent className="p-8 text-center">
             <Package className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No packages yet</h3>
-            <p className="text-gray-600 mb-4">Create your first service package to get started</p>
+            <h3 className="text-lg font-semibold mb-2">{t("packages.noPackagesYet")}</h3>
+            <p className="text-gray-600 mb-4">{t("packages.createFirstPackageDescription")}</p>
             <Button onClick={() => openEditDialog()}>
               <Plus className="h-4 w-4 mr-2" />
-              Create First Package
+              {t("packages.createFirstPackage")}
             </Button>
           </CardContent>
         </Card>
@@ -490,10 +492,10 @@ export default function JobOfferingPackagesManagerV2({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Package Name</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t("packages.packageName")}</TableHead>
+                    <TableHead>{t("packages.price")}</TableHead>
+                    <TableHead>{t("packages.status")}</TableHead>
+                    <TableHead className="text-right">{t("packages.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <SortableContext
@@ -509,6 +511,7 @@ export default function JobOfferingPackagesManagerV2({
                         onDelete={handleDeletePackage}
                         onToggleActive={handleToggleActive}
                         onManageItems={openItemsDialog}
+                        t={t}
                       />
                     ))}
                   </TableBody>
@@ -524,26 +527,26 @@ export default function JobOfferingPackagesManagerV2({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingPackage ? 'Edit Package' : 'Create New Package'}
+              {editingPackage ? t("packages.editPackage") : t("packages.createNewPackage")}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="packageName">Package Name *</Label>
+              <Label htmlFor="packageName">{t("packages.packageNameRequired")}</Label>
               <Input
                 id="packageName"
-                placeholder="e.g., Basic Logo Design"
+                placeholder={t("packages.packageNamePlaceholder")}
                 value={packageName}
                 onChange={(e) => setPackageName(e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="shortDescription">Short Description</Label>
+              <Label htmlFor="shortDescription">{t("packages.shortDescription")}</Label>
               <Textarea
                 id="shortDescription"
-                placeholder="e.g., Simple logo with 2 variations"
+                placeholder={t("packages.shortDescriptionPlaceholder")}
                 value={shortDescription}
                 onChange={(e) => setShortDescription(e.target.value)}
                 rows={3}
@@ -551,18 +554,18 @@ export default function JobOfferingPackagesManagerV2({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price">Base Price (€) *</Label>
+              <Label htmlFor="price">{t("packages.basePrice")}</Label>
               <Input
                 id="price"
                 type="number"
                 min="0"
                 step="0.01"
-                placeholder="150.00"
+                placeholder={t("packages.basePricePlaceholder")}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
               />
               <p className="text-xs text-gray-500">
-                This will be overridden by calculated total from line items
+                {t("packages.basePriceDescription")}
               </p>
             </div>
 
@@ -571,18 +574,18 @@ export default function JobOfferingPackagesManagerV2({
                 variant="outline" 
                 onClick={() => setEditDialogOpen(false)}
               >
-                Cancel
+                {t("packages.cancel")}
               </Button>
               <Button onClick={handleSavePackage} disabled={saving}>
                 {saving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
+                    {t("packages.saving")}
                   </>
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    {editingPackage ? 'Update' : 'Create'}
+                    {editingPackage ? t("packages.update") : t("packages.create")}
                   </>
                 )}
               </Button>
@@ -597,13 +600,13 @@ export default function JobOfferingPackagesManagerV2({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
-              Package Items - {selectedPackage?.package_name}
+              {t("packages.packageItems")} - {selectedPackage?.package_name}
             </DialogTitle>
           </DialogHeader>
           {selectedPackage && (
             <div className="p-4 text-center text-gray-500">
-              <p>Package items management will be implemented here</p>
-              <p className="text-sm">This will allow adding/editing line items for: {selectedPackage.package_name}</p>
+              <p>{t("packages.packageItemsDescription")}</p>
+              <p className="text-sm">{t("packages.packageItemsDescription2", { packageName: selectedPackage.package_name })}</p>
             </div>
           )}
         </DialogContent>

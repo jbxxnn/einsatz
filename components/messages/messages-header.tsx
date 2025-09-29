@@ -15,7 +15,7 @@ export default function MessagesHeader() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     // TODO: Implement search functionality
-    console.log('Searching for:', searchQuery)
+    console.log(t('messages.searchingFor'), searchQuery)
   }
 
   const handleNewMessage = () => {
@@ -25,7 +25,7 @@ export default function MessagesHeader() {
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">All Conversations</h1>
+        <h1 className="text-2xl font-bold">{t('messages.allConversations')}</h1>
         {/* <div>
           <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
         </div> */}

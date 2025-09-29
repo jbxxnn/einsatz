@@ -96,8 +96,8 @@ export default function ChatHeader({ conversationId }: ChatHeaderProps) {
         // Set a fallback participant to prevent the component from crashing
         setParticipant({
           id: 'unknown',
-          first_name: 'Unknown',
-          last_name: 'User',
+          first_name: t('messages.unknownUser').split(' ')[0],
+          last_name: t('messages.unknownUser').split(' ')[1] || 'User',
           avatar_url: null,
           user_type: 'unknown',
           is_online: false
@@ -146,22 +146,22 @@ export default function ChatHeader({ conversationId }: ChatHeaderProps) {
 
   const handleCall = () => {
     // TODO: Implement call functionality
-    console.log('Calling participant')
+    console.log(t('messages.callingParticipant'))
   }
 
   const handleVideoCall = () => {
     // TODO: Implement video call functionality
-    console.log('Video calling participant')
+    console.log(t('messages.videoCallingParticipant'))
   }
 
   const handleBlock = () => {
     // TODO: Implement block functionality
-    console.log('Blocking participant')
+    console.log(t('messages.blockingParticipant'))
   }
 
   const handleReport = () => {
     // TODO: Implement report functionality
-    console.log('Reporting participant')
+    console.log(t('messages.reportingParticipant'))
   }
 
   const formatLastSeen = (lastSeen: string) => {
@@ -169,10 +169,10 @@ export default function ChatHeader({ conversationId }: ChatHeaderProps) {
     const lastSeenDate = new Date(lastSeen)
     const diffInMinutes = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60))
     
-    if (diffInMinutes < 1) return 'Just now'
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
-    return `${Math.floor(diffInMinutes / 1440)}d ago`
+    if (diffInMinutes < 1) return t('messages.justNow')
+    if (diffInMinutes < 60) return t('messages.minutesAgo', { minutes: diffInMinutes })
+    if (diffInMinutes < 1440) return t('messages.hoursAgo', { hours: Math.floor(diffInMinutes / 60) })
+    return t('messages.daysAgo', { days: Math.floor(diffInMinutes / 1440) })
   }
 
   if (loading || !participant) {
@@ -215,11 +215,11 @@ export default function ChatHeader({ conversationId }: ChatHeaderProps) {
               <div className="flex items-center space-x-1">
                 {/* <div className={`w-2 h-2 rounded-full ${participant.is_online ? 'bg-green-500' : 'bg-gray-400'}`} /> */}
                 {/* <span className="text-xs text-muted-foreground">
-                  {participant.is_online ? 'Online' : 'Offline'}
+                  {participant.is_online ? t('messages.online') : t('messages.offline')}
                 </span> */}
                 {participant.last_seen && !participant.is_online && (
                   <span className="text-xs text-muted-foreground ml-1">
-                    • Last seen {formatLastSeen(participant.last_seen)}
+                    • {t('messages.lastSeen')} {formatLastSeen(participant.last_seen)}
                   </span>
                 )}
               </div>
@@ -244,10 +244,10 @@ export default function ChatHeader({ conversationId }: ChatHeaderProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleBlock}>
-                {t('block')}
+                {t('messages.block')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleReport}>
-                {t('report')}
+                {t('messages.report')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

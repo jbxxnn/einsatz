@@ -54,7 +54,7 @@ export default function PaymentPage() {
 
       if (error) {
         console.error("Error fetching booking:", error)
-        toast.error("Could not load booking details")
+        toast.error(t("payments.couldNotLoadBookingDetails"))
         router.push("/dashboard")
       } else {
         setBooking(data as Booking)
@@ -331,7 +331,7 @@ export default function PaymentPage() {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">{t("payments.location")}</span>
-                        <span>{booking.location || "Not specified"}</span>
+                        <span>{booking.location || t("payments.notSpecified")}</span>
                       </div>
                     </div>
                   </div>
@@ -351,20 +351,20 @@ export default function PaymentPage() {
                           <input
                             type="text"
                             className="w-full p-2 border rounded-md"
-                            placeholder="4242 4242 4242 4242"
+                            placeholder={t("payments.cardNumberPlaceholder")}
                           />
                         </div>
                         <div>
                           <label className="text-sm text-muted-foreground mb-1 block">{t("payments.expiryDate")}</label>
-                          <input type="text" className="w-full p-2 border rounded-md" placeholder="MM/YY" />
+                          <input type="text" className="w-full p-2 border rounded-md" placeholder={t("payments.expiryDatePlaceholder")} />
                         </div>
                         <div>
                           <label className="text-sm text-muted-foreground mb-1 block">{t("payments.cvc")}</label>
-                          <input type="text" className="w-full p-2 border rounded-md" placeholder="123" />
+                          <input type="text" className="w-full p-2 border rounded-md" placeholder={t("payments.cvcPlaceholder")} />
                         </div>
                         <div className="col-span-2">
                           <label className="text-sm text-muted-foreground mb-1 block">{t("payments.nameOnCard")}</label>
-                          <input type="text" className="w-full p-2 border rounded-md" placeholder="John Doe" />
+                          <input type="text" className="w-full p-2 border rounded-md" placeholder={t("payments.nameOnCardPlaceholder")} />
                         </div>
                       </div>
                     </div>
@@ -398,12 +398,12 @@ export default function PaymentPage() {
                     // Package pricing display
                     <>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Service Package</span>
+                        <span className="text-muted-foreground">{t("payments.servicePackage")}</span>
                         <span>{booking.package_name}</span>
                       </div>
                       {booking.package_description && (
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Package Details</span>
+                          <span className="text-muted-foreground">{t("payments.packageDetails")}</span>
                           <span className="text-sm">{booking.package_description}</span>
                         </div>
                       )}
@@ -423,7 +423,7 @@ export default function PaymentPage() {
                             (new Date(booking.end_time).getTime() - new Date(booking.start_time).getTime()) /
                             3600000
                           ).toFixed(1)}{" "}
-                          hours
+                          {t("payments.hours")}
                         </span>
                       </div>
                     </>

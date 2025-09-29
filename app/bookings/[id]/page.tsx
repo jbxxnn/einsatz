@@ -296,7 +296,7 @@ export default function BookingDetailsPage() {
         ...updateData,
       } as Booking)
 
-      toast.success(`Booking ${action}ed successfully`)
+      toast.success(t(`booking.id.booking${action.charAt(0).toUpperCase() + action.slice(1)}Successfully`))
     } catch (error: any) {
       toast.error(error.message || t("booking.id.error"))
     }
@@ -340,13 +340,13 @@ export default function BookingDetailsPage() {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
       
-      toast.success('PDF report downloaded successfully!')
+      toast.success(t('booking.id.pdfReportDownloadedSuccessfully'))
     } catch (error) {
       console.error('Error downloading PDF:', error)
       if (error instanceof Error && error.message.includes('Failed to fetch')) {
-        toast.error('Connection error. Please try again in a moment.')
+        toast.error(t('booking.id.connectionError'))
       } else {
-        toast.error('Failed to download PDF report')
+        toast.error(t('booking.id.failedToDownloadPdfReport'))
       }
     } finally {
       setDownloadingPDF(false)
@@ -523,7 +523,7 @@ export default function BookingDetailsPage() {
                           ? `${booking.freelancer?.first_name} ${booking.freelancer?.last_name}`
                           : `${booking.client?.first_name} ${booking.client?.last_name}`}
                       </p>
-                      <p className="text-xs text-black">{userType === "client" ? "Freelancer" : "Client"}</p>
+                      <p className="text-xs text-black">{userType === "client" ? t("booking.id.freelancer") : t("booking.id.client")}</p>
                     </div>
                   </div>
                 </div>
@@ -560,20 +560,20 @@ export default function BookingDetailsPage() {
                   {/* Job Images */}
                   {booking.images && Array.isArray(booking.images) && booking.images.length > 0 && (
                     <div>
-                      <h3 className="text-xs font-medium text-black mb-2">Job Images ({booking.images.length})</h3>
+                      <h3 className="text-xs font-medium text-black mb-2">{t("booking.id.jobImageCount", { count: booking.images.length })}</h3>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {booking.images.map((imageUrl, index) => (
                           <div key={index} className="relative group">
                             <div className="aspect-square rounded-lg overflow-hidden border">
                               <Image
                                 src={imageUrl}
-                                alt={`Job image ${index + 1}`}
+                                alt={t("booking.id.jobImage", { index: index + 1 })}
                                 fill
                                 className="object-cover hover:scale-105 transition-transform duration-200"
                               />
                             </div>
                             <button
-                              title="View image in full screen"
+                              title={t("booking.id.viewImageInFullScreen")}
                               onClick={() => {
                                 // Open image in full screen
                                 window.open(imageUrl, '_blank')
@@ -597,17 +597,17 @@ export default function BookingDetailsPage() {
                     // Package pricing display with detailed breakdown
                     <>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-black">Service Package</span>
+                        <span className="text-xs text-black">{t("booking.id.servicePackage")}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-black font-medium">{booking.package_name}</span>
                           <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs">
-                            Package
+                            {t("booking.id.package")}
                           </Badge>
                         </div>
                       </div>
                       {booking.package_description && (
                         <div className="flex justify-between">
-                          <span className="text-xs text-black">Package Details</span>
+                          <span className="text-xs text-black">{t("booking.id.packageDetails")}</span>
                           <span className="text-xs text-black">{booking.package_description}</span>
                         </div>
                       )}
@@ -618,7 +618,7 @@ export default function BookingDetailsPage() {
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <Package className="h-4 w-4 text-gray-600" />
-                              <h4 className="text-xs font-medium text-black">Package Items</h4>
+                              <h4 className="text-xs font-medium text-black">{t("booking.id.packageItems")}</h4>
                             </div>
                             {(() => {
                               const items = Object.keys(packageItems).length > 0 
@@ -630,12 +630,12 @@ export default function BookingDetailsPage() {
                                 <div className="flex gap-2 text-xs">
                                   {fixedCount > 0 && (
                                     <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                      {fixedCount} Fixed
+                                      {fixedCount} {t("booking.id.fixed")}
                                     </Badge>
                                   )}
                                   {variableCount > 0 && (
                                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                      {variableCount} Variable
+                                      {variableCount} {t("booking.id.variable")}
                                     </Badge>
                                   )}
                                 </div>
@@ -653,23 +653,23 @@ export default function BookingDetailsPage() {
                                       <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
                                           <span className="text-sm font-medium text-black">
-                                            Item {itemId.substring(0, 8)}
+                                            {t("booking.id.item")} {itemId.substring(0, 8)}
                                           </span>
                                           <Badge variant="outline" className="text-xs bg-gray-50 text-gray-700 border-gray-200">
-                                            Legacy
+                                            {t("booking.id.legacy")}
                                           </Badge>
                                         </div>
                                         <div className="text-gray-500 text-xs">
-                                          Quantity: {itemData}
+                                          {t("booking.id.quantity")}: {itemData}
                                         </div>
                                       </div>
                                       <div className="text-right">
                                         <div className="text-sm font-medium text-black mb-1">
-                                          {itemData} units
+                                          {itemData} {t("booking.id.units")}
                                         </div>
                                         <div className="flex items-center gap-1 text-gray-500 font-semibold">
                                           <Euro className="h-3 w-3" />
-                                          N/A
+                                          {t("booking.id.notAvailable")}
                                         </div>
                                       </div>
                                     </div>
@@ -683,7 +683,7 @@ export default function BookingDetailsPage() {
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                       <span className="text-sm font-medium text-black">
-                                        {itemData.offering || `Item ${itemId.substring(0, 8)}`}
+                                        {itemData.offering || `${t("booking.id.item")} ${itemId.substring(0, 8)}`}
                                       </span>
                                       <Badge 
                                         variant="outline" 
@@ -693,7 +693,7 @@ export default function BookingDetailsPage() {
                                             : 'bg-green-50 text-green-700 border-green-200'
                                         }`}
                                       >
-                                        {itemData.quantity_type === 'fixed' ? 'Fixed' : 'Variable'}
+                                        {itemData.quantity_type === 'fixed' ? t("booking.id.fixed") : t("booking.id.variable")}
                                       </Badge>
                                     </div>
                                     <div className="text-gray-500 text-xs">
@@ -726,7 +726,7 @@ export default function BookingDetailsPage() {
                           </div>
                           <div className="bg-gray-50 rounded-lg p-3">
                             <p className="text-xs text-gray-600">
-                              Package details will be available after booking confirmation.
+                              {t("booking.id.packageDetailsWillBeAvailable")}
                             </p>
                           </div>
                         </div>
@@ -974,7 +974,7 @@ export default function BookingDetailsPage() {
                   disabled={downloadingPDF}
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  {downloadingPDF ? "Generating PDF..." : "Download DBA Report"}
+                  {downloadingPDF ? t("booking.id.generatingPdf") : t("booking.id.downloadDbaReport")}
                 </Button>
               )}
 
@@ -1006,7 +1006,7 @@ export default function BookingDetailsPage() {
             <ContractDisplay 
               booking={booking}
               onContractGenerated={(contractNumber) => {
-                toast.success(`Contract ${contractNumber} generated successfully`)
+                toast.success(t('booking.id.contractGeneratedSuccessfully', { contractNumber }))
               }}
             />
           )}

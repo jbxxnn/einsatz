@@ -59,11 +59,13 @@ interface PackageItemsManagerProps {
 function SortableItemRow({ 
   item, 
   onEdit,
-  onDelete
+  onDelete,
+  t
 }: { 
   item: JobOfferingPackageItem
   onEdit: (item: JobOfferingPackageItem) => void
   onDelete: (id: string) => void
+  t: (key: string) => string
 }) {
   const {
     attributes,
@@ -122,13 +124,13 @@ function SortableItemRow({
         {item.quantity_type === "fixed" ? (
           <div className="flex items-center gap-1">
             <Badge variant="outline" className="text-xs">
-              Fixed
+              {t("packageItems.fixed")}
             </Badge>
             <span className="text-xs">{item.fixed_quantity} {item.unit_type}</span>
           </div>
         ) : (
           <Badge variant="outline" className="text-xs">
-            Variable
+            {t("packageItems.variable")}
           </Badge>
         )}
       </TableCell>
@@ -212,7 +214,7 @@ export default function PackageItemsManager({
         setUnitTypes(unitTypesData || [])
       } catch (error) {
         console.error("Error fetching data:", error)
-        toast.error("Failed to load package items")
+        toast.error(t("packageItems.failedToLoadPackageItems"))
       } finally {
         setLoading(false)
       }
@@ -256,12 +258,12 @@ export default function PackageItemsManager({
 
   const handleSaveItem = async () => {
     if (!offering.trim() || !pricePerUnit.trim() || !unitType.trim()) {
-      toast.error("All fields are required")
+      toast.error(t("packageItems.allFieldsRequired"))
       return
     }
 
     if (quantityType === "fixed" && (!fixedQuantity.trim() || parseFloat(fixedQuantity) <= 0)) {
-      toast.error("Fixed quantity must be greater than 0")
+      toast.error(t("packageItems.fixedQuantityMustBeGreaterThanZero"))
       return
     }
 
@@ -290,7 +292,7 @@ export default function PackageItemsManager({
         setItems(items.map(item => 
           item.id === editingItem.id ? { ...item, ...itemData } : item
         ))
-        toast.success("Item updated successfully")
+        toast.success(t("packageItems.itemUpdatedSuccessfully"))
       } else {
         // Create new item
         const { data, error } = await supabase
@@ -302,21 +304,21 @@ export default function PackageItemsManager({
         if (error) throw error
 
         setItems([...items, data])
-        toast.success("Item created successfully")
+        toast.success(t("packageItems.itemCreatedSuccessfully"))
       }
 
       setEditDialogOpen(false)
       resetForm()
     } catch (error) {
       console.error("Error saving item:", error)
-      toast.error("Failed to save item")
+      toast.error(t("packageItems.failedToSaveItem"))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!confirm("Are you sure you want to delete this item?")) return
+    if (!confirm(t("packageItems.confirmDelete"))) return
 
     try {
       const { error } = await supabase
@@ -327,10 +329,10 @@ export default function PackageItemsManager({
       if (error) throw error
 
       setItems(items.filter(item => item.id !== itemId))
-      toast.success("Item deleted successfully")
+      toast.success(t("packageItems.itemDeletedSuccessfully"))
     } catch (error) {
       console.error("Error deleting item:", error)
-      toast.error("Failed to delete item")
+      toast.error(t("packageItems.failedToDeleteItem"))
     }
   }
 
@@ -355,10 +357,10 @@ export default function PackageItemsManager({
           if (error) throw error
         }
 
-        toast.success("Item order updated")
+        toast.success(t("packageItems.itemOrderUpdated"))
       } catch (error) {
         console.error("Error updating item order:", error)
-        toast.error("Failed to update item order")
+        toast.error(t("packageItems.failedToUpdateItemOrder"))
       }
     }
   }
@@ -375,11 +377,11 @@ export default function PackageItemsManager({
 
       if (error) throw error
 
-      toast.success("Package price updated successfully")
+      toast.success(t("packageItems.packagePriceUpdatedSuccessfully"))
       onSaveAndClose?.()
     } catch (error) {
       console.error("Error updating package price:", error)
-      toast.error("Failed to update package price")
+      toast.error(t("packageItems.failedToUpdatePackagePrice"))
     }
   }
 
@@ -395,12 +397,12 @@ export default function PackageItemsManager({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Package Items - {packageName}</h3>
-          <p className="text-sm text-gray-600">Add detailed line items for this package</p>
+          <h3 className="text-lg font-semibold">{t("packageItems.title")} - {packageName}</h3>
+          <p className="text-sm text-gray-600">{t("packageItems.subtitle")}</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <div className="text-sm text-gray-500">Total Price</div>
+            <div className="text-sm text-gray-500">{t("packageItems.totalPrice")}</div>
             <div className="text-lg font-semibold text-green-600 flex items-center gap-1">
               <Euro className="h-4 w-4" />
               {totalPrice.toFixed(2)}
@@ -409,11 +411,11 @@ export default function PackageItemsManager({
           <div className="flex gap-2">
             <Button onClick={() => openEditDialog()}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Item
+              {t("packageItems.addItem")}
             </Button>
             <Button onClick={handleSaveAndClose} variant="default">
               <Save className="h-4 w-4 mr-2" />
-              Save & Close
+              {t("packageItems.saveAndClose")}
             </Button>
           </div>
         </div>
@@ -423,11 +425,11 @@ export default function PackageItemsManager({
         <Card>
           <CardContent className="p-8 text-center">
             <Calculator className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No items yet</h3>
-            <p className="text-gray-600 mb-4">Add line items to break down your package pricing</p>
+            <h3 className="text-lg font-semibold mb-2">{t("packageItems.noItemsYet")}</h3>
+            <p className="text-gray-600 mb-4">{t("packageItems.addLineItemsDescription")}</p>
             <Button onClick={() => openEditDialog()}>
               <Plus className="h-4 w-4 mr-2" />
-              Add First Item
+              {t("packageItems.addFirstItem")}
             </Button>
           </CardContent>
         </Card>
@@ -442,11 +444,11 @@ export default function PackageItemsManager({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Offering</TableHead>
-                    <TableHead>Price per Unit</TableHead>
-                    <TableHead>Unit Type</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t("packageItems.offering")}</TableHead>
+                    <TableHead>{t("packageItems.pricePerUnit")}</TableHead>
+                    <TableHead>{t("packageItems.unitType")}</TableHead>
+                    <TableHead>{t("packageItems.quantity")}</TableHead>
+                    <TableHead className="text-right">{t("packageItems.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <SortableContext
@@ -460,6 +462,7 @@ export default function PackageItemsManager({
                         item={item}
                         onEdit={openEditDialog}
                         onDelete={handleDeleteItem}
+                        t={t}
                       />
                     ))}
                   </TableBody>
@@ -475,30 +478,30 @@ export default function PackageItemsManager({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? 'Edit Item' : 'Add New Item'}
+              {editingItem ? t("packageItems.editItem") : t("packageItems.addNewItem")}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="type">Type *</Label>
+              <Label htmlFor="type">{t("packageItems.typeRequired")}</Label>
               <Select value={type} onValueChange={(value: "labour" | "materials" | "others") => setType(value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t("packageItems.selectType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="labour">Labour</SelectItem>
-                  <SelectItem value="materials">Materials</SelectItem>
-                  <SelectItem value="others">Others</SelectItem>
+                  <SelectItem value="labour">{t("packageItems.labour")}</SelectItem>
+                  <SelectItem value="materials">{t("packageItems.materials")}</SelectItem>
+                  <SelectItem value="others">{t("packageItems.others")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="offering">Offering *</Label>
+              <Label htmlFor="offering">{t("packageItems.offeringRequired")}</Label>
               <Textarea
                 id="offering"
-                placeholder="e.g., 30/30 tiles laying, Logo design work, Call out charges"
+                placeholder={t("packageItems.offeringPlaceholder")}
                 value={offering}
                 onChange={(e) => setOffering(e.target.value)}
                 rows={3}
@@ -507,23 +510,23 @@ export default function PackageItemsManager({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="pricePerUnit">Price per Unit (€) *</Label>
+                <Label htmlFor="pricePerUnit">{t("packageItems.pricePerUnitRequired")}</Label>
                 <Input
                   id="pricePerUnit"
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="30.00"
+                  placeholder={t("packageItems.pricePerUnitPlaceholder")}
                   value={pricePerUnit}
                   onChange={(e) => setPricePerUnit(e.target.value)}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="unitType">Unit Type *</Label>
+                <Label htmlFor="unitType">{t("packageItems.unitTypeRequired")}</Label>
                 <Select value={unitType} onValueChange={setUnitType}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select unit" />
+                    <SelectValue placeholder={t("packageItems.selectUnit")} />
                   </SelectTrigger>
                   <SelectContent>
                     {unitTypes.map((unit) => (
@@ -538,14 +541,14 @@ export default function PackageItemsManager({
 
             {/* Quantity Type Selection */}
             <div className="space-y-2">
-              <Label htmlFor="quantityType">Quantity Type *</Label>
+              <Label htmlFor="quantityType">{t("packageItems.quantityTypeRequired")}</Label>
               <Select value={quantityType} onValueChange={(value: "fixed" | "variable") => setQuantityType(value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select quantity type" />
+                  <SelectValue placeholder={t("packageItems.selectQuantityType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="variable">Variable - Client can adjust quantity</SelectItem>
-                  <SelectItem value="fixed">Fixed - Predetermined quantity</SelectItem>
+                  <SelectItem value="variable">{t("packageItems.variableDescription")}</SelectItem>
+                  <SelectItem value="fixed">{t("packageItems.fixedDescription")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -553,18 +556,18 @@ export default function PackageItemsManager({
             {/* Fixed Quantity Input (only shown when quantity type is fixed) */}
             {quantityType === "fixed" && (
               <div className="space-y-2">
-                <Label htmlFor="fixedQuantity">Fixed Quantity *</Label>
+                <Label htmlFor="fixedQuantity">{t("packageItems.fixedQuantityRequired")}</Label>
                 <Input
                   id="fixedQuantity"
                   type="number"
                   min="0.1"
                   step="0.1"
-                  placeholder="e.g., 2"
+                  placeholder={t("packageItems.fixedQuantityPlaceholder")}
                   value={fixedQuantity}
                   onChange={(e) => setFixedQuantity(e.target.value)}
                 />
                 <p className="text-xs text-gray-500">
-                  This quantity will be fixed for all clients
+                  {t("packageItems.fixedQuantityDescription")}
                 </p>
               </div>
             )}
@@ -574,18 +577,18 @@ export default function PackageItemsManager({
                 variant="outline" 
                 onClick={() => setEditDialogOpen(false)}
               >
-                Cancel
+                {t("packageItems.cancel")}
               </Button>
               <Button onClick={handleSaveItem} disabled={saving}>
                 {saving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
+                    {t("packageItems.saving")}
                   </>
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    {editingItem ? 'Update' : 'Add'}
+                    {editingItem ? t("packageItems.update") : t("packageItems.add")}
                   </>
                 )}
               </Button>

@@ -13,6 +13,7 @@ import Link from "next/link"
 import { format } from "date-fns"
 import type { Database } from "@/lib/database.types"
 import { toast } from "@/lib/toast"
+import { useTranslation } from "@/lib/i18n"
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -48,6 +49,7 @@ type Invoice = Database["public"]["Tables"]["invoices"]["Row"] & {
 }
 
 export default function PaymentsPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
   const { profile, isLoading: isProfileLoading } = useOptimizedUser()
@@ -101,7 +103,7 @@ export default function PaymentsPage() {
         setInvoices(invoicesData as Invoice[])
       } catch (error) {
         console.error("Error fetching invoices:", error)
-        toast.error("Failed to load payments data. Please try again.")
+        toast.error(t("payments.failedToLoadPaymentsData"))
       }
     }
     fetchInvoices()
@@ -112,25 +114,25 @@ export default function PaymentsPage() {
       case "draft":
         return (
           <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-            Draft
+            {t("payments.draft")}
           </Badge>
         )
       case "sent":
         return (
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            Sent
+            {t("payments.sent")}
           </Badge>
         )
       case "paid":
         return (
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            Paid
+            {t("payments.paid")}
           </Badge>
         )
       case "cancelled":
         return (
           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-            Cancelled
+            {t("payments.cancelled")}
           </Badge>
         )
       default:
@@ -159,8 +161,8 @@ export default function PaymentsPage() {
   if (!profile) {
     return (
       <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Profile not found</h1>
-        <Button onClick={() => router.push("/")}>Go to Home</Button>
+        <h1 className="text-2xl font-bold mb-4">{t("payments.profileNotFound")}</h1>
+        <Button onClick={() => router.push("/")}>{t("payments.goToHome")}</Button>
       </div>
     )
   }
@@ -182,7 +184,7 @@ export default function PaymentsPage() {
               {profile.user_type === "freelancer" && (
               <Button className="ml-auto">
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Set Up Payment Method
+{t("payments.setUpPaymentMethod")}
                 </Button>
               )}
           {/* </header> */}
@@ -192,7 +194,7 @@ export default function PaymentsPage() {
               <div className="p-6 bg-background rounded-lg overflow-hidden">
                 <div className="flex flex-col items-center justify-center">
                   <div className="text-xs font-medium text-black">
-                    {profile.user_type === "client" ? "Total Spent" : "Total Earned"}
+                    {profile.user_type === "client" ? t("payments.totalSpent") : t("payments.totalEarned")}
                   </div>
                 </div>
                 <div className="flex flex-col items-center justify-center">
@@ -208,7 +210,7 @@ export default function PaymentsPage() {
               <div className="p-6 bg-background rounded-lg overflow-hidden">
                 <div className="flex flex-col items-center justify-center">
                   <div className="text-xs font-medium text-black">
-                  {profile.user_type === "client" ? "Pending Payments" : "Pending Earnings"}
+                  {profile.user_type === "client" ? t("payments.pendingPayments") : t("payments.pendingEarnings")}
                   </div>
                 </div>
                 <div className="flex flex-col items-center justify-center">
@@ -224,7 +226,7 @@ export default function PaymentsPage() {
               <div className="p-6 bg-background rounded-lg overflow-hidden">
                 <div className="flex flex-col items-center justify-center">
                   <div className="text-xs font-medium text-black">
-                  <CardTitle className="text-sm font-medium text-black">Total Invoices</CardTitle>
+                  <CardTitle className="text-sm font-medium text-black">{t("payments.totalInvoices")}</CardTitle>
                   </div>
                 </div>
                 <div className="flex flex-col items-center justify-center">
@@ -237,19 +239,19 @@ export default function PaymentsPage() {
 
             <Tabs defaultValue="invoices" className="space-y-4">
                 <TabsList>
-                <TabsTrigger value="invoices">Invoices</TabsTrigger>
-                <TabsTrigger value="transactions">Transactions</TabsTrigger>
+                <TabsTrigger value="invoices">{t("payments.invoices")}</TabsTrigger>
+                <TabsTrigger value="transactions">{t("payments.transactions")}</TabsTrigger>
                 </TabsList>
 
               <TabsContent value="invoices" className="space-y-4">
                 {invoices.length === 0 ? (
                  <div className="p-6 bg-background rounded-lg overflow-hidden">
                  <div className="flex flex-col items-center justify-center">
-                      <h3 className="text-lg text-black font-medium mb-1">No invoices yet</h3>
+                      <h3 className="text-lg text-black font-medium mb-1">{t("payments.noInvoicesYet")}</h3>
                       <p className="text-black text-xs text-center max-w-md">
                         {profile.user_type === "client"
-                          ? "Your invoices will appear here once you make bookings."
-                          : "Your invoices will appear here once you complete jobs."}
+                          ? t("payments.yourInvoicesWillAppearHereOnceYouMakeBookings")
+                          : t("payments.yourInvoicesWillAppearHereOnceYouCompleteJobs")}
                       </p>
                  </div>
                 </div>
@@ -267,7 +269,7 @@ export default function PaymentsPage() {
                                 {getStatusBadge(invoice.status)}
                               </div>
                               <p className="text-xs text-black mb-2">
-                                {invoice.booking?.title || "Booking"}
+                                {invoice.booking?.title || t("payments.booking")}
                               </p>
                               <div className="flex items-center text-xs text-black">
                                 <Clock className="h-4 w-4 mr-1" />
@@ -280,18 +282,18 @@ export default function PaymentsPage() {
                               <div className="text-right">
                                 <p className="text-xl font-bold">€{invoice.amount.toFixed(2)}</p>
                                 <p className="text-xs text-black">
-                                  {invoice.status === "paid" ? "Paid" : "Due"}
+                                  {invoice.status === "paid" ? t("payments.paid") : t("payments.due")}
                                 </p>
                               </div>
                               <div className="flex gap-2">
                                 <Button variant="outline" size="sm">
                                   <Download className="h-4 w-4 mr-1" />
-                                  Download
+{t("payments.download")}
                                 </Button>
                                 {invoice.status === "sent" && profile.user_type === "client" && (
                                   <Button size="sm">
                                     <CheckCircle className="h-4 w-4 mr-1" />
-                                    Pay Now
+{t("payments.payNow")}
                                   </Button>
                                 )}
                               </div>
@@ -308,9 +310,9 @@ export default function PaymentsPage() {
                   <div className="p-6 bg-background rounded-lg overflow-hidden">
                     <div className="flex flex-col items-center justify-center">
                     <CreditCard className="h-12 w-12 text-black mb-4" />
-                    <h3 className="text-lg text-black font-medium mb-2">Transaction History</h3>
+                    <h3 className="text-lg text-black font-medium mb-2">{t("payments.transactionHistory")}</h3>
                     <p className="text-black text-center max-w-md text-xs">
-                      Your transaction history will appear here once you have completed payments.
+                      {t("payments.yourTransactionHistoryWillAppearHereOnceYouHaveCompletedPayments")}
                     </p>
                     </div>
                   </div>

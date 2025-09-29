@@ -39,29 +39,17 @@ interface FreelancerDBAQuestionnaireProps {
 }
 
 const categoryLabels = {
-  work_relationship: { en: "Work Relationship", nl: "Werkrelatie" },
-  financial_risk: { en: "Financial Risk", nl: "Financieel Risico" },
-  work_environment: { en: "Work Environment", nl: "Werkomgeving" },
-  professional_risk: { en: "Professional Risk Management", nl: "Professioneel Risicobeheer" }
+  work_relationship: "dbaQuestionnaire.workRelationship",
+  financial_risk: "dbaQuestionnaire.financialRisk",
+  work_environment: "dbaQuestionnaire.workEnvironment",
+  professional_risk: "dbaQuestionnaire.professionalRisk"
 }
 
 const categoryDescriptions = {
-  work_relationship: { 
-    en: "Questions about your relationship with clients and work arrangements", 
-    nl: "Vragen over je relatie met klanten en werkafspraken" 
-  },
-  financial_risk: { 
-    en: "Questions about financial independence and risk management", 
-    nl: "Vragen over financiële onafhankelijkheid en risicobeheer" 
-  },
-  work_environment: { 
-    en: "Questions about your work environment and business operations", 
-    nl: "Vragen over je werkomgeving en bedrijfsvoering" 
-  },
-  professional_risk: { 
-    en: "Questions about professional insurance and risk awareness", 
-    nl: "Vragen over professionele verzekeringen en risicobewustzijn" 
-  }
+  work_relationship: "dbaQuestionnaire.workRelationshipDescription",
+  financial_risk: "dbaQuestionnaire.financialRiskDescription",
+  work_environment: "dbaQuestionnaire.workEnvironmentDescription",
+  professional_risk: "dbaQuestionnaire.professionalRiskDescription"
 }
 
 export default function FreelancerDBAQuestionnaire({
@@ -145,8 +133,8 @@ export default function FreelancerDBAQuestionnaire({
     } catch (error) {
       console.error('Error fetching DBA data:', error)
       toast({
-        title: "Error",
-        description: "Failed to load DBA questionnaire. Please try again.",
+        title: t("dbaQuestionnaire.errorTitle"),
+        description: t("dbaQuestionnaire.failedToLoadQuestionnaire"),
         variant: "destructive"
       })
     } finally {
@@ -186,8 +174,8 @@ export default function FreelancerDBAQuestionnaire({
       }
 
       toast({
-        title: "Success",
-        description: "Your answers have been saved successfully!"
+        title: t("dbaQuestionnaire.successTitle"),
+        description: t("dbaQuestionnaire.answersSavedSuccessfully")
       })
 
       // Refresh completion status
@@ -197,8 +185,8 @@ export default function FreelancerDBAQuestionnaire({
     } catch (error) {
       console.error('Error saving answers:', error)
       toast({
-        title: "Error", 
-        description: "Failed to save answers. Please try again.",
+        title: t("dbaQuestionnaire.errorTitle"), 
+        description: t("dbaQuestionnaire.failedToSaveAnswers"),
         variant: "destructive"
       })
     } finally {
@@ -211,21 +199,21 @@ export default function FreelancerDBAQuestionnaire({
     
     if (validProgress === 100) {
       toast({
-        title: "DBA Complete!",
-        description: `Your DBA assessment for ${jobCategoryName} is now complete.`
+        title: t("dbaQuestionnaire.dbaCompleteTitle"),
+        description: t("dbaQuestionnaire.assessmentCompleteMessage", { jobCategoryName })
       })
       onComplete?.()
     }
   }
 
   const getCategoryLabel = (category: string) => {
-    const labels = categoryLabels[category as keyof typeof categoryLabels]
-    return locale === "nl" ? labels?.nl : labels?.en
+    const labelKey = categoryLabels[category as keyof typeof categoryLabels]
+    return labelKey ? t(labelKey) : category
   }
 
   const getCategoryDescription = (category: string) => {
-    const descriptions = categoryDescriptions[category as keyof typeof categoryDescriptions]
-    return locale === "nl" ? descriptions?.nl : descriptions?.en
+    const descriptionKey = categoryDescriptions[category as keyof typeof categoryDescriptions]
+    return descriptionKey ? t(descriptionKey) : ""
   }
 
   const navigateCategory = (direction: 'prev' | 'next') => {
@@ -256,17 +244,17 @@ export default function FreelancerDBAQuestionnaire({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <CheckCircle className="h-5 w-5 text-primary" />
-            DBA Assessment - {jobCategoryName}
+            {t("dbaQuestionnaire.title")} - {jobCategoryName}
           </CardTitle>
           <CardDescription>
-            Complete your Dutch labor law compliance assessment for this service category.
-            This helps protect both you and your clients by clarifying your working relationship.
+            {t("dbaQuestionnaire.subtitle")}
+            {t("dbaQuestionnaire.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>{validAnsweredQuestions} of {totalQuestions} questions completed</span>
+              <span>{validAnsweredQuestions} of {totalQuestions} {t("dbaQuestionnaire.questionsCompleted")}</span>
               <span>{Math.round(validProgress)}%</span>
             </div>
             <Progress value={validProgress} className="h-2" />
@@ -360,7 +348,7 @@ export default function FreelancerDBAQuestionnaire({
           className="flex items-center gap-2"
         >
           <ChevronLeft className="h-4 w-4" />
-          Previous
+          {t("dbaQuestionnaire.previous")}
         </Button>
 
         <div className="flex gap-2">
@@ -371,7 +359,7 @@ export default function FreelancerDBAQuestionnaire({
             className="flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
-            {saving ? "Saving..." : "Save Progress"}
+            {saving ? t("dbaQuestionnaire.saving") : t("dbaQuestionnaire.saveProgress")}
           </Button>
 
           {validProgress === 100 && (
@@ -381,7 +369,7 @@ export default function FreelancerDBAQuestionnaire({
               className="flex items-center gap-2"
             >
               <CheckCircle className="h-4 w-4" />
-              Complete Assessment
+              {t("dbaQuestionnaire.completeAssessment")}
             </Button>
           )}
         </div>
@@ -391,7 +379,7 @@ export default function FreelancerDBAQuestionnaire({
           disabled={categories.indexOf(currentCategory) === categories.length - 1}
           className="flex items-center gap-2"
         >
-          Next
+          {t("dbaQuestionnaire.next")}
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
@@ -400,8 +388,7 @@ export default function FreelancerDBAQuestionnaire({
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Your answers help determine your legal classification as an independent contractor.
-          This assessment is optional but recommended for legal clarity.
+          {t("dbaQuestionnaire.alertDescription")}
         </AlertDescription>
       </Alert>
     </div>
