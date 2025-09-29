@@ -18,7 +18,19 @@ import ContractDisplay from "@/components/contract-display"
 
 import OptimizedHeader from "@/components/optimized-header"
 import ModernSidebarNav from "@/components/modern-sidebar-nav"
-import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar"
+import { SidebarProvider, Sidebar, SidebarInset, useSidebar } from "@/components/ui/sidebar"
+
+// Custom header component that uses sidebar's mobile state
+function MobileHeader() {
+  const { openMobile, setOpenMobile } = useSidebar()
+  
+  return (
+    <OptimizedHeader 
+      isMobileMenuOpen={openMobile}
+      setIsMobileMenuOpen={setOpenMobile}
+    />
+  )
+}
 
 // Skeleton for immediate loading
 function BookingDetailsSkeleton() {
@@ -453,7 +465,7 @@ export default function BookingDetailsPage() {
             <ModernSidebarNav profile={null} />
           </Sidebar>
           <SidebarInset className="w-full">
-            <OptimizedHeader />
+            <MobileHeader />
             <div className="p-6">
               <BookingDetailsSkeleton />
             </div>
@@ -479,7 +491,7 @@ export default function BookingDetailsPage() {
         {profile && <ModernSidebarNav profile={profile} />}
       </Sidebar>
       <SidebarInset className="w-full">
-        <OptimizedHeader />
+        <MobileHeader />
           <div className="lg:col-span-3 space-y-6 p-6 pb-20 bg-[#f7f7f7]">
       {/* <Link href="/bookings" className="flex items-center text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="h-4 w-4 mr-2" />

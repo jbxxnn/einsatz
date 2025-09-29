@@ -120,6 +120,43 @@ const CustomPaymentsIcon = (props: React.SVGProps<SVGSVGElement>) => (
           </svg>
 )
 
+const CustomMessagesIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="18" 
+  height="18" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M2 12.97V6.99C2 4.23 4.24 2 7 2h10c2.76 0 5 2.23 5 4.99v6.98c0 2.75-2.24 4.98-5 4.98h-1.5c-.31 0-.61.15-.8.4l-1.5 1.99c-.66.88-1.74.88-2.4 0l-1.5-1.99c-.16-.22-.52-.4-.8-.4H7c-2.76 0-5-2.23-5-4.98v-1Z" 
+    fill="currentColor">
+      </path>
+      <path d="M12 12c-.56 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.44 1-1 1ZM16 12c-.56 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.44 1-1 1ZM8 12c-.56 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.44 1-1 1Z" 
+      fill="currentColor">
+        </path>
+        </svg>
+)
+
+const CustomFindFreelancersIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="18" 
+  height="18" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z" 
+    fill="currentColor">
+      </path>
+      <path d="M16.5 7.5c0 2.49-2.01 4.5-4.5 4.5S7.5 9.99 7.5 7.5 9.51 3 12 3s4.5 2.01 4.5 4.5Z" 
+      fill="currentColor">
+        </path>
+      <path d="M12 14c-1.66 0-3 1.34-3 3v1h6v-1c0-1.66-1.34-3-3-3Z" 
+      fill="currentColor">
+        </path>
+        </svg>
+)
+
 const CustomJobOfferingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg 
   className={props.className}
@@ -233,6 +270,22 @@ export default function ModernSidebarNav({ profile }: ModernSidebarNavProps) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
+              {profile.user_type === "client" && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={isActive("/freelancers")} 
+                    tooltip={t("sidebar.findFreelancers")}
+                    className={isActive("/freelancers") ? "!bg-[#15dda9] !text-white hover:!bg-[#15dda9] hover:!text-black !rounded-lg" : "hover:!bg-[#d0f8ee] hover:!text-black hover:!rounded-lg"}
+                  >
+                    <Link href="/freelancers">
+                      <CustomFindFreelancersIcon className={`h-4 w-4 ${isActive("/freelancers") ? "text-black" : "text-[#15dda9]"}`} />
+                      <span className="text-xs font-light">{t("sidebar.findFreelancers")}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
               {profile.user_type === "freelancer" && (
                 <SidebarMenuItem>
                   <SidebarMenuButton 
@@ -289,6 +342,20 @@ export default function ModernSidebarNav({ profile }: ModernSidebarNavProps) {
                   <Link href="/payments">
                     <CustomPaymentsIcon className={`h-4 w-4 ${isActive("/payments") ? "text-black" : "text-[#15dda9]"}`} />
                     <span className="text-xs font-light">{t("sidebar.payments")}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  asChild 
+                  isActive={isActive("/messages")} 
+                  tooltip={t("sidebar.messages")}
+                  className={isActive("/messages") ? "!bg-[#15dda9] !text-white hover:!bg-[#15dda9] hover:!text-black !rounded-lg" : "hover:!bg-[#d0f8ee] hover:!text-black hover:!rounded-lg"}
+                >
+                  <Link href="/messages">
+                    <CustomMessagesIcon className={`h-4 w-4 ${isActive("/messages") ? "text-black" : "text-[#15dda9]"}`} />
+                    <span className="text-xs font-light">{t("sidebar.messages")}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

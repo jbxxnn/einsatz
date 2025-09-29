@@ -15,13 +15,24 @@ import ChatHeader from '@/components/messages/chat-header'
 import { 
   SidebarProvider, 
   Sidebar, 
-  SidebarInset
+  SidebarInset,
+  useSidebar
 } from '@/components/ui/sidebar'
 import ModernSidebarNav from '@/components/modern-sidebar-nav'
 import OptimizedHeader from '@/components/optimized-header'
 import { ArrowLeftIcon } from 'lucide-react'
 
-
+// Custom header component that uses sidebar's mobile state
+function MobileHeader() {
+  const { openMobile, setOpenMobile } = useSidebar()
+  
+  return (
+    <OptimizedHeader 
+      isMobileMenuOpen={openMobile}
+      setIsMobileMenuOpen={setOpenMobile}
+    />
+  )
+}
 
 const CustomMessagesIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg 
@@ -179,7 +190,7 @@ export default function MessagesPage() {
           </Sidebar>
           
           <SidebarInset className="w-full">
-            {/* <OptimizedHeader /> */}
+            <MobileHeader />
             <div className="p-6">
               <MessagesSkeleton />
             </div>
@@ -207,28 +218,14 @@ export default function MessagesPage() {
 
         {/* Main Content */}
         <SidebarInset className="w-full">
-          {/* <OptimizedHeader /> */}
+          <MobileHeader />
           <div className="flex h-screen bg-[#f7f7f7]">
-            {/* Left Column - Conversations List */}
-            <div className="w-80 border-r bg-white flex flex-col">
-              <div className="p-4 border-b">
-                <MessagesHeader />
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                <Suspense fallback={<MessagesSkeleton />}>
-                  <ConversationsList 
-                    onConversationSelect={handleConversationSelect}
-                    selectedConversationId={selectedConversationId}
-                  />
-                </Suspense>
-              </div>
-            </div>
-
-            {/* Middle Column - Chat Interface */}
-            <div className="flex-1 flex flex-col bg-white">
+            {/* Mobile Layout - Single Column */}
+            <div className="flex-1 flex flex-col md:hidden">
               {selectedConversationId ? (
                 <>
-                  <div className="border-b p-4">
+                  {/* Mobile Chat Header */}
+                  <div className="border-b bg-white p-4">
                     <div className="flex items-center space-x-3">
                       <Button 
                         variant="ghost" 
@@ -242,7 +239,7 @@ export default function MessagesPage() {
                         className="mr-2"
                       >
                         <ArrowLeftIcon className="w-4 h-4" />
-{t("messages.backToConversations")}
+                        {t("messages.backToConversations")}
                       </Button>
                     </div>
                   </div>
@@ -256,32 +253,100 @@ export default function MessagesPage() {
                   </div>
                 </>
               ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center space-y-4">
-                    <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
-                      <CustomMessagesIcon className="w-12 h-12 text-gray-400" />
-
+                <>
+                  {/* Mobile Conversations List */}
+                  <div className="flex-1 bg-white flex flex-col">
+                    <div className="p-4 border-b">
+                      <MessagesHeader />
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{t("messages.pickUpWhereYouLeftOff")}</h3>
-                      <p className="text-gray-500 text-sm">{t("messages.selectConversationAndChatAway")}</p>
+                    <div className="flex-1 overflow-y-auto">
+                      <Suspense fallback={<MessagesSkeleton />}>
+                        <ConversationsList 
+                          onConversationSelect={handleConversationSelect}
+                          selectedConversationId={selectedConversationId}
+                        />
+                      </Suspense>
                     </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
 
-            {/* Right Column - Participant Details */}
-            <div className="w-80 border-l bg-white p-4">
-              {selectedConversationId ? (
-                <Suspense fallback={<ParticipantDetailsSkeleton />}>
-                  <ParticipantDetails conversationId={selectedConversationId} />
-                </Suspense>
-              ) : (
-                <div className="text-center text-sm text-gray-500 mt-8">
-                  <p>{t("messages.selectConversationToSeeParticipantDetails")}</p>
+            {/* Desktop Layout - Three Columns */}
+            <div className="hidden md:flex flex-1">
+              {/* Left Column - Conversations List */}
+              <div className="w-80 border-r bg-white flex flex-col">
+                <div className="p-4 border-b">
+                  <MessagesHeader />
                 </div>
-              )}
+                <div className="flex-1 overflow-y-auto">
+                  <Suspense fallback={<MessagesSkeleton />}>
+                    <ConversationsList 
+                      onConversationSelect={handleConversationSelect}
+                      selectedConversationId={selectedConversationId}
+                    />
+                  </Suspense>
+                </div>
+              </div>
+
+              {/* Middle Column - Chat Interface */}
+              <div className="flex-1 flex flex-col bg-white">
+                {selectedConversationId ? (
+                  <>
+                    <div className="border-b p-4">
+                      <div className="flex items-center space-x-3">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedConversationId(null)
+                            const url = new URL(window.location.href)
+                            url.searchParams.delete('conversation')
+                            window.history.pushState({}, '', url.toString())
+                          }}
+                          className="mr-2"
+                        >
+                          <ArrowLeftIcon className="w-4 h-4" />
+                          {t("messages.backToConversations")}
+                        </Button>
+                      </div>
+                    </div>
+                    <Suspense fallback={<ChatHeaderSkeleton />}>
+                      <ChatHeader conversationId={selectedConversationId} />
+                    </Suspense>
+                    <div className="flex-1 overflow-hidden">
+                      <Suspense fallback={<ChatSkeleton />}>
+                        <ChatInterface conversationId={selectedConversationId} />
+                      </Suspense>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <div className="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                        <CustomMessagesIcon className="w-12 h-12 text-gray-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{t("messages.pickUpWhereYouLeftOff")}</h3>
+                        <p className="text-gray-500 text-sm">{t("messages.selectConversationAndChatAway")}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column - Participant Details */}
+              <div className="w-80 border-l bg-white p-4">
+                {selectedConversationId ? (
+                  <Suspense fallback={<ParticipantDetailsSkeleton />}>
+                    <ParticipantDetails conversationId={selectedConversationId} />
+                  </Suspense>
+                ) : (
+                  <div className="text-center text-sm text-gray-500 mt-8">
+                    <p>{t("messages.selectConversationToSeeParticipantDetails")}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </SidebarInset>

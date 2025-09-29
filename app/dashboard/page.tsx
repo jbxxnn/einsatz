@@ -26,7 +26,8 @@ import {
   SidebarContent, 
   SidebarFooter,
   SidebarTrigger,
-  SidebarInset
+  SidebarInset,
+  useSidebar
 } from "@/components/ui/sidebar"
 import ModernSidebarNav from "@/components/modern-sidebar-nav"
 import { Loader, Calendar, TrendingUp, Users, Clock, MessageSquare, User, Download, Settings, Star, MapPin, Clock as ClockIcon, MoreHorizontal, Target, Award, TrendingDown, Euro, CheckCircle, Menu, X } from "lucide-react"
@@ -38,6 +39,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Progress } from "@/components/ui/progress"
 import OptimizedHeader from "@/components/optimized-header"
+
+// Custom header component that uses sidebar's mobile state
+function MobileHeader() {
+  const { openMobile, setOpenMobile } = useSidebar()
+  
+  return (
+    <OptimizedHeader 
+      isMobileMenuOpen={openMobile}
+      setIsMobileMenuOpen={setOpenMobile}
+    />
+  )
+}
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -1010,7 +1023,7 @@ export default function DashboardPage() {
     push: true,
     sms: false,
   })
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  // Remove custom mobile state since we'll use the sidebar's built-in state
 
   // Redirect to login if no profile found - with more patient logic
   useEffect(() => {
@@ -1158,27 +1171,12 @@ export default function DashboardPage() {
       
       <div className="flex min-h-screen bg-muted/30 w-full">
 
-        <Sidebar 
-          className={`fixed inset-y-0 left-0 z-50 w-64 md:relative md:translate-x-0 ${
-            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-          } transition-transform duration-300 ease-in-out`}
-        >
+        <Sidebar>
           <ModernSidebarNav profile={profile} />
         </Sidebar>
         
         <SidebarInset className="w-full">
-          <OptimizedHeader 
-            isMobileMenuOpen={isMobileMenuOpen}
-            setIsMobileMenuOpen={setIsMobileMenuOpen}
-          />
-          
-          {/* Mobile Overlay */}
-          {isMobileMenuOpen && (
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-          )}
+          <MobileHeader />
           
           <div className="flex flex-col gap-6 p-6 pb-20 bg-[#f7f7f7] h-full">
                     {profile.user_type === "freelancer" && (

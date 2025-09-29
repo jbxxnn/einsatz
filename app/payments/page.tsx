@@ -17,10 +17,23 @@ import { useTranslation } from "@/lib/i18n"
 import { 
   SidebarProvider, 
   Sidebar, 
-  SidebarInset
+  SidebarInset,
+  useSidebar
 } from "@/components/ui/sidebar"
 import ModernSidebarNav from "@/components/modern-sidebar-nav"
 import OptimizedHeader from "@/components/optimized-header"
+
+// Custom header component that uses sidebar's mobile state
+function MobileHeader() {
+  const { openMobile, setOpenMobile } = useSidebar()
+  
+  return (
+    <OptimizedHeader 
+      isMobileMenuOpen={openMobile}
+      setIsMobileMenuOpen={setOpenMobile}
+    />
+  )
+}
 
 // Skeleton for immediate loading
 function PaymentsSkeleton() {
@@ -148,7 +161,7 @@ export default function PaymentsPage() {
             <ModernSidebarNav profile={null} />
           </Sidebar>
           <SidebarInset className="w-full">
-            <OptimizedHeader />
+            <MobileHeader />
             <div className="p-6">
               <PaymentsSkeleton />
             </div>
@@ -174,7 +187,7 @@ export default function PaymentsPage() {
         {profile && <ModernSidebarNav profile={profile} />}
       </Sidebar>
       <SidebarInset className="w-full">
-        <OptimizedHeader />
+        <MobileHeader />
         <div className="lg:col-span-3 space-y-6 p-6 pb-20 bg-[#f7f7f7] h-full">
           {/* <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 bg-background px-6"> */}
             {/* <SidebarTrigger className="-ml-1" /> */}

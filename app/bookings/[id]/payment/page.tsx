@@ -13,6 +13,21 @@ import type { Database } from "@/lib/database.types"
 import { toast } from "sonner"
 import { useTranslation } from "@/lib/i18n"
 import OptimizedHeader from "@/components/optimized-header"
+import ModernSidebarNav from "@/components/modern-sidebar-nav"
+import { SidebarProvider, Sidebar, SidebarInset, useSidebar } from "@/components/ui/sidebar"
+import { useOptimizedUser } from "@/components/optimized-user-provider"
+
+// Custom header component that uses sidebar's mobile state
+function MobileHeader() {
+  const { openMobile, setOpenMobile } = useSidebar()
+  
+  return (
+    <OptimizedHeader 
+      isMobileMenuOpen={openMobile}
+      setIsMobileMenuOpen={setOpenMobile}
+    />
+  )
+}
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"] & {
   freelancer: Database["public"]["Tables"]["profiles"]["Row"]
@@ -23,6 +38,7 @@ export default function PaymentPage() {
   const params = useParams()
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
+  const { profile } = useOptimizedUser()
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
@@ -126,73 +142,98 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen w-full">
-        <Loader className="h-8 w-8 animate-spin" />
-      </div>
+      <SidebarProvider className="w-full">
+        <div className="flex min-h-screen bg-muted/30 w-full">
+          <Sidebar>
+            <ModernSidebarNav profile={null} />
+          </Sidebar>
+          <SidebarInset className="w-full">
+            <MobileHeader />
+            <div className="flex justify-center items-center min-h-screen w-full">
+              <Loader className="h-8 w-8 animate-spin" />
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     )
   }
 
   if (!booking) {
     return (
-      <div className="container py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">{t("payments.bookingNotFound")}</h1>
-        <Button onClick={() => router.push("/dashboard")}>{t("payments.goToDashboard")}</Button>
-      </div>
+      <SidebarProvider className="w-full">
+        <div className="flex min-h-screen bg-muted/30 w-full">
+          <Sidebar>
+            {profile && <ModernSidebarNav profile={profile} />}
+          </Sidebar>
+          <SidebarInset className="w-full">
+            <MobileHeader />
+            <div className="container py-10 text-center">
+              <h1 className="text-2xl font-bold mb-4">{t("payments.bookingNotFound")}</h1>
+              <Button onClick={() => router.push("/dashboard")}>{t("payments.goToDashboard")}</Button>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     )
   }
 
   return (
-    <>
-    <OptimizedHeader />
-    <div className="container py-10">
-      <Link href="/dashboard" className="flex items-center text-muted-foreground hover:text-foreground mb-6">
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        {t("payments.goToDashboard")}
-      </Link>
+    <SidebarProvider className="w-full">
+      <div className="flex min-h-screen bg-muted/30 w-full">
+        <Sidebar>
+          {profile && <ModernSidebarNav profile={profile} />}
+        </Sidebar>
+        <SidebarInset className="w-full">
+          <MobileHeader />
+          <div className="container py-10">
+            <Link href="/dashboard" className="flex items-center text-muted-foreground hover:text-foreground mb-6">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t("payments.goToDashboard")}
+            </Link>
 
-      <div className="max-w-2xl mx-auto">
-        {paymentSuccess ? (
-          <Card>
-            <CardContent className="pt-6 flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2">{t("payments.paymentSuccessful")}</h2>
-              <p className="text-muted-foreground mb-6">
-                {t("payments.paymentSuccessfulMessage")}
-              </p>
-              <div className="w-full max-w-md p-4 border rounded-lg mb-6">
-                <div className="flex justify-between mb-2">
-                  <span className="text-muted-foreground">{t("payments.bookingId")}</span>
-                  <span className="font-medium">{booking.id.substring(0, 8)}</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-muted-foreground">{t("payments.date")}</span>
-                  <span className="font-medium">{format(new Date(booking.start_time), "MMMM d, yyyy")}</span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-muted-foreground">{t("payments.time")}</span>
-                  <span className="font-medium">
-                    {format(new Date(booking.start_time), "h:mm a")} - {format(new Date(booking.end_time), "h:mm a")}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("payments.total")}</span>
-                  <span className="font-bold">€{booking.total_amount.toFixed(2)}</span>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <Link href={`/bookings/${booking.id}`}>
-                  <Button>{t("payments.viewBookingDetails")}</Button>
-                </Link>
-                <Link href="/dashboard">
-                  <Button variant="outline">{t("payments.goToDashboard")}</Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-            ) : booking.payment_method === "offline" ? (
-              <Card>
+            <div className="max-w-2xl mx-auto">
+              {paymentSuccess ? (
+                <Card>
+                  <CardContent className="pt-6 flex flex-col items-center text-center">
+                    <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2">{t("payments.paymentSuccessful")}</h2>
+                    <p className="text-muted-foreground mb-6">
+                      {t("payments.paymentSuccessfulMessage")}
+                    </p>
+                    <div className="w-full max-w-md p-4 border rounded-lg mb-6">
+                      <div className="flex justify-between mb-2">
+                        <span className="text-muted-foreground">{t("payments.bookingId")}</span>
+                        <span className="font-medium">{booking.id.substring(0, 8)}</span>
+                      </div>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-muted-foreground">{t("payments.date")}</span>
+                        <span className="font-medium">{format(new Date(booking.start_time), "MMMM d, yyyy")}</span>
+                      </div>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-muted-foreground">{t("payments.time")}</span>
+                        <span className="font-medium">
+                          {format(new Date(booking.start_time), "h:mm a")} - {format(new Date(booking.end_time), "h:mm a")}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{t("payments.total")}</span>
+                        <span className="font-bold">€{booking.total_amount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <Link href={`/bookings/${booking.id}`}>
+                        <Button>{t("payments.viewBookingDetails")}</Button>
+                      </Link>
+                      <Link href="/dashboard">
+                        <Button variant="outline">{t("payments.goToDashboard")}</Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : booking.payment_method === "offline" ? (
+                <Card>
                 <CardHeader>
                   <CardTitle>{t("payments.offlinePaymentInstructions")}</CardTitle>
                   <CardDescription>
@@ -443,10 +484,12 @@ export default function PaymentPage() {
               </Card>
             </div>
           </div>
-        )}
-      </div>
-    </div>
-    </>
-  )
-}
+              )}
+            </div>
+          </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    )
+  }
 

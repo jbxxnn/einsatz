@@ -504,9 +504,11 @@
   "sidebar": {
     "dashboard": "Dashboard",
     "profile": "Profiel",
+    "findFreelancers": "Zoek Freelancers",
     "jobOfferings": "Dienstenaanbod",
     "bookings": "Boekingen",
     "payments": "Betalingen",
+    "messages": "Berichten",
     "settings": "Instellingen",
     "logout": "Uitloggen",
     "availability": "Beschikbaarheid",

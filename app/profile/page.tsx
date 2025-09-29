@@ -64,10 +64,23 @@ import { getCoverTemplate } from "@/lib/cover-templates"
 import { 
   SidebarProvider, 
   Sidebar, 
-  SidebarInset
+  SidebarInset,
+  useSidebar
 } from "@/components/ui/sidebar"
 import ModernSidebarNav from "@/components/modern-sidebar-nav"
 import OptimizedHeader from "@/components/optimized-header"
+
+// Custom header component that uses sidebar's mobile state
+function MobileHeader() {
+  const { openMobile, setOpenMobile } = useSidebar()
+  
+  return (
+    <OptimizedHeader 
+      isMobileMenuOpen={openMobile}
+      setIsMobileMenuOpen={setOpenMobile}
+    />
+  )
+}
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
@@ -340,7 +353,7 @@ export default function ProfilePage() {
           </Sidebar>
           
           <SidebarInset className="w-full">
-            <OptimizedHeader />
+            <MobileHeader />
             <div className="p-6">
               <ProfileSkeleton />
             </div>
@@ -381,7 +394,7 @@ export default function ProfilePage() {
 
           {/* Main Content */}
           <SidebarInset className="w-full">
-          <OptimizedHeader />
+          <MobileHeader />
           <div className="lg:col-span-3 space-y-6 p-6 pb-20 bg-[#f7f7f7]">
             <div className="flex items-center justify-between">
               {/* <h1 className="text-3xl font-bold">{t("profile.title")}</h1> */}

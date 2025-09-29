@@ -20,11 +20,23 @@ import FreelancerOnboardingProgress from "@/components/freelancer-onboarding-pro
 import { 
   SidebarProvider, 
   Sidebar, 
-  SidebarInset
+  SidebarInset,
+  useSidebar
 } from "@/components/ui/sidebar"
 import ModernSidebarNav from "@/components/modern-sidebar-nav"
 import OptimizedHeader from "@/components/optimized-header"
 
+// Custom header component that uses sidebar's mobile state
+function MobileHeader() {
+  const { openMobile, setOpenMobile } = useSidebar()
+  
+  return (
+    <OptimizedHeader 
+      isMobileMenuOpen={openMobile}
+      setIsMobileMenuOpen={setOpenMobile}
+    />
+  )
+}
 
 const CustomNoBookingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg 
@@ -249,7 +261,7 @@ export default function BookingsPage() {
             <ModernSidebarNav profile={null} />
           </Sidebar>
           <SidebarInset className="w-full">
-            <OptimizedHeader />
+            <MobileHeader />
             <div className="p-6">
               <BookingsSkeleton />
             </div>
@@ -287,7 +299,7 @@ export default function BookingsPage() {
         {profile && <ModernSidebarNav profile={profile} />}
       </Sidebar>
       <SidebarInset className="w-full">
-        <OptimizedHeader />
+        <MobileHeader />
         <div className="lg:col-span-3 space-y-6 p-6 pb-20 bg-[#f7f7f7] h-full">
           {profile.user_type === "freelancer" && (
             <FreelancerOnboardingProgress profile={profile} />

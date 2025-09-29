@@ -504,9 +504,11 @@
   "sidebar": {
     "dashboard": "Dashboard",
     "profile": "Profile",
+    "findFreelancers": "Find Freelancers",
     "jobOfferings": "Job Offerings",
     "bookings": "Bookings",
     "payments": "Payments",
+    "messages": "Messages",
     "settings": "Settings",
     "logout": "Logout",
     "availability": "Availability",
