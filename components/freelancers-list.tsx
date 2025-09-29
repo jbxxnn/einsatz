@@ -206,9 +206,9 @@ export default function FreelancersList() {
           
           {/* Cache status indicator */}
           <div className="text-xs text-gray-500">
-            {t("freelancers.cache.lastUpdated") || "Last updated"}:
+            {t("freelancers.cache.lastUpdated")}:
             {isFetching ? (
-              <span className="text-blue-600 ml-1">Updating...</span>
+              <span className="text-blue-600 ml-1">{t("freelancers.loading.updating")}</span>
             ) : (
               <span className="text-green-600 ml-1">
                 {new Date().toLocaleTimeString()}
@@ -236,12 +236,12 @@ export default function FreelancersList() {
             {isFetching ? (
               <>
                 <RefreshCw className="h-3 w-3 animate-spin mr-1" />
-                {t("freelancers.loading.updating") || "Updating..."}
+                {t("freelancers.loading.updating")}
               </>
             ) : (
               <>
                 <RefreshCw className="h-3 w-3 mr-1" />
-                {t("freelancers.refresh") || "Refresh"}
+                {t("freelancers.loading.refresh")}
               </>
             )}
           </Button>
@@ -501,13 +501,13 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                                     return activePackages.length > 0 ? (
                                       <span className="text-xs font-normal">
                                         {activePackages.length === 1 
-                                          ? `€${activePackages[0].price} package`
-                                          : `From €${Math.min(...activePackages.map(p => p.price))} packages`
+                                          ? `€${activePackages[0].price} ${t("freelancers.package")}`
+                                          : t("freelancers.fromPrice", { price: Math.min(...activePackages.map(p => p.price)) }) + ` ${t("freelancers.packages")}`
                                         }
                                       </span>
                                     ) : (
                                       <span className="text-xs font-normal text-gray-500">
-                                        Packages available
+                                        {t("freelancers.packagesAvailable")}
                                       </span>
                                     )
                                   })()

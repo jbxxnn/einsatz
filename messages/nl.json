@@ -125,7 +125,10 @@
       "step1": "Selecteer je gewenste datum en tijd uit de kalender",
       "step2": "Vul jobdetails en locatie in",
       "step3": "Voltooi DBA-beoordeling of sla over (gebaseerd op freelancer's status)",
-      "step4": "Bekijk en bevestig je boeking"
+      "step4": "Bekijk en bevestig je boeking",
+      "step2Calendar": "Selecteer je gewenste datum en tijd uit de kalender",
+      "step3DBA": "Voltooi DBA-beoordeling of sla over (gebaseerd op freelancer's status)",
+      "step4Review": "Bekijk en bevestig je boeking"
     },
     "importantNotes": {
       "title": "Belangrijke Opmerkingen",
@@ -133,6 +136,33 @@
       "dbaCompliance": "DBA-beoordeling zorgt voor juridische naleving",
       "imageUpload": "Je kunt jobafbeeldingen uploaden voor meer duidelijkheid",
       "cancellationPolicy": "Annuleringsbeleid geldt voor alle boekingen"
+    },
+    "id": {
+      "verified": "Geverifieerd",
+      "availableNow": "Nu Beschikbaar",
+      "freelancer": "Freelancer",
+      "messageFreelancer": "Bericht Freelancer",
+      "loading": "Laden...",
+      "aboutMe": "OVER MIJ",
+      "memberSince": "LID SINDS",
+      "services": "Diensten",
+      "reviews": "Beoordelingen",
+      "pleaseSelectPackageFirst": "Selecteer eerst een pakket",
+      "pleaseSelectServiceFirst": "Selecteer eerst een dienst om beschikbaarheid te bekijken",
+      "user": "Gebruiker",
+      "showingReviews": "Toont {from} tot {to} van {total} beoordelingen",
+      "previous": "Vorige",
+      "next": "Volgende",
+      "pageOf": "Pagina {current} van {total}",
+      "noReviewsYet": "Nog geen beoordelingen",
+      "hire": "Huur",
+      "isAvailableForHire": "{name} is beschikbaar voor huur",
+      "changeFreelancerService": "Wijzig freelancer dienst",
+      "yearsOfExperience": "{years} jaar ervaring",
+      "package": "pakket",
+      "packages": "pakketten",
+      "fromPrice": "Vanaf €{price}",
+      "selectAndCustomizePackage": "Selecteer en pas je servicepakket aan"
     },
     "error": {
       "failedToLoadProfile": "Fout bij het laden van freelancer profiel",
@@ -307,7 +337,14 @@
     },
     "distance": {
       "away": "km weg"
-    }
+    },
+    "cache": {
+      "lastUpdated": "Laatst bijgewerkt"
+    },
+    "package": "pakket",
+    "packages": "pakketten",
+    "packagesAvailable": "Pakketten beschikbaar",
+    "fromPrice": "Vanaf €{price}"
   },
   "pagination": {
     "previous": "Vorige",
@@ -736,7 +773,22 @@
     "packageDeactivatedSuccessfully": "Pakket succesvol gedeactiveerd",
     "failedToUpdatePackageStatus": "Fout bij het bijwerken van pakket status",
     "packageOrderUpdated": "Pakket volgorde bijgewerkt",
-    "failedToUpdatePackageOrder": "Fout bij het bijwerken van pakket volgorde"
+    "failedToUpdatePackageOrder": "Fout bij het bijwerken van pakket volgorde",
+    "selection": {
+      "failedToLoadPackages": "Fout bij het laden van servicepakketten",
+      "noPackagesAvailable": "Geen pakketten beschikbaar",
+      "noPackagesDescription": "Deze freelancer heeft nog geen servicepakketten ingesteld voor deze categorie.",
+      "chooseServicePackage": "Kies Je Servicepakket",
+      "selectAndCustomize": "Selecteer en pas je {categoryName} servicepakket aan",
+      "item": "item",
+      "items": "items",
+      "fixed": "Vast",
+      "fixedLabel": "Vast:",
+      "quantity": "Aantal:",
+      "total": "Totaal:",
+      "selected": "Geselecteerd",
+      "selectPackage": "Pakket Selecteren"
+    }
   },
   "packageItems": {
     "title": "Pakket Items",

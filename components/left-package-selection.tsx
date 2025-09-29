@@ -19,6 +19,7 @@ import {
   Loader2
 } from "lucide-react"
 import type { Database } from "@/lib/database.types"
+import { useTranslation } from "@/lib/i18n"
 
 type JobOfferingPackage = Database["public"]["Tables"]["job_offering_packages"]["Row"]
 type JobOfferingPackageItem = Database["public"]["Tables"]["job_offering_package_items"]["Row"]
@@ -54,6 +55,7 @@ export default function LeftPackageSelection({
   onPackageSelect,
   selectedPackageData
 }: LeftPackageSelectionProps) {
+  const { t } = useTranslation()
   const { supabase } = useOptimizedSupabase()
   const [packages, setPackages] = useState<(JobOfferingPackage & {
     items: JobOfferingPackageItem[]
@@ -107,7 +109,7 @@ export default function LeftPackageSelection({
 
       } catch (error) {
         console.error("Error fetching packages:", error)
-        toast.error("Failed to load service packages")
+        toast.error(t("packages.selection.failedToLoadPackages"))
       } finally {
         setLoading(false)
       }
@@ -181,8 +183,8 @@ export default function LeftPackageSelection({
     return (
       <div className="text-center py-4">
         <Package className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-        <h3 className="text-sm font-semibold mb-1">No packages available</h3>
-        <p className="text-xs text-gray-600">This freelancer hasn't set up service packages for this category yet.</p>
+        <h3 className="text-sm font-semibold mb-1">{t("packages.selection.noPackagesAvailable")}</h3>
+        <p className="text-xs text-gray-600">{t("packages.selection.noPackagesDescription")}</p>
       </div>
     )
   }
@@ -190,8 +192,8 @@ export default function LeftPackageSelection({
   return (
     <div className="space-y-3">
       <div className="text-center mb-4">
-        <h3 className="text-sm font-semibold mb-1">Choose Your Service Package</h3>
-        <p className="text-xs text-gray-600">Select and customize your {categoryName} service package</p>
+        <h3 className="text-sm font-semibold mb-1">{t("packages.selection.chooseServicePackage")}</h3>
+        <p className="text-xs text-gray-600">{t("packages.selection.selectAndCustomize", { categoryName })}</p>
       </div>
 
       <div className="space-y-3">
@@ -221,7 +223,7 @@ export default function LeftPackageSelection({
                     )}
                     <div className="flex items-center gap-2 mt-2">
                       <Badge variant="outline" className="text-xs">
-                        {pkg.items.length} item{pkg.items.length !== 1 ? 's' : ''}
+                        {pkg.items.length} {pkg.items.length !== 1 ? t("packages.selection.items") : t("packages.selection.item")}
                       </Badge>
                       <div className="flex items-center gap-1 text-green-600 font-semibold text-sm">
                         <Euro className="h-3 w-3" />
@@ -274,19 +276,19 @@ export default function LeftPackageSelection({
                               {item.quantity_type === "fixed" ? (
                                 <div className="flex items-center gap-2">
                                   <Label className="text-xs text-gray-600">
-                                    Fixed:
+                                    {t("packages.selection.fixedLabel")}
                                   </Label>
                                   <span className="text-xs font-medium">
                                     {item.fixed_quantity} {item.unit_type}
                                   </span>
                                   <Badge variant="outline" className="text-xs">
-                                    Fixed
+                                    {t("packages.selection.fixed")}
                                   </Badge>
                                 </div>
                               ) : (
                                 <>
                                   <Label htmlFor={`quantity-${item.id}`} className="text-xs">
-                                    Qty:
+                                    {t("packages.selection.quantity")}
                                   </Label>
                                   <Input
                                     id={`quantity-${item.id}`}
@@ -311,7 +313,7 @@ export default function LeftPackageSelection({
 
                     {/* Package Total */}
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold">Total:</span>
+                      <span className="text-sm font-semibold">{t("packages.selection.total")}</span>
                       <div className="flex items-center gap-1 text-sm font-bold text-green-600">
                         <Euro className="h-4 w-4" />
                         {totalPrice.toFixed(2)}
@@ -331,12 +333,12 @@ export default function LeftPackageSelection({
                       {isSelected ? (
                         <>
                           <CheckCircle className="h-3 w-3 mr-1" />
-                          Selected
+                          {t("packages.selection.selected")}
                         </>
                       ) : (
                         <>
                           <Package className="h-3 w-3 mr-1" />
-                          Select Package
+                          {t("packages.selection.selectPackage")}
                         </>
                       )}
                     </Button>

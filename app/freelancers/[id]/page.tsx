@@ -499,7 +499,7 @@ export default function FreelancerProfile() {
                 <div className="absolute -bottom-1 -right-1">
                   <Badge className="bg-[#33CC99] hover:bg-[#2BB88A] text-white font-light text-xs">
                       <ShieldCheck className="h-3 w-3 mr-1" />
-                      Verified
+                      {t("freelancer.id.verified")}
                   </Badge>
                 </div>
               )}
@@ -524,7 +524,7 @@ export default function FreelancerProfile() {
                   {freelancer.is_available_now && (
                     <Badge className="bg-green-500 hover:bg-green-600 text-white">
                       <div className="w-2 h-2 bg-white rounded-full mr-1"></div>
-                      Available Now
+                      {t("freelancer.id.availableNow")}
                     </Badge>
                   )}
                 </div>
@@ -536,7 +536,7 @@ export default function FreelancerProfile() {
                     <span className="text-xs text-black">
                       {freelancer.metadata && typeof freelancer.metadata === 'object' && 'role' in freelancer.metadata 
                         ? freelancer.metadata.role as string 
-                        : 'Freelancer'
+                        : t("freelancer.id.freelancer")
                       }
                     </span>
                   </div>
@@ -559,7 +559,7 @@ export default function FreelancerProfile() {
                       disabled={!conversationId}
                     >
                       <CustomMessagesIcon className="h-4 w-4 mr-2" />
-                      {conversationId ? "Message Freelancer" : "Loading..."}
+                      {conversationId ? t("freelancer.id.messageFreelancer") : t("freelancer.id.loading")}
                     </Button>
                   </Link>
                 </div>
@@ -572,11 +572,11 @@ export default function FreelancerProfile() {
 
                 <div className="flex flex-col justify-between space-y-4">
                   <div className="flex flex-col mb-4">
-                    <span className="font-semibold text-black text-sm mb-2">ABOUT ME</span>
+                    <span className="font-semibold text-black text-sm mb-2">{t("freelancer.id.aboutMe")}</span>
                     <span className="text-black text-xs">{freelancer.bio}</span>
                   </div>
                   <div className="flex flex-col mb-4">
-                    <span className="font-semibold text-black text-sm mb-2 mr-2">MEMBER SINCE</span>
+                    <span className="font-semibold text-black text-sm mb-2 mr-2">{t("freelancer.id.memberSince")}</span>
                     <span className="text-black text-xs">{new Date(freelancer.created_at).toLocaleDateString('en-US', { 
                        year: 'numeric', 
                        month: 'long', 
@@ -601,7 +601,7 @@ export default function FreelancerProfile() {
                   }`}
                   onClick={() => setActiveTab('services')}
                 >
-                  Services
+                  {t("freelancer.id.services")}
                 </button>
                 <button 
                   className={`pb-2 border-b-2 text-black text-sm font-medium transition-colors ${
@@ -611,7 +611,7 @@ export default function FreelancerProfile() {
                   }`}
                   onClick={() => setActiveTab('reviews')}
                 >
-                  Reviews
+                  {t("freelancer.id.reviews")}
                 </button>
               </div>
             </div>
@@ -652,13 +652,13 @@ export default function FreelancerProfile() {
                                   return activePackages.length > 0 ? (
                                     <span className="font-bold text-black text-sm">
                                       {activePackages.length === 1 
-                                        ? `€${activePackages[0].price} package`
-                                        : `From €${Math.min(...activePackages.map(p => p.price))} packages`
+                                        ? `€${activePackages[0].price} ${t("freelancer.id.package")}`
+                                        : t("freelancer.id.fromPrice", { price: Math.min(...activePackages.map(p => p.price)) }) + ` ${t("freelancer.id.packages")}`
                                       }
                                     </span>
                                   ) : (
                                     <span className="font-bold text-black text-sm text-gray-500">
-                                      Packages available
+                                      {t("freelancers.packagesAvailable")}
                                     </span>
                                   )
                                 })()
@@ -680,7 +680,7 @@ export default function FreelancerProfile() {
                             {offering.experience_years && (
                               <div className="flex items-center space-x-2">
                                 <CustomViewDetailsIcon className="h-4 w-4 text-[#33CC99]" />
-                                <span className="text-black text-xs">{offering.experience_years} years of experience</span>
+                                <span className="text-black text-xs">{t("freelancer.id.yearsOfExperience", { years: offering.experience_years })}</span>
                               </div>
                             )}
                           </div>
@@ -703,7 +703,7 @@ export default function FreelancerProfile() {
                                 onClick={handleCategoryDeselect}
                                 className="text-xs w-full"
                       >
-                                Change freelancer service
+                                {t("freelancer.id.changeFreelancerService")}
                       </Button>
                             </div>
                             <div className="space-y-3">
@@ -769,19 +769,19 @@ export default function FreelancerProfile() {
                                   <>
                                     <div className="flex items-start gap-2">
                                       <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">1</div>
-                                      <p className="text-xs text-muted-foreground">Select and customize your service package</p>
+                                      <p className="text-xs text-muted-foreground">{t("freelancer.id.selectAndCustomizePackage")}</p>
                                     </div>
                                     <div className="flex items-start gap-2">
                                       <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">2</div>
-                                      <p className="text-xs text-muted-foreground">Select your preferred date and time from the calendar</p>
+                                      <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step2Calendar")}</p>
                                     </div>
                                     <div className="flex items-start gap-2">
                                       <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">3</div>
-                                      <p className="text-xs text-muted-foreground">Complete DBA assessment or skip (based on freelancer's status)</p>
+                                      <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step3DBA")}</p>
                                     </div>
                                     <div className="flex items-start gap-2">
                                       <div className="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">4</div>
-                                      <p className="text-xs text-muted-foreground">Review and confirm your booking</p>
+                                      <p className="text-xs text-muted-foreground">{t("freelancer.bookingProcess.step4Review")}</p>
                                     </div>
                                   </>
                                 ) : (
@@ -849,7 +849,7 @@ export default function FreelancerProfile() {
                                   onClick={() => setShowBookingForm(true)}
                                 >
                                   {getSelectedOffering()?.pricing_type === "packages" && !selectedPackageData
-                                    ? "Please select a package first"
+                                    ? t("freelancer.id.pleaseSelectPackageFirst")
                                     : t("freelancer.continueToBooking")
                                   }
                                 </Button>
@@ -872,7 +872,7 @@ export default function FreelancerProfile() {
                   {/* Show message when no category is selected */}
                   {!selectedCategoryId && (
                     <div className="text-center py-8">
-                      <p className="text-black text-sm">Please select a service first to view availability</p>
+                      <p className="text-black text-sm">{t("freelancer.id.pleaseSelectServiceFirst")}</p>
                     </div>
                   )}
                 </div>
@@ -893,7 +893,7 @@ export default function FreelancerProfile() {
                                 <div className="w-10 h-10 rounded-full overflow-hidden relative">
                                    <Image
                                      src={review.profiles?.avatar_url || `/placeholder.svg?height=40&width=40&text=${review.profiles?.first_name?.charAt(0) || "U"}`}
-                                     alt={review.profiles?.first_name || "User"}
+                                     alt={review.profiles?.first_name || t("freelancer.id.user")}
                                      fill
                                      className="rounded-full object-cover"
                                    />
@@ -940,7 +940,11 @@ export default function FreelancerProfile() {
                       {totalReviews > reviewsPerPage && (
                         <div className="flex items-center justify-between mt-6">
                           <div className="text-sm text-muted-foreground">
-                            Showing {((currentPage - 1) * reviewsPerPage) + 1} to {Math.min(currentPage * reviewsPerPage, totalReviews)} of {totalReviews} reviews
+                            {t("freelancer.id.showingReviews", { 
+                              from: ((currentPage - 1) * reviewsPerPage) + 1, 
+                              to: Math.min(currentPage * reviewsPerPage, totalReviews),
+                              total: totalReviews 
+                            })}
                           </div>
                           <div className="flex items-center space-x-2">
                             <Button
@@ -949,10 +953,10 @@ export default function FreelancerProfile() {
                               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                               disabled={currentPage === 1}
                             >
-                              Previous
+                              {t("freelancer.id.previous")}
                             </Button>
                             <span className="text-sm">
-                              Page {currentPage} of {Math.ceil(totalReviews / reviewsPerPage)}
+                              {t("freelancer.id.pageOf", { current: currentPage, total: Math.ceil(totalReviews / reviewsPerPage) })}
                             </span>
                             <Button
                               variant="outline"
@@ -960,7 +964,7 @@ export default function FreelancerProfile() {
                               onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalReviews / reviewsPerPage), prev + 1))}
                               disabled={currentPage >= Math.ceil(totalReviews / reviewsPerPage)}
                             >
-                              Next
+                              {t("freelancer.id.next")}
                             </Button>
                           </div>
                         </div>
@@ -969,7 +973,7 @@ export default function FreelancerProfile() {
                   ) : (
                     <Card>
                       <CardContent className="p-6 text-center">
-                        <p className="text-muted-foreground">No reviews yet</p>
+                        <p className="text-muted-foreground">{t("freelancer.id.noReviewsYet")}</p>
                       </CardContent>
                     </Card>
                   )}
@@ -992,11 +996,11 @@ export default function FreelancerProfile() {
                 />
               </div>
               <div>
-                <div className="font-medium">{freelancer.first_name} is available for hire</div>
+                <div className="font-medium">{t("freelancer.id.isAvailableForHire", { name: freelancer.first_name })}</div>
                 {/* <div className="text-sm text-slate-300">Availability: Now</div> */}
               </div>
               <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
-                Hire {freelancer.first_name}
+                {t("freelancer.id.hire")} {freelancer.first_name}
               </Button>
               {/* <button className="text-slate-400 hover:text-white">
                 <div className="w-4 h-4">×</div>

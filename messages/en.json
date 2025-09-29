@@ -125,7 +125,10 @@
       "step1": "Select your preferred date and time from the calendar",
       "step2": "Fill in job details and location",
       "step3": "Complete DBA assessment or skip (based on freelancer's status)",
-      "step4": "Review and confirm your booking"
+      "step4": "Review and confirm your booking",
+      "step2Calendar": "Select your preferred date and time from the calendar",
+      "step3DBA": "Complete DBA assessment or skip (based on freelancer's status)",
+      "step4Review": "Review and confirm your booking"
     },
     "importantNotes": {
       "title": "Important Notes",
@@ -133,6 +136,33 @@
       "dbaCompliance": "DBA assessment ensures legal compliance",
       "imageUpload": "You can upload job images for better clarity",
       "cancellationPolicy": "Cancellation policy applies to all bookings"
+    },
+    "id": {
+      "verified": "Verified",
+      "availableNow": "Available Now",
+      "freelancer": "Freelancer",
+      "messageFreelancer": "Message Freelancer",
+      "loading": "Loading...",
+      "aboutMe": "ABOUT ME",
+      "memberSince": "MEMBER SINCE",
+      "services": "Services",
+      "reviews": "Reviews",
+      "pleaseSelectPackageFirst": "Please select a package first",
+      "pleaseSelectServiceFirst": "Please select a service first to view availability",
+      "user": "User",
+      "showingReviews": "Showing {from} to {to} of {total} reviews",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {current} of {total}",
+      "noReviewsYet": "No reviews yet",
+      "hire": "Hire",
+      "isAvailableForHire": "{name} is available for hire",
+      "changeFreelancerService": "Change freelancer service",
+      "yearsOfExperience": "{years} years of experience",
+      "package": "package",
+      "packages": "packages",
+      "fromPrice": "From €{price}",
+      "selectAndCustomizePackage": "Select and customize your service package"
     },
     "error": {
       "failedToLoadProfile": "Failed to load freelancer profile",
@@ -307,7 +337,14 @@
     },
     "distance": {
       "away": "km away"
-    }
+    },
+    "cache": {
+      "lastUpdated": "Last updated"
+    },
+    "package": "package",
+    "packages": "packages",
+    "packagesAvailable": "Packages available",
+    "fromPrice": "From €{price}"
   },
   "pagination": {
     "previous": "Previous",
@@ -736,7 +773,22 @@
     "packageDeactivatedSuccessfully": "Package deactivated successfully",
     "failedToUpdatePackageStatus": "Failed to update package status",
     "packageOrderUpdated": "Package order updated",
-    "failedToUpdatePackageOrder": "Failed to update package order"
+    "failedToUpdatePackageOrder": "Failed to update package order",
+    "selection": {
+      "failedToLoadPackages": "Failed to load service packages",
+      "noPackagesAvailable": "No packages available",
+      "noPackagesDescription": "This freelancer hasn't set up service packages for this category yet.",
+      "chooseServicePackage": "Choose Your Service Package",
+      "selectAndCustomize": "Select and customize your {categoryName} service package",
+      "item": "item",
+      "items": "items",
+      "fixed": "Fixed",
+      "fixedLabel": "Fixed:",
+      "quantity": "Qty:",
+      "total": "Total:",
+      "selected": "Selected",
+      "selectPackage": "Select Package"
+    }
   },
   "packageItems": {
     "title": "Package Items",
