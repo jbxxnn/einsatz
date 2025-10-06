@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/lib/toast"
 import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Loader, GripVertical, Shield, CheckCircle, Clock, Package, DollarSign, Calculator } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import JobCategorySelector from "@/components/job-category-selector"
@@ -190,7 +190,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [offerings, setOfferings] = useState<(JobOffering & { category_name: string; subcategory_name?: string; display_order?: number })[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null)
-  const [pricingType, setPricingType] = useState<"hourly" | "packages">("hourly")
+  const [pricingType, setPricingType] = useState<"hourly" | "packages">("packages")
   const [hourlyRate, setHourlyRate] = useState("")
   const [description, setDescription] = useState("")
   const [experienceYears, setExperienceYears] = useState("")
@@ -207,6 +207,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [packageItemsDialogOpen, setPackageItemsDialogOpen] = useState(false)
   const [selectedPackageForItems, setSelectedPackageForItems] = useState<{ id: string; name: string } | null>(null)
   const [packagesRefreshTrigger, setPackagesRefreshTrigger] = useState(0)
+  const [addOfferingDialogOpen, setAddOfferingDialogOpen] = useState(false)
 
 
   // Drag and drop sensors
@@ -294,12 +295,26 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   }, [supabase, freelancerId])
 
   const handleAddOffering = async () => {
+    console.log("🚀 Starting handleAddOffering...")
+    console.log("📊 Current state:", {
+      selectedCategoryId,
+      selectedSubcategoryId,
+      pricingType,
+      hourlyRate,
+      description,
+      experienceYears,
+      offeringsCount: offerings.length,
+      freelancerId
+    })
+
     if (!selectedCategoryId) {
+      console.log("❌ No category selected")
       toast.error(t("jobOfferings.cardAddOfferingError"))
       return
     }
 
     if (offerings.length >= MAX_JOB_OFFERINGS) {
+      console.log("❌ Max offerings reached:", offerings.length)
       toast.error(t("jobOfferings.cardMaxOfferings"))
       return
     }
@@ -314,25 +329,42 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           ((!o.subcategory_id && !selectedSubcategoryId) || o.subcategory_id === selectedSubcategoryId),
       )
 
+      console.log("🔍 Checking for existing offering:", {
+        existingOffering: existingOffering ? {
+          id: existingOffering.id,
+          category_id: existingOffering.category_id,
+          subcategory_id: existingOffering.subcategory_id
+        } : null,
+        searchCriteria: {
+          category_id: selectedCategoryId,
+          subcategory_id: selectedSubcategoryId
+        }
+      })
+
       if (existingOffering) {
-        toast.error(t("jobOfferings.cardAddOfferingError"))
+        console.log("❌ Duplicate offering found in local state")
+        toast.error(t("jobOfferings.duplicateOfferingLocal"))
         setSaving(false)
         return
       }
 
+      const insertData = {
+        freelancer_id: freelancerId,
+        category_id: selectedCategoryId,
+        subcategory_id: selectedSubcategoryId,
+        pricing_type: pricingType,
+        hourly_rate: pricingType === "hourly" ? Number.parseFloat(hourlyRate) || 45.00 : null,
+        description: description,
+        experience_years: experienceYears ? Number.parseFloat(experienceYears) : null,
+        is_available_now: false,
+        display_order: offerings.length + 1,
+      }
+
+      console.log("📝 Insert data:", insertData)
+
       const { data, error } = await supabase
         .from("freelancer_job_offerings")
-        .insert({
-          freelancer_id: freelancerId,
-          category_id: selectedCategoryId,
-          subcategory_id: selectedSubcategoryId,
-          pricing_type: pricingType,
-          hourly_rate: pricingType === "hourly" ? Number.parseFloat(hourlyRate) || 45.00 : null,
-          description: description,
-          experience_years: experienceYears ? Number.parseFloat(experienceYears) : null,
-          is_available_now: false,
-          display_order: offerings.length + 1,
-        })
+        .insert(insertData)
         .select(`
           *,
           job_categories (
@@ -344,33 +376,86 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         `)
         .single()
 
-      if (error) throw error
+      console.log("📡 Supabase response:", { data, error })
+
+      if (error) {
+        console.error("❌ Supabase error details:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          fullError: error
+        })
+        throw error
+      }
+
+      console.log("✅ Successfully inserted job offering:", data)
 
       // Add to local state
+      const newOffering = {
+        ...data,
+        category_name: data.job_categories.name,
+        subcategory_name: data.job_subcategories?.name,
+      }
+      
+      console.log("📝 Adding to local state:", newOffering)
+      
       setOfferings([
         ...offerings,
-        {
-          ...data,
-          category_name: data.job_categories.name,
-          subcategory_name: data.job_subcategories?.name,
-        },
+        newOffering,
       ])
 
-      // Reset form
+      // Reset form and close modal
       setSelectedCategoryId(null)
       setSelectedSubcategoryId(null)
-      setPricingType("hourly")
+      setPricingType("packages")
       setHourlyRate("")
       setDescription("")
       setExperienceYears("")
+      setAddOfferingDialogOpen(false)
 
-      toast.success(`You can now be booked for ${data.job_categories.name} ${
-        data.job_subcategories?.name ? `- ${data.job_subcategories.name}` : ""
-      } jobs`)
+      console.log("🎉 Job offering added successfully!")
+
+      // Auto-open packages modal for the new offering
+      
+      // Small delay to ensure the add offering modal closes first
+      setTimeout(() => {
+        setSelectedOfferingForPackages(newOffering)
+        setPackagesDialogOpen(true)
+      }, 300)
+
+      toast.success(t("jobOfferings.jobOfferingCreated", {
+        categoryName: data.job_categories.name,
+        subcategoryName: data.job_subcategories?.name ? ` - ${data.job_subcategories.name}` : ""
+      }))
     } catch (error) {
-      console.error("Error adding job offering:", error)
-      toast.error(t("jobOfferings.cardAddOfferingError"))
+      console.error("💥 Error adding job offering - Full error object:", error)
+      console.error("💥 Error type:", typeof error)
+      console.error("💥 Error constructor:", error?.constructor?.name)
+      console.error("💥 Error keys:", error ? Object.keys(error) : 'N/A')
+      
+      // More specific error handling
+      if (error && typeof error === 'object' && 'code' in error) {
+        console.log("🔍 Database error detected with code:", error.code)
+        if (error.code === '23505') {
+          console.log("❌ Unique constraint violation")
+          toast.error(t("jobOfferings.duplicateOfferingExists"))
+        } else if (error.code === '23503') {
+          console.log("❌ Foreign key constraint violation")
+          toast.error(t("jobOfferings.invalidCategorySubcategory"))
+        } else {
+          console.log("❌ Other database error")
+          toast.error(t("jobOfferings.databaseError", {
+            code: error.code,
+            message: (error as any).message || t("jobOfferings.unknownError")
+          }))
+        }
+      } else {
+        console.log("❌ Non-database error")
+        toast.error(t("jobOfferings.cardAddOfferingError"))
+      }
     } finally {
+      console.log("🏁 handleAddOffering completed, setting saving to false")
       setSaving(false)
     }
   }
@@ -437,6 +522,21 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const openPackageItemsDialog = (packageId: string, packageName: string) => {
     setSelectedPackageForItems({ id: packageId, name: packageName })
     setPackageItemsDialogOpen(true)
+  }
+
+  const openAddOfferingDialog = () => {
+    setAddOfferingDialogOpen(true)
+  }
+
+  const closeAddOfferingDialog = () => {
+    setAddOfferingDialogOpen(false)
+    // Reset form when closing
+    setSelectedCategoryId(null)
+    setSelectedSubcategoryId(null)
+    setPricingType("packages")
+    setHourlyRate("")
+    setDescription("")
+    setExperienceYears("")
   }
 
   // Reset subcategory when category changes
@@ -521,188 +621,33 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         </div>
       </div>
 
-      {hasReachedMaxOfferings ? (
-        <div className="bg-background rounded-lg overflow-hidden">
-          <div className="p-6 flex gap-2">
-            <AlertCircle className="h-4 w-4" />
-            <div>
-            <AlertTitle className="text-sm text-black">{t("jobOfferings.cardMaxOfferings")}</AlertTitle>
-            <AlertDescription className="text-xs text-black">
-              {t("jobOfferings.cardMaxOfferingsDescription", { MAX_JOB_OFFERINGS: 3 })}
-            </AlertDescription>
-          </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-background rounded-lg overflow-hidden">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold mb-1">{t("jobOfferings.cardAddNewOffering")}</h2>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="category" className="text-xs text-black">{t("jobOfferings.cardCategory")}</Label>
-                <JobCategorySelector
-                  selectedCategories={selectedCategoryId ? [selectedCategoryId] : []}
-                  onChange={(categories) => setSelectedCategoryId(categories[0] || null)}
-                  multiple={false}
-                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-                />
+      {/* Add Job Offering Button */}
+      <div className="bg-background rounded-lg overflow-hidden">
+        <div className="p-6">
+          {hasReachedMaxOfferings ? (
+            <div className="flex gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <div>
+                <AlertTitle className="text-sm text-black">{t("jobOfferings.cardMaxOfferings")}</AlertTitle>
+                <AlertDescription className="text-xs text-black">
+                  {t("jobOfferings.cardMaxOfferingsDescription", { MAX_JOB_OFFERINGS: 3 })}
+                </AlertDescription>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="subcategory" className="text-xs text-black">{t("jobOfferings.cardSubcategory")}</Label>
-                <JobSubcategorySelector
-                  categoryId={selectedCategoryId}
-                  selectedSubcategory={selectedSubcategoryId}
-                  onChange={setSelectedSubcategoryId}
-                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs text-black">{t("jobOfferings.pricingType")}</Label>
-                <RadioGroup 
-                  value={pricingType} 
-                  onValueChange={(value: "hourly" | "packages") => setPricingType(value)}
-                  className="flex gap-6"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="hourly" id="hourly" />
-                    <Label htmlFor="hourly" className="text-xs text-black cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        Fixed Hourly Rate
-                      </div>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="packages" id="packages" />
-                    <Label htmlFor="packages" className="text-xs text-black cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4" />
-                        {t("jobOfferings.multiplePackages")}
-                      </div>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {pricingType === "hourly" && (
-                <div className="space-y-2">
-                  <Label htmlFor="hourlyRate" className="text-xs text-black">{t("jobOfferings.cardHourlyRate")}</Label>
-                  <Input
-                    id="hourlyRate"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="45.00"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(e.target.value)}
-                    className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-                  />
-                </div>
-              )}
-
-              {pricingType === "packages" && (
-                <div className="text-xs text-gray-600 p-3 bg-gray-50 rounded-lg">
-                  <p className="font-medium mb-1">💡 {t("jobOfferings.packagePricing")}</p>
-                  <p>{t("jobOfferings.packagePricingDescription")}</p>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="experienceYears" className="text-xs text-black">{t("jobOfferings.cardExperienceYears")}</Label>
-                <Input
-                  id="experienceYears"
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  placeholder="3.5"
-                  value={experienceYears}
-                  onChange={(e) => setExperienceYears(e.target.value)}
-                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-xs text-black">{t("jobOfferings.cardDescription")}</Label>
-                <Textarea
-                  id="description"
-                  placeholder={t("jobOfferings.descriptionPlaceholder")}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-                />
-                
-                {/* Live Preview */}
-                {description && (
-                  <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">{t("jobOfferings.previewAsShownToClients")}</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
-                      <div className="flex flex-col gap-1">
-                        <div className="text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200">
-                          <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full">
-                            <span className="font-bold">
-                              {selectedSubcategoryId ? t("jobOfferings.sampleSubcategory") : t("jobOfferings.sampleCategory")}
-                            </span>
-                            
-                            {/* Pricing and Experience */}
-                            <div className="flex gap-4 mt-1">
-                              {pricingType === "hourly" && hourlyRate && (
-                                <span className="text-xs font-semibold text-green-600">
-                                  €{hourlyRate}/hour
-                                </span>
-                              )}
-                              {pricingType === "packages" && (
-                                <span className="text-xs font-semibold text-green-600">
-                                  {t("jobOfferings.multiplePackages")}
-                                </span>
-                              )}
-                              {experienceYears && (
-                                <span className="text-xs">
-                                  {experienceYears} {experienceYears === "1" ? "year" : "years"} {t("jobOfferings.yearsExperience")}
-                                </span>
-                              )}
-                            </div>
-                            
-                            {/* Description - This is what gets truncated */}
-                            <div className="flex items-center gap-1 mt-1">
-                              <div className="line-clamp-2 text-xs">
-                                {description}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {description.length > 80 && (
-                      <div className="text-xs text-orange-600">
-                        ⚠️ {t("jobOfferings.textWillBeTruncated")}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <Button onClick={handleAddOffering} disabled={saving} className="w-full">
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("jobOfferings.cardAdding")}
-                  </>
-                ) : (
-                  <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t("jobOfferings.cardAddJobOffering")}
-                  </>
-                )}
+            </div>
+          ) : (
+            <div className="text-center">
+              <Button 
+                onClick={openAddOfferingDialog}
+                className="w-full"
+                disabled={hasReachedMaxOfferings}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {t("jobOfferings.cardAddNewOffering")}
               </Button>
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Availability Dialog */}
       <Dialog open={availabilityDialogOpen} onOpenChange={setAvailabilityDialogOpen}>
@@ -790,6 +735,197 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               }}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Job Offering Dialog */}
+      <Dialog open={addOfferingDialogOpen} onOpenChange={closeAddOfferingDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              {t("jobOfferings.cardAddNewOffering")}
+            </DialogTitle>
+            <DialogDescription>
+              {t("jobOfferings.addJobOfferingDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="category" className="text-xs text-black">{t("jobOfferings.cardCategory")}</Label>
+              <JobCategorySelector
+                selectedCategories={selectedCategoryId ? [selectedCategoryId] : []}
+                onChange={(categories) => setSelectedCategoryId(categories[0] || null)}
+                multiple={false}
+                className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="subcategory" className="text-xs text-black">{t("jobOfferings.cardSubcategory")}</Label>
+              <JobSubcategorySelector
+                categoryId={selectedCategoryId}
+                selectedSubcategory={selectedSubcategoryId}
+                onChange={setSelectedSubcategoryId}
+                className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-black">{t("jobOfferings.pricingType")}</Label>
+              <RadioGroup 
+                value={pricingType} 
+                onValueChange={(value: 
+                 // "hourly" | 
+                  "packages") => setPricingType(value)}
+                className="flex gap-6"
+              >
+                {/* <div className="flex items-center space-x-2 opacity-50 cursor-not-allowed">
+                  <RadioGroupItem value="hourly" id="hourly" disabled />
+                  <Label htmlFor="hourly" className="text-xs text-gray-400 cursor-not-allowed">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      {t("jobOfferings.fixedHourlyRate")} ({t("jobOfferings.comingSoon")})
+                    </div>
+                  </Label>
+                </div> */}
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="packages" id="packages" />
+                  <Label htmlFor="packages" className="text-xs text-black cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      {t("jobOfferings.multiplePackages")}
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {pricingType === "hourly" && (
+              <div className="space-y-2">
+                <Label htmlFor="hourlyRate" className="text-xs text-black">{t("jobOfferings.cardHourlyRate")}</Label>
+                <Input
+                  id="hourlyRate"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="45.00"
+                  value={hourlyRate}
+                  onChange={(e) => setHourlyRate(e.target.value)}
+                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+                />
+              </div>
+            )}
+
+            {pricingType === "packages" && (
+              <div className="text-xs text-gray-600 p-3 bg-gray-50 rounded-lg">
+                <p className="font-medium mb-1">💡 {t("jobOfferings.packagePricing")}</p>
+                <p>{t("jobOfferings.packagePricingDescription")}</p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="experienceYears" className="text-xs text-black">{t("jobOfferings.cardExperienceYears")}</Label>
+              <Input
+                id="experienceYears"
+                type="number"
+                min="0"
+                step="0.5"
+                placeholder="3.5"
+                value={experienceYears}
+                onChange={(e) => setExperienceYears(e.target.value)}
+                className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-xs text-black">{t("jobOfferings.cardDescription")}</Label>
+              <Textarea
+                id="description"
+                placeholder={t("jobOfferings.descriptionPlaceholder")}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+              />
+              
+              {/* Live Preview */}
+              {description && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">{t("jobOfferings.previewAsShownToClients")}</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <div className="text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200">
+                        <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full">
+                          <span className="font-bold">
+                            {selectedSubcategoryId ? t("jobOfferings.sampleSubcategory") : t("jobOfferings.sampleCategory")}
+                          </span>
+                          
+                          {/* Pricing and Experience */}
+                          <div className="flex gap-4 mt-1">
+                            {pricingType === "hourly" && hourlyRate && (
+                              <span className="text-xs font-semibold text-green-600">
+                                €{hourlyRate}/hour
+                              </span>
+                            )}
+                            {pricingType === "packages" && (
+                              <span className="text-xs font-semibold text-green-600">
+                                {t("jobOfferings.multiplePackages")}
+                              </span>
+                            )}
+                            {experienceYears && (
+                              <span className="text-xs">
+                                {experienceYears} {experienceYears === "1" ? "year" : "years"} {t("jobOfferings.yearsExperience")}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Description - This is what gets truncated */}
+                          <div className="flex items-center gap-1 mt-1">
+                            <div className="line-clamp-2 text-xs">
+                              {description}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {description.length > 80 && (
+                    <div className="text-xs text-orange-600">
+                      ⚠️ {t("jobOfferings.textWillBeTruncated")}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={closeAddOfferingDialog}
+                className="flex-1"
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button 
+                onClick={handleAddOffering} 
+                disabled={saving} 
+                className="flex-1"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t("jobOfferings.cardAdding")}
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t("jobOfferings.cardAddJobOffering")}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
