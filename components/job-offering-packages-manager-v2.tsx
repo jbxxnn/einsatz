@@ -122,9 +122,15 @@ function SortablePackageRow({
       </TableCell>
       <TableCell className="font-semibold text-green-600">
         <div className="flex flex-col">
-          <span>€{totalPrice}</span>
-          {pkg.calculated_total && pkg.calculated_total !== pkg.price && (
-            <span className="text-xs text-gray-500 line-through">€{pkg.price}</span>
+          {totalPrice > 0 ? (
+            <>
+              <span>€{totalPrice}</span>
+              {pkg.calculated_total && pkg.calculated_total !== pkg.price && pkg.price > 0 && (
+                <span className="text-xs text-gray-500 line-through">€{pkg.price}</span>
+              )}
+            </>
+          ) : (
+            <span className="text-gray-400 text-sm">{t("packages.addItemsToSetPrice")}</span>
           )}
         </div>
       </TableCell>
@@ -198,7 +204,7 @@ export default function JobOfferingPackagesManagerV2({
   // Form state
   const [packageName, setPackageName] = useState("")
   const [shortDescription, setShortDescription] = useState("")
-  const [price, setPrice] = useState("")
+  const [price, setPrice] = useState("0") // Default to 0, hidden from user
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -298,7 +304,7 @@ export default function JobOfferingPackagesManagerV2({
   const resetForm = () => {
     setPackageName("")
     setShortDescription("")
-    setPrice("")
+    setPrice("0") // Always reset to 0
     setEditingPackage(null)
   }
 
@@ -324,8 +330,8 @@ export default function JobOfferingPackagesManagerV2({
   }
 
   const handleSavePackage = async () => {
-    if (!packageName.trim() || !price.trim()) {
-      toast.error(t("packages.packageNameAndPriceRequired"))
+    if (!packageName.trim()) {
+      toast.error(t("packages.packageNameRequired"))
       return
     }
 
@@ -335,7 +341,7 @@ export default function JobOfferingPackagesManagerV2({
         job_offering_id: jobOfferingId,
         package_name: packageName.trim(),
         short_description: shortDescription.trim() || null,
-        price: parseFloat(price),
+        price: 0, // Always 0 - calculated from package items
         display_order: editingPackage ? editingPackage.display_order : packages.length + 1,
         is_active: editingPackage ? editingPackage.is_active : true,
       }
@@ -493,7 +499,7 @@ export default function JobOfferingPackagesManagerV2({
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("packages.packageName")}</TableHead>
-                    <TableHead>{t("packages.price")}</TableHead>
+                    <TableHead>Price</TableHead>
                     <TableHead>{t("packages.status")}</TableHead>
                     <TableHead className="text-right">{t("packages.actions")}</TableHead>
                   </TableRow>
@@ -553,21 +559,12 @@ export default function JobOfferingPackagesManagerV2({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="price">{t("packages.basePrice")}</Label>
-              <Input
-                id="price"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder={t("packages.basePricePlaceholder")}
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-              <p className="text-xs text-gray-500">
-                {t("packages.basePriceDescription")}
-              </p>
-            </div>
+            {/* Price field hidden - calculated from package items */}
+            <input
+              type="hidden"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
 
             <div className="flex gap-2 justify-end">
               <Button 

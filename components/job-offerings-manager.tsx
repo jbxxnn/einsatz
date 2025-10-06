@@ -408,7 +408,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         job_offering_id: data.id,
         package_name: t("jobOfferings.defaultPackageName", { categoryName: data.job_categories.name }),
         short_description: t("jobOfferings.defaultPackageDescription"),
-        price: freelancerHourlyRate, // Use freelancer's hourly rate
+        price: 0, // Default to 0 - calculated from package items
         display_order: 1,
         is_active: true,
       }

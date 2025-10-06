@@ -838,6 +838,7 @@
     "basePrice": "Basis Prijs (€) *",
     "basePricePlaceholder": "150,00",
     "basePriceDescription": "Dit wordt overschreven door berekend totaal van regels",
+    "addItemsToSetPrice": "Voeg items toe om prijs in te stellen",
     "cancel": "Annuleren",
     "saving": "Opslaan...",
     "update": "Bijwerken",

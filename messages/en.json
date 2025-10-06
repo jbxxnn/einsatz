@@ -838,6 +838,7 @@
     "basePrice": "Base Price (€) *",
     "basePricePlaceholder": "150.00",
     "basePriceDescription": "This will be overridden by calculated total from line items",
+    "addItemsToSetPrice": "Add items to set price",
     "cancel": "Cancel",
     "saving": "Saving...",
     "update": "Update",
