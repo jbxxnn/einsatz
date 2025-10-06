@@ -191,7 +191,7 @@ export default function LeftPackageSelection({
 
   return (
     <div className="space-y-3">
-      <div className="text-center mb-4">
+      <div className="text-start mb-4">
         <h3 className="text-sm font-semibold mb-1">{t("packages.selection.chooseServicePackage")}</h3>
         <p className="text-xs text-gray-600">{t("packages.selection.selectAndCustomize", { categoryName })}</p>
       </div>

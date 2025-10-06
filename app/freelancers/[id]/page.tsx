@@ -714,6 +714,14 @@ export default function FreelancerProfile() {
                                 </div>
                               </div>
                             </div>
+
+                             {/* Service Description */}
+                             {getSelectedOffering()?.description && (
+                              <div className="pt-4">
+                                <h4 className="text-sm font-medium mb-2">{t("freelancer.serviceDetails.serviceDescription")}</h4>
+                                <p className="text-sm text-muted-foreground">{getSelectedOffering()?.description}</p>
+                    </div>
+                  )}
                           </CardHeader>
                           <CardContent className="space-y-4">
                             {/* Package Selection or Service Details */}
@@ -752,14 +760,6 @@ export default function FreelancerProfile() {
                                 )}
                               </div>
                             )}
-
-                            {/* Service Description */}
-                            {getSelectedOffering()?.description && (
-                              <div>
-                                <h4 className="text-sm font-medium mb-2">{t("freelancer.serviceDetails.serviceDescription")}</h4>
-                                <p className="text-sm text-muted-foreground">{getSelectedOffering()?.description}</p>
-                    </div>
-                  )}
 
                             {/* Booking Process Guide */}
                             <div className="border-t pt-4">
