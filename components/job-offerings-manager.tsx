@@ -391,6 +391,66 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
 
       console.log("✅ Successfully inserted job offering:", data)
 
+      // Get freelancer's hourly rate from profile
+      console.log("💰 Fetching freelancer hourly rate...")
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("hourly_rate")
+        .eq("id", freelancerId)
+        .single()
+
+      const freelancerHourlyRate = profile?.hourly_rate || 40 // Default to €40 if not set
+      console.log("💰 Using hourly rate:", freelancerHourlyRate)
+
+      // Create default package for the new job offering
+      console.log("📦 Creating default package...")
+      const defaultPackageData = {
+        job_offering_id: data.id,
+        package_name: t("jobOfferings.defaultPackageName", { categoryName: data.job_categories.name }),
+        short_description: t("jobOfferings.defaultPackageDescription"),
+        price: freelancerHourlyRate, // Use freelancer's hourly rate
+        display_order: 1,
+        is_active: true,
+      }
+
+      const { data: defaultPackage, error: packageError } = await supabase
+        .from("job_offering_packages")
+        .insert(defaultPackageData)
+        .select()
+        .single()
+
+      if (packageError) {
+        console.error("❌ Error creating default package:", packageError)
+        // Don't throw error, just log it - job offering was created successfully
+        toast.error(t("jobOfferings.defaultPackageCreationFailed"))
+      } else {
+        console.log("✅ Default package created:", defaultPackage)
+
+        // Create default package item
+        console.log("📋 Creating default package item...")
+        const defaultItemData = {
+          package_id: defaultPackage.id,
+          type: "labour",
+          offering: t("jobOfferings.defaultItemOffering"),
+          price_per_unit: freelancerHourlyRate,
+          unit_type: "hours",
+          display_order: 1,
+        }
+
+        const { data: defaultItem, error: itemError } = await supabase
+          .from("job_offering_package_items")
+          .insert(defaultItemData)
+          .select()
+          .single()
+
+        if (itemError) {
+          console.error("❌ Error creating default package item:", itemError)
+          // Don't throw error, package was created successfully
+        } else {
+          console.log("✅ Default package item created:", defaultItem)
+        }
+      }
+
       // Add to local state
       const newOffering = {
         ...data,
