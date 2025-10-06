@@ -139,18 +139,53 @@ export default function TermsAndConditionsManager({ freelancerId }: TermsAndCond
       if (enabled) {
         // If enabling custom terms, create default custom terms based on platform terms
         if (platformTerms) {
-          const { data, error } = await supabase
+          // First, check if there's an existing record for this freelancer
+          const { data: existingTerms, error: fetchError } = await supabase
             .from("freelancer_terms")
-            .upsert({
-              freelancer_id: freelancerId,
-              content: platformTerms.content,
-              is_active: true
-            })
-            .select()
+            .select("*")
+            .eq("freelancer_id", freelancerId)
             .single()
 
+          if (fetchError && fetchError.code !== "PGRST116") {
+            console.error("Error fetching existing terms:", fetchError)
+            toast.error(t("terms.failedToLoadCustomTerms"))
+            return
+          }
+
+          let data, error
+
+          if (existingTerms) {
+            // Update existing record
+            const { data: updateData, error: updateError } = await supabase
+              .from("freelancer_terms")
+              .update({
+                content: platformTerms.content,
+                is_active: true
+              })
+              .eq("id", existingTerms.id)
+              .select()
+              .single()
+
+            data = updateData
+            error = updateError
+          } else {
+            // Create new record
+            const { data: insertData, error: insertError } = await supabase
+              .from("freelancer_terms")
+              .insert({
+                freelancer_id: freelancerId,
+                content: platformTerms.content,
+                is_active: true
+              })
+              .select()
+              .single()
+
+            data = insertData
+            error = insertError
+          }
+
           if (error) {
-            console.error("Error creating custom terms:", error)
+            console.error("Error creating/updating custom terms:", error)
             toast.error(t("terms.failedToCreateCustomTerms"))
             return
           }
@@ -193,15 +228,50 @@ export default function TermsAndConditionsManager({ freelancerId }: TermsAndCond
         return
       }
 
-      const { data, error } = await supabase
+      // Check if there's an existing record for this freelancer
+      const { data: existingTerms, error: fetchError } = await supabase
         .from("freelancer_terms")
-        .upsert({
-          freelancer_id: freelancerId,
-          content: customContent.trim(),
-          is_active: true
-        })
-        .select()
+        .select("*")
+        .eq("freelancer_id", freelancerId)
         .single()
+
+      if (fetchError && fetchError.code !== "PGRST116") {
+        console.error("Error fetching existing terms:", fetchError)
+        toast.error(t("terms.failedToLoadCustomTerms"))
+        return
+      }
+
+      let data, error
+
+      if (existingTerms) {
+        // Update existing record
+        const { data: updateData, error: updateError } = await supabase
+          .from("freelancer_terms")
+          .update({
+            content: customContent.trim(),
+            is_active: true
+          })
+          .eq("id", existingTerms.id)
+          .select()
+          .single()
+
+        data = updateData
+        error = updateError
+      } else {
+        // Create new record
+        const { data: insertData, error: insertError } = await supabase
+          .from("freelancer_terms")
+          .insert({
+            freelancer_id: freelancerId,
+            content: customContent.trim(),
+            is_active: true
+          })
+          .select()
+          .single()
+
+        data = insertData
+        error = insertError
+      }
 
       if (error) {
         console.error("Error saving custom terms:", error)

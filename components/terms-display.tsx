@@ -213,7 +213,7 @@ export default function TermsDisplay({
               </p>
               <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
               <DialogTrigger asChild>
-                <p className="text-xs text-blue-500">
+                <p className="text-xs text-blue-500 cursor-pointer">
                   {t("terms.viewFull")}
                 </p>
               </DialogTrigger>
