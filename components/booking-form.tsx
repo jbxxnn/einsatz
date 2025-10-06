@@ -20,6 +20,7 @@ import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
 import { PreBookingDBAModal } from './pre-booking-dba-modal'
 import PackageSelectionStep from './package-selection-step'
+import TermsDisplay from './terms-display'
 
 
 
@@ -156,6 +157,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [tempImages, setTempImages] = useState<File[]>([])
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(selectedPackageData?.package.id || null)
   const [selectedPackage, setSelectedPackage] = useState<any>(selectedPackageData?.package || null)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const { t } = useTranslation()
 
@@ -750,6 +752,12 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       }
     }
 
+    // Check terms acceptance
+    if (!termsAccepted) {
+      toast.error(t("terms.acceptTermsRequired"))
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -1232,6 +1240,15 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         </div>
       </div>
 
+      {/* Terms and Conditions */}
+      <TermsDisplay
+        freelancerId={freelancer.id}
+        onTermsAccepted={setTermsAccepted}
+        showAcceptance={true}
+        className="border-t pt-4"
+      />
+
+
       {/* DBA Check Section - Shows different options based on freelancer's DBA status */}
       <div className="space-y-3 pt-4 border-t">
           <div className="flex items-center justify-between">
@@ -1253,6 +1270,22 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             )}
           </div>
           
+          {!termsAccepted && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-blue-800">
+                    {t("bookingform.dba.acceptTermsFirst")}
+                  </p>
+                  <p className="text-xs text-blue-700 mt-1">
+                    {t("bookingform.dba.acceptTermsFirstDescription")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {freelancerDbaStatus?.is_completed ? (
             // Freelancer completed DBA - client can choose to complete or skip
             <div className="space-y-3">
@@ -1266,6 +1299,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                   variant={dbaCompleted ? "outline" : "default"}
                   size="sm"
                   className="flex-1"
+                  disabled={!termsAccepted}
                 >
                   <CustomRescheduleIcon2 className="h-4 w-4 mr-2" />
                   {dbaCompleted ? t("bookingform.dba.reviewDBA") : t("bookingform.dba.completeDBA")}
@@ -1276,6 +1310,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                   variant={dbaSkipped ? "outline" : "outline"}
                   size="sm"
                   className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50"
+                  disabled={!termsAccepted}
                 >
                   <AlertCircle className="h-4 w-4 mr-2" />
                   {t("bookingform.dba.skipDBA")}
@@ -1304,6 +1339,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
                 variant={dbaSkipped ? "outline" : "outline"}
                 size="sm"
                 className="w-full text-orange-600 border-orange-200 hover:bg-orange-50"
+                disabled={!termsAccepted}
               >
                 <AlertCircle className="h-4 w-4 mr-2" />
                 {dbaSkipped ? t("bookingform.dba.dbaSkippedProceedWithRisk") : t("bookingform.dba.proceedWithoutDBA")}
@@ -1331,10 +1367,11 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           </div>
         )}
 
+
       <Button
         type="submit"
         className="w-full"
-        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || (!dbaCompleted && !dbaSkipped) || !!bookingId || (currentOffering?.pricing_type === "packages" && !selectedPackageData)}
+        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || (!dbaCompleted && !dbaSkipped) || !termsAccepted || !!bookingId || (currentOffering?.pricing_type === "packages" && !selectedPackageData)}
       >
         {loading ? t("bookingform.processing") : bookingId ? t("bookingform.buttons.bookingCreatedProceedToPayment") : 
          dbaCompleted ? t("bookingform.buttons.bookingCreatedProceedToPayment") : 
@@ -1465,6 +1502,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
         <Button
           onClick={() => router.push(`/bookings/${bookingId}/payment`)}
           className="flex items-center gap-2 ml-auto"
+          disabled={!termsAccepted}
         >
           {t("bookingform.proceedToPayment")}
           <ChevronRight className="h-4 w-4" />

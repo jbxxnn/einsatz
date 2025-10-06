@@ -69,6 +69,8 @@ import {
 } from "@/components/ui/sidebar"
 import ModernSidebarNav from "@/components/modern-sidebar-nav"
 import OptimizedHeader from "@/components/optimized-header"
+import TermsAndConditionsManager from "@/components/terms-and-conditions-manager"
+
 
 // Custom header component that uses sidebar's mobile state
 function MobileHeader() {
@@ -723,6 +725,11 @@ export default function ProfilePage() {
                           {t("profile.manageJobOfferings")}
                         </Button>
                       </Link>
+                    </div>
+
+                    {/* Terms and Conditions Management */}
+                    <div className="bg-background rounded-lg shadow-sm border p-8">
+                      <TermsAndConditionsManager freelancerId={profile.id} />
                     </div>
                   </>
                 )}
