@@ -25,6 +25,7 @@ type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row
   category_name: string
   subcategory_name?: string
   icon?: string
+  is_wildcard?: boolean
   dba_status?: {
     is_completed: boolean
     risk_level: string
@@ -285,9 +286,9 @@ export default function FreelancerProfile() {
         // Format job offerings with DBA status and packages
         const formattedOfferings = offeringsData.map((offering) => ({
           ...offering,
-          category_name: offering.job_categories.name,
-          icon: offering.job_categories.icon,
-          subcategory_name: offering.job_subcategories.name,
+          category_name: offering.job_categories?.name || "Wildcard Services",
+          icon: offering.job_categories?.icon || "🎯",
+          subcategory_name: offering.job_subcategories?.name || null,
           dba_status: dbaMap.get(offering.category_id) || null,
           job_offering_packages: offering.job_offering_packages?.filter((pkg: any) => pkg.is_active) || []
         }))
@@ -638,9 +639,32 @@ export default function FreelancerProfile() {
                           <div className="space-y-3">
                             {/* Category name */}
                             <div className="flex items-center space-x-2">
-                              <CustomResponseIcon className="h-4 w-4 text-[#33CC99]" />
-                              <h4 className="font-bold text-black text-sm">{offering.subcategory_name}</h4>
+                              {offering.is_wildcard ? (
+                                <>
+                                  <span className="text-orange-600 text-lg">🎯</span>
+                                  <h4 className="font-bold text-black text-sm">{offering.category_name}</h4>
+                                </>
+                              ) : (
+                                <>
+                                  <CustomResponseIcon className="h-4 w-4 text-[#33CC99]" />
+                                  <h4 className="font-bold text-black text-sm">{offering.subcategory_name}</h4>
+                                </>
+                              )}
                             </div>
+                            
+                            {/* Wildcard Work Types */}
+                            {offering.is_wildcard && offering.description && (
+                              <div className="flex flex-wrap gap-1">
+                                {offering.description.split('\n\nWork Types: ')[1]?.split(', ').slice(0, 3).map((workType, index) => (
+                                  <span key={index} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                                    {workType}
+                                  </span>
+                                ))}
+                                {(offering.description.split('\n\nWork Types: ')[1]?.split(', ').length || 0) > 3 && (
+                                  <span className="text-xs text-orange-600">+{(offering.description.split('\n\nWork Types: ')[1]?.split(', ').length || 0) - 3} more</span>
+                                )}
+                              </div>
+                            )}
                             
                             {/* Pricing */}
                             <div className="flex items-center space-x-2">
@@ -668,11 +692,16 @@ export default function FreelancerProfile() {
                               )}
                             </div>
                             
-                            {/* Description */}
+                            {/* Description (exclude work types for wildcard) */}
                             {offering.description && (
                               <div className="flex items-start space-x-2">
                                 <CustomNoBookingsIcon className="h-4 w-4 text-[#33CC99] mt-0.5" />
-                                <span className="text-black text-xs">{offering.description}</span>
+                                <span className="text-black text-xs">
+                                  {offering.is_wildcard 
+                                    ? offering.description.split('\n\nWork Types: ')[0]
+                                    : offering.description
+                                  }
+                                </span>
                               </div>
                             )}
                             

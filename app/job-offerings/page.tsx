@@ -162,7 +162,7 @@ export default function JobOfferingsPage() {
               {/* <CardContent> */}
                 <JobOfferingsManager freelancerId={profile.id} />
                 <div className="mt-6">
-                  <WildcardCategoriesForm profile={profile} />
+                  {/* <WildcardCategoriesForm profile={profile} /> */}
                 </div>
               {/* </CardContent> */}
             {/* </Card> */}

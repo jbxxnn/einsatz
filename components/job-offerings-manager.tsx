@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Switch } from "@/components/ui/switch"
 import JobCategorySelector from "@/components/job-category-selector"
 import JobSubcategorySelector from "@/components/job-subcategory-selector"
 import AvailabilityCalendar from "@/components/availability-calendar"
@@ -44,7 +45,9 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"]
+type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"] & {
+  is_wildcard?: boolean
+}
 type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"]
 type JobSubcategory = Database["public"]["Tables"]["job_subcategories"]["Row"]
 
@@ -54,6 +57,18 @@ interface JobOfferingsManagerProps {
 
 // Maximum number of job offerings allowed
 const MAX_JOB_OFFERINGS = 3
+const MAX_WILDCARD_OFFERINGS = 4 // 3 normal + 1 wildcard
+
+// Wildcard work types
+const WILDCARD_WORK_TYPES = [
+  { id: 'physical', label: 'Physical Work', description: "I'm able-bodied and can perform physical tasks" },
+  { id: 'customer-facing', label: 'Customer-Facing Work', description: "I have good representation and communication skills" },
+  { id: 'outdoor', label: 'Outdoor Work', description: "I don't mind working in different weather conditions" },
+  { id: 'flexible-hours', label: 'Flexible Hours', description: "I'm available to work early mornings, late nights, or weekends" },
+  { id: 'repetitive', label: 'Repetitive Tasks', description: "I don't mind repetitive or routine work" },
+  { id: 'analytical', label: 'Analytical Work', description: "I have problem-solving and analytical skills" },
+  { id: 'creative', label: 'Creative Work', description: "I have creative skills and innovative thinking" }
+]
 
 // Sortable table row component
 function SortableTableRow({ 
@@ -194,6 +209,12 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [hourlyRate, setHourlyRate] = useState("")
   const [description, setDescription] = useState("")
   const [experienceYears, setExperienceYears] = useState("")
+  
+  // Wildcard form state
+  const [wildcardWorkTypes, setWildcardWorkTypes] = useState<string[]>([])
+  const [wildcardPricingType, setWildcardPricingType] = useState<"hourly" | "packages">("hourly")
+  const [wildcardHourlyRate, setWildcardHourlyRate] = useState("")
+  const [wildcardDescription, setWildcardDescription] = useState("")
   const [saving, setSaving] = useState(false)
   const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false)
   const [selectedOfferingCategoryId, setSelectedOfferingCategoryId] = useState<string | null>(null)
@@ -208,6 +229,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [selectedPackageForItems, setSelectedPackageForItems] = useState<{ id: string; name: string } | null>(null)
   const [packagesRefreshTrigger, setPackagesRefreshTrigger] = useState(0)
   const [addOfferingDialogOpen, setAddOfferingDialogOpen] = useState(false)
+  const [addWildcardDialogOpen, setAddWildcardDialogOpen] = useState(false)
+  const [wildcardEnabled, setWildcardEnabled] = useState(false)
+  const [loadingWildcardStatus, setLoadingWildcardStatus] = useState(false)
 
 
   // Drag and drop sensors
@@ -243,6 +267,28 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       console.error('Error fetching DBA statuses:', error)
     } finally {
       setLoadingDbaStatus(false)
+    }
+  }
+
+  const fetchWildcardStatus = async () => {
+    setLoadingWildcardStatus(true)
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("wildcard_job_offering_enabled")
+        .eq("id", freelancerId)
+        .single()
+
+      if (error) {
+        console.error("Error fetching wildcard status:", error)
+        return
+      }
+
+      setWildcardEnabled(data.wildcard_job_offering_enabled || false)
+    } catch (error) {
+      console.error("Error fetching wildcard status:", error)
+    } finally {
+      setLoadingWildcardStatus(false)
     }
   }
 
@@ -291,8 +337,152 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
 
     if (freelancerId) {
       fetchOfferings()
+      fetchWildcardStatus()
     }
   }, [supabase, freelancerId])
+
+  const handleAddWildcardOffering = async () => {
+    console.log("🚀 Starting handleAddWildcardOffering...")
+    console.log("📊 Current wildcard state:", {
+      wildcardWorkTypes,
+      wildcardPricingType,
+      wildcardHourlyRate,
+      wildcardDescription,
+      offeringsCount: offerings.length,
+      freelancerId
+    })
+
+    if (wildcardWorkTypes.length === 0) {
+      console.log("❌ No work types selected")
+      toast.error(t("jobOfferings.wildcardWorkTypesRequired"))
+      return
+    }
+
+    if (offerings.length >= maxOfferings) {
+      console.log("❌ Max offerings reached:", offerings.length, "Max allowed:", maxOfferings)
+      toast.error(t("jobOfferings.cardMaxOfferings"))
+      return
+    }
+
+    setSaving(true)
+
+    try {
+      // Check if wildcard offering already exists
+      const existingWildcardOffering = offerings.find(
+        (o) => o.is_wildcard === true
+      )
+
+      if (existingWildcardOffering) {
+        console.log("❌ Wildcard offering already exists")
+        toast.error(t("jobOfferings.wildcardAlreadyExists"))
+        setSaving(false)
+        return
+      }
+
+      // For wildcard offerings, use the special wildcard category
+      const WILDCARD_CATEGORY_ID = '00000000-0000-0000-0000-000000000001'
+      
+      const insertData = {
+        freelancer_id: freelancerId,
+        category_id: WILDCARD_CATEGORY_ID, // Use special wildcard category
+        subcategory_id: null,
+        pricing_type: "hourly", // Always hourly for wildcard
+        hourly_rate: Number.parseFloat(wildcardHourlyRate) || 45.00,
+        description: `${wildcardDescription}\n\nWork Types: ${wildcardWorkTypes.join(', ')}`,
+        experience_years: null, // No experience years for wildcard
+        is_available_now: false,
+        display_order: offerings.length + 1,
+        is_wildcard: true, // Mark as wildcard offering
+      }
+
+      console.log("📝 Wildcard insert data:", insertData)
+
+      const { data, error } = await supabase
+        .from("freelancer_job_offerings")
+        .insert(insertData)
+        .select(`
+          *,
+          job_categories (
+            id, name
+          ),
+          job_subcategories (
+            id, name
+          )
+        `)
+        .single()
+
+      console.log("📡 Supabase wildcard response:", { data, error })
+
+      if (error) {
+        console.error("❌ Supabase wildcard error details:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          fullError: error
+        })
+        throw error
+      }
+
+      console.log("✅ Successfully inserted wildcard job offering:", data)
+
+      // Add to local state
+      const newWildcardOffering = {
+        ...data,
+        category_name: data.job_categories?.name || "Wildcard Services",
+        subcategory_name: data.job_subcategories?.name,
+      }
+      
+      console.log("📝 Adding wildcard to local state:", newWildcardOffering)
+      
+      setOfferings([
+        ...offerings,
+        newWildcardOffering,
+      ])
+
+      // Reset wildcard form and close modal
+      setWildcardWorkTypes([])
+      setWildcardPricingType("hourly")
+      setWildcardHourlyRate("")
+      setWildcardDescription("")
+      setAddWildcardDialogOpen(false)
+
+      console.log("🎉 Wildcard job offering added successfully!")
+
+      toast.success(t("jobOfferings.wildcardJobOfferingCreated", {
+        workTypes: wildcardWorkTypes.join(', ')
+      }))
+    } catch (error) {
+      console.error("💥 Error adding wildcard job offering - Full error object:", error)
+      console.error("💥 Error type:", typeof error)
+      console.error("💥 Error constructor:", error?.constructor?.name)
+      console.error("💥 Error keys:", error ? Object.keys(error) : 'N/A')
+      
+      // More specific error handling
+      if (error && typeof error === 'object' && 'code' in error) {
+        console.log("🔍 Database error detected with code:", error.code)
+        if (error.code === '23505') {
+          console.log("❌ Unique constraint violation")
+          toast.error(t("jobOfferings.duplicateOfferingExists"))
+        } else if (error.code === '23503') {
+          console.log("❌ Foreign key constraint violation")
+          toast.error(t("jobOfferings.invalidCategorySubcategory"))
+        } else {
+          console.log("❌ Other database error")
+          toast.error(t("jobOfferings.databaseError", {
+            code: error.code,
+            message: (error as any).message || t("jobOfferings.unknownError")
+          }))
+        }
+      } else {
+        console.log("❌ Non-database error")
+        toast.error(t("jobOfferings.cardAddOfferingError"))
+      }
+    } finally {
+      console.log("🏁 handleAddWildcardOffering completed, setting saving to false")
+      setSaving(false)
+    }
+  }
 
   const handleAddOffering = async () => {
     console.log("🚀 Starting handleAddOffering...")
@@ -304,6 +494,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       description,
       experienceYears,
       offeringsCount: offerings.length,
+      regularOfferingsCount: regularOfferings.length,
       freelancerId
     })
 
@@ -313,8 +504,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       return
     }
 
-    if (offerings.length >= MAX_JOB_OFFERINGS) {
-      console.log("❌ Max offerings reached:", offerings.length)
+    // Regular offerings are limited to MAX_JOB_OFFERINGS (3), regardless of wildcard status
+    if (regularOfferings.length >= MAX_JOB_OFFERINGS) {
+      console.log("❌ Max regular offerings reached:", regularOfferings.length, "Max allowed:", MAX_JOB_OFFERINGS)
       toast.error(t("jobOfferings.cardMaxOfferings"))
       return
     }
@@ -349,15 +541,15 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       }
 
       const insertData = {
-        freelancer_id: freelancerId,
-        category_id: selectedCategoryId,
-        subcategory_id: selectedSubcategoryId,
-        pricing_type: pricingType,
-        hourly_rate: pricingType === "hourly" ? Number.parseFloat(hourlyRate) || 45.00 : null,
-        description: description,
-        experience_years: experienceYears ? Number.parseFloat(experienceYears) : null,
-        is_available_now: false,
-        display_order: offerings.length + 1,
+          freelancer_id: freelancerId,
+          category_id: selectedCategoryId,
+          subcategory_id: selectedSubcategoryId,
+          pricing_type: pricingType,
+          hourly_rate: pricingType === "hourly" ? Number.parseFloat(hourlyRate) || 45.00 : null,
+          description: description,
+          experience_years: experienceYears ? Number.parseFloat(experienceYears) : null,
+          is_available_now: false,
+          display_order: offerings.length + 1,
       }
 
       console.log("📝 Insert data:", insertData)
@@ -453,9 +645,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
 
       // Add to local state
       const newOffering = {
-        ...data,
-        category_name: data.job_categories.name,
-        subcategory_name: data.job_subcategories?.name,
+          ...data,
+          category_name: data.job_categories.name,
+          subcategory_name: data.job_subcategories?.name,
       }
       
       console.log("📝 Adding to local state:", newOffering)
@@ -512,7 +704,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         }
       } else {
         console.log("❌ Non-database error")
-        toast.error(t("jobOfferings.cardAddOfferingError"))
+      toast.error(t("jobOfferings.cardAddOfferingError"))
       }
     } finally {
       console.log("🏁 handleAddOffering completed, setting saving to false")
@@ -599,12 +791,59 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
     setExperienceYears("")
   }
 
+  const openAddWildcardDialog = () => {
+    setAddWildcardDialogOpen(true)
+  }
+
+  const closeAddWildcardDialog = () => {
+    setAddWildcardDialogOpen(false)
+    // Reset wildcard form when closing
+    setWildcardWorkTypes([])
+    setWildcardPricingType("hourly")
+    setWildcardHourlyRate("")
+    setWildcardDescription("")
+  }
+
+  const handleToggleWildcard = async (enabled: boolean) => {
+    try {
+      setLoadingWildcardStatus(true)
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({ wildcard_job_offering_enabled: enabled })
+        .eq("id", freelancerId)
+
+      if (error) {
+        console.error("Error updating wildcard status:", error)
+        toast.error(t("jobOfferings.wildcardToggleError"))
+        return
+      }
+
+      setWildcardEnabled(enabled)
+      toast.success(enabled ? t("jobOfferings.wildcardEnabled") : t("jobOfferings.wildcardDisabled"))
+    } catch (error) {
+      console.error("Error toggling wildcard:", error)
+      toast.error(t("jobOfferings.wildcardToggleError"))
+    } finally {
+      setLoadingWildcardStatus(false)
+    }
+  }
+
   // Reset subcategory when category changes
   useEffect(() => {
     setSelectedSubcategoryId(null)
   }, [selectedCategoryId])
 
-  const hasReachedMaxOfferings = offerings.length >= MAX_JOB_OFFERINGS
+  // Separate regular and wildcard offerings
+  const regularOfferings = offerings.filter(offering => !offering.is_wildcard)
+  const wildcardOfferings = offerings.filter(offering => offering.is_wildcard)
+  
+  const maxOfferings = wildcardEnabled ? MAX_WILDCARD_OFFERINGS : MAX_JOB_OFFERINGS
+  const hasReachedMaxRegularOfferings = regularOfferings.length >= MAX_JOB_OFFERINGS
+  const hasReachedMaxOfferings = offerings.length >= maxOfferings
+  
+  // Check if there are any wildcard offerings in the database (regardless of wildcard enabled status)
+  const hasWildcardOfferings = offerings.some(offering => offering.is_wildcard)
 
   return (
     <div className="space-y-6">
@@ -618,7 +857,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
             <div className="flex justify-center items-center w-full">
               <Loader className="h-8 w-8 animate-spin" />
             </div>
-          ) : offerings.length === 0 ? (
+          ) : regularOfferings.length === 0 ? (
             <div className="text-center py-4 text-black text-sm">
               <p>{t("jobOfferings.cardNoOfferings")}</p>
               <p>{t("jobOfferings.cardAddOfferings")}</p>
@@ -642,11 +881,11 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                     </TableRow>
                   </TableHeader>
                   <SortableContext
-                    items={offerings.map(offering => offering.id)}
+                    items={regularOfferings.map(offering => offering.id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <TableBody>
-                      {offerings.map((offering) => {
+                      {regularOfferings.map((offering) => {
                         return (
                           <SortableTableRow
                             key={offering.id}
@@ -668,20 +907,126 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                 </Table>
               </DndContext>
               
-              <div className="mt-[20px]">
+              {/* <div className="mt-[20px]">
                 <Link href="/profile/availability">
                   <Button>
                     <Briefcase className="h-4 w-4 mr-2" />
                     {t("jobOfferings.cardSetupAvailability")}
                   </Button>
                 </Link>
-              </div>
+              </div> */}
             </div>
           )}
         </div>
       </div>
 
-      {/* Add Job Offering Button */}
+      {/* Wildcard Job Offerings Table */}
+      {wildcardEnabled && wildcardOfferings.length > 0 && (
+        <div className="bg-background rounded-lg overflow-hidden border border-orange-200">
+          <div className="p-6 bg-orange-50 border-b border-orange-200">
+            <h3 className="text-lg font-semibold text-orange-800 flex items-center gap-2">
+              <span className="text-orange-600">🎯</span>
+              {t("jobOfferings.wildcardOfferings")}
+            </h3>
+            <p className="text-sm text-orange-700 mt-1">{t("jobOfferings.wildcardOfferingsDescription")}</p>
+          </div>
+          <div className="p-6">
+            <Table>
+              <TableHeader>
+                <TableRow className="text-xs text-black">
+                  <TableHead>{t("jobOfferings.workTypes")}</TableHead>
+                  <TableHead>{t("jobOfferings.pricing")}</TableHead>
+                  <TableHead>{t("jobOfferings.workTypesCount")}</TableHead>
+                  <TableHead className="text-right">{t("jobOfferings.actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {wildcardOfferings.map((offering) => (
+                  <TableRow key={offering.id} className="text-xs text-black">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <span className="text-orange-600">🎯</span>
+                        <div className="flex flex-wrap gap-1">
+                          {offering.description?.split('\n\nWork Types: ')[1]?.split(', ').slice(0, 3).map((workType, index) => (
+                            <span key={index} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                              {workType}
+                            </span>
+                          ))}
+                          {(offering.description?.split('\n\nWork Types: ')[1]?.split(', ').length || 0) > 3 && (
+                            <span className="text-xs text-orange-600">+{(offering.description?.split('\n\nWork Types: ')[1]?.split(', ').length || 0) - 3} more</span>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div className="font-medium text-green-600">
+                          €{offering.hourly_rate}/hour
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-xs text-orange-600">
+                        {offering.description?.split('\n\nWork Types: ')[1]?.split(', ').length || 0} work types
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end items-center">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDeleteOffering(offering.id)}
+                          className="text-orange-600 hover:bg-orange-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
+
+      {/* Wildcard Job Offering Toggle */}
+        <div className="bg-background rounded-lg overflow-hidden">
+        <div className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium text-black">{t("jobOfferings.wildcardTitle")}</h3>
+              <p className="text-xs text-gray-600">{t("jobOfferings.wildcardDescription")}</p>
+              <p className="text-xs text-gray-500">
+                {t("jobOfferings.wildcardLimit", { 
+                  normal: MAX_JOB_OFFERINGS, 
+                  wildcard: MAX_WILDCARD_OFFERINGS 
+                })}
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              {loadingWildcardStatus ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Switch
+                  checked={wildcardEnabled}
+                  onCheckedChange={handleToggleWildcard}
+                  disabled={loadingWildcardStatus}
+                />
+              )}
+            </div>
+          </div>
+          {hasWildcardOfferings && !wildcardEnabled && (
+            <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-md">
+              <p className="text-xs text-orange-800">
+                {t("jobOfferings.wildcardHidden")}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Add Job Offering Buttons */}
       <div className="bg-background rounded-lg overflow-hidden">
         <div className="p-6">
           {hasReachedMaxOfferings ? (
@@ -689,21 +1034,39 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               <AlertCircle className="h-4 w-4" />
               <div>
                 <AlertTitle className="text-sm text-black">{t("jobOfferings.cardMaxOfferings")}</AlertTitle>
-                <AlertDescription className="text-xs text-black">
-                  {t("jobOfferings.cardMaxOfferingsDescription", { MAX_JOB_OFFERINGS: 3 })}
-                </AlertDescription>
+            <AlertDescription className="text-xs text-black">
+                  {t("jobOfferings.cardMaxOfferingsDescription", { 
+                    maxOfferings: maxOfferings,
+                    wildcardEnabled: wildcardEnabled ? 
+                      (t("common.language") === "nl" ? " (inclusief wildcard)" : " (including wildcard)") : ""
+                  })}
+            </AlertDescription>
               </div>
             </div>
           ) : (
-            <div className="text-center">
+            <div className="space-y-3">
+              {/* Regular Job Offering Button */}
               <Button 
                 onClick={openAddOfferingDialog}
                 className="w-full"
-                disabled={hasReachedMaxOfferings}
+                disabled={hasReachedMaxRegularOfferings}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {t("jobOfferings.cardAddNewOffering")}
               </Button>
+              
+              {/* Wildcard Job Offering Button - Only show if wildcard is enabled and no wildcard exists */}
+              {wildcardEnabled && !hasWildcardOfferings && (
+                <Button 
+                  onClick={openAddWildcardDialog}
+                  variant="outline"
+                  className="w-full border-orange-200 text-orange-700 hover:bg-orange-50"
+                  disabled={hasReachedMaxOfferings}
+                >
+                  <Package className="mr-2 h-4 w-4" />
+                  {t("jobOfferings.cardAddWildcardOffering")}
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -810,154 +1173,154 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               {t("jobOfferings.addJobOfferingDescription")}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="category" className="text-xs text-black">{t("jobOfferings.cardCategory")}</Label>
-              <JobCategorySelector
-                selectedCategories={selectedCategoryId ? [selectedCategoryId] : []}
-                onChange={(categories) => setSelectedCategoryId(categories[0] || null)}
-                multiple={false}
-                className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="subcategory" className="text-xs text-black">{t("jobOfferings.cardSubcategory")}</Label>
-              <JobSubcategorySelector
-                categoryId={selectedCategoryId}
-                selectedSubcategory={selectedSubcategoryId}
-                onChange={setSelectedSubcategoryId}
-                className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs text-black">{t("jobOfferings.pricingType")}</Label>
-              <RadioGroup 
-                value={pricingType} 
-                onValueChange={(value: 
-                 // "hourly" | 
-                  "packages") => setPricingType(value)}
-                className="flex gap-6"
-              >
-                {/* <div className="flex items-center space-x-2 opacity-50 cursor-not-allowed">
-                  <RadioGroupItem value="hourly" id="hourly" disabled />
-                  <Label htmlFor="hourly" className="text-xs text-gray-400 cursor-not-allowed">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" />
-                      {t("jobOfferings.fixedHourlyRate")} ({t("jobOfferings.comingSoon")})
-                    </div>
-                  </Label>
-                </div> */}
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="packages" id="packages" />
-                  <Label htmlFor="packages" className="text-xs text-black cursor-pointer">
-                    <div className="flex items-center gap-2">
-                      <Package className="h-4 w-4" />
-                      {t("jobOfferings.multiplePackages")}
-                    </div>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {pricingType === "hourly" && (
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="hourlyRate" className="text-xs text-black">{t("jobOfferings.cardHourlyRate")}</Label>
-                <Input
-                  id="hourlyRate"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="45.00"
-                  value={hourlyRate}
-                  onChange={(e) => setHourlyRate(e.target.value)}
+                <Label htmlFor="category" className="text-xs text-black">{t("jobOfferings.cardCategory")}</Label>
+                <JobCategorySelector
+                  selectedCategories={selectedCategoryId ? [selectedCategoryId] : []}
+                  onChange={(categories) => setSelectedCategoryId(categories[0] || null)}
+                  multiple={false}
                   className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                 />
               </div>
-            )}
 
-            {pricingType === "packages" && (
-              <div className="text-xs text-gray-600 p-3 bg-gray-50 rounded-lg">
-                <p className="font-medium mb-1">💡 {t("jobOfferings.packagePricing")}</p>
-                <p>{t("jobOfferings.packagePricingDescription")}</p>
+              <div className="space-y-2">
+                <Label htmlFor="subcategory" className="text-xs text-black">{t("jobOfferings.cardSubcategory")}</Label>
+                <JobSubcategorySelector
+                  categoryId={selectedCategoryId}
+                  selectedSubcategory={selectedSubcategoryId}
+                  onChange={setSelectedSubcategoryId}
+                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+                />
               </div>
-            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="experienceYears" className="text-xs text-black">{t("jobOfferings.cardExperienceYears")}</Label>
-              <Input
-                id="experienceYears"
-                type="number"
-                min="0"
-                step="0.5"
-                placeholder="3.5"
-                value={experienceYears}
-                onChange={(e) => setExperienceYears(e.target.value)}
-                className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-black">{t("jobOfferings.pricingType")}</Label>
+                <RadioGroup 
+                  value={pricingType} 
+                onValueChange={(value: 
+                 // "hourly" | 
+                  "packages") => setPricingType(value)}
+                  className="flex gap-6"
+                >
+                {/* <div className="flex items-center space-x-2 opacity-50 cursor-not-allowed">
+                  <RadioGroupItem value="hourly" id="hourly" disabled />
+                  <Label htmlFor="hourly" className="text-xs text-gray-400 cursor-not-allowed">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" />
+                      {t("jobOfferings.fixedHourlyRate")} ({t("jobOfferings.comingSoon")})
+                      </div>
+                    </Label>
+                </div> */}
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="packages" id="packages" />
+                    <Label htmlFor="packages" className="text-xs text-black cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        {t("jobOfferings.multiplePackages")}
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-xs text-black">{t("jobOfferings.cardDescription")}</Label>
-              <Textarea
-                id="description"
-                placeholder={t("jobOfferings.descriptionPlaceholder")}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-              />
-              
-              {/* Live Preview */}
-              {description && (
+              {pricingType === "hourly" && (
                 <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">{t("jobOfferings.previewAsShownToClients")}</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
-                    <div className="flex flex-col gap-1">
-                      <div className="text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200">
-                        <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full">
-                          <span className="font-bold">
-                            {selectedSubcategoryId ? t("jobOfferings.sampleSubcategory") : t("jobOfferings.sampleCategory")}
-                          </span>
-                          
-                          {/* Pricing and Experience */}
-                          <div className="flex gap-4 mt-1">
-                            {pricingType === "hourly" && hourlyRate && (
-                              <span className="text-xs font-semibold text-green-600">
-                                €{hourlyRate}/hour
-                              </span>
-                            )}
-                            {pricingType === "packages" && (
-                              <span className="text-xs font-semibold text-green-600">
-                                {t("jobOfferings.multiplePackages")}
-                              </span>
-                            )}
-                            {experienceYears && (
-                              <span className="text-xs">
-                                {experienceYears} {experienceYears === "1" ? "year" : "years"} {t("jobOfferings.yearsExperience")}
-                              </span>
-                            )}
-                          </div>
-                          
-                          {/* Description - This is what gets truncated */}
-                          <div className="flex items-center gap-1 mt-1">
-                            <div className="line-clamp-2 text-xs">
-                              {description}
+                  <Label htmlFor="hourlyRate" className="text-xs text-black">{t("jobOfferings.cardHourlyRate")}</Label>
+                  <Input
+                    id="hourlyRate"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="45.00"
+                    value={hourlyRate}
+                    onChange={(e) => setHourlyRate(e.target.value)}
+                    className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+                  />
+                </div>
+              )}
+
+              {pricingType === "packages" && (
+                <div className="text-xs text-gray-600 p-3 bg-gray-50 rounded-lg">
+                  <p className="font-medium mb-1">💡 {t("jobOfferings.packagePricing")}</p>
+                  <p>{t("jobOfferings.packagePricingDescription")}</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="experienceYears" className="text-xs text-black">{t("jobOfferings.cardExperienceYears")}</Label>
+                <Input
+                  id="experienceYears"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  placeholder="3.5"
+                  value={experienceYears}
+                  onChange={(e) => setExperienceYears(e.target.value)}
+                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-xs text-black">{t("jobOfferings.cardDescription")}</Label>
+                <Textarea
+                  id="description"
+                  placeholder={t("jobOfferings.descriptionPlaceholder")}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+                />
+                
+                {/* Live Preview */}
+                {description && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">{t("jobOfferings.previewAsShownToClients")}</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
+                      <div className="flex flex-col gap-1">
+                        <div className="text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200">
+                          <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full">
+                            <span className="font-bold">
+                              {selectedSubcategoryId ? t("jobOfferings.sampleSubcategory") : t("jobOfferings.sampleCategory")}
+                            </span>
+                            
+                            {/* Pricing and Experience */}
+                            <div className="flex gap-4 mt-1">
+                              {pricingType === "hourly" && hourlyRate && (
+                                <span className="text-xs font-semibold text-green-600">
+                                  €{hourlyRate}/hour
+                                </span>
+                              )}
+                              {pricingType === "packages" && (
+                                <span className="text-xs font-semibold text-green-600">
+                                  {t("jobOfferings.multiplePackages")}
+                                </span>
+                              )}
+                              {experienceYears && (
+                                <span className="text-xs">
+                                  {experienceYears} {experienceYears === "1" ? "year" : "years"} {t("jobOfferings.yearsExperience")}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {/* Description - This is what gets truncated */}
+                            <div className="flex items-center gap-1 mt-1">
+                              <div className="line-clamp-2 text-xs">
+                                {description}
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
+                    {description.length > 80 && (
+                      <div className="text-xs text-orange-600">
+                        ⚠️ {t("jobOfferings.textWillBeTruncated")}
+                      </div>
+                    )}
                   </div>
-                  {description.length > 80 && (
-                    <div className="text-xs text-orange-600">
-                      ⚠️ {t("jobOfferings.textWillBeTruncated")}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
             <div className="flex gap-2 pt-4">
               <Button 
@@ -981,6 +1344,165 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                   <>
                     <Plus className="mr-2 h-4 w-4" />
                     {t("jobOfferings.cardAddJobOffering")}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Wildcard Job Offering Dialog */}
+      <Dialog open={addWildcardDialogOpen} onOpenChange={closeAddWildcardDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-orange-600" />
+              {t("jobOfferings.cardAddWildcardOffering")}
+            </DialogTitle>
+            <DialogDescription>
+              {t("jobOfferings.addWildcardJobOfferingDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <Label className="text-xs text-black font-medium">{t("jobOfferings.wildcardWorkTypes")}</Label>
+              <p className="text-xs text-gray-600">{t("jobOfferings.wildcardWorkTypesDescription")}</p>
+              <div className="grid grid-cols-1 gap-3">
+                {WILDCARD_WORK_TYPES.map((workType) => (
+                  <div key={workType.id} className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      id={`wildcard-work-${workType.id}`}
+                      checked={wildcardWorkTypes.includes(workType.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setWildcardWorkTypes([...wildcardWorkTypes, workType.id])
+                        } else {
+                          setWildcardWorkTypes(wildcardWorkTypes.filter(id => id !== workType.id))
+                        }
+                      }}
+                      className="mt-1 h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                    />
+                    <div className="flex-1">
+                      <label htmlFor={`wildcard-work-${workType.id}`} className="text-sm font-medium text-gray-900 cursor-pointer">
+                        {workType.label}
+                      </label>
+                      <p className="text-xs text-gray-600 mt-1">{workType.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {wildcardWorkTypes.length === 0 && (
+                <p className="text-xs text-red-600">{t("jobOfferings.wildcardWorkTypesRequired")}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="wildcardHourlyRate" className="text-xs text-black">{t("jobOfferings.cardHourlyRate")}</Label>
+              <Input
+                id="wildcardHourlyRate"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="45.00"
+                value={wildcardHourlyRate}
+                onChange={(e) => setWildcardHourlyRate(e.target.value)}
+                className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="wildcard-description" className="text-xs text-black">{t("jobOfferings.cardDescription")}</Label>
+              <Textarea
+                id="wildcard-description"
+                placeholder={t("jobOfferings.wildcardDescriptionPlaceholder")}
+                value={wildcardDescription}
+                onChange={(e) => setWildcardDescription(e.target.value)}
+                rows={3}
+                className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+              />
+              
+              {/* Live Preview */}
+              {wildcardDescription && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">{t("jobOfferings.previewAsShownToClients")}</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <div className="text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200">
+                        <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full">
+                          <span className="font-bold">
+                            Wildcard Services
+                            <span className="ml-1 text-orange-600">🎯</span>
+                          </span>
+                          
+                          {/* Work Types */}
+                          {wildcardWorkTypes.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {wildcardWorkTypes.slice(0, 2).map((workTypeId) => {
+                                const workType = WILDCARD_WORK_TYPES.find(wt => wt.id === workTypeId)
+                                return (
+                                  <span key={workTypeId} className="text-xs bg-orange-200 text-orange-800 px-1 rounded">
+                                    {workType?.label}
+                                  </span>
+                                )
+                              })}
+                              {wildcardWorkTypes.length > 2 && (
+                                <span className="text-xs text-orange-600">+{wildcardWorkTypes.length - 2} more</span>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Pricing */}
+                          <div className="flex gap-4 mt-1">
+                            {wildcardHourlyRate && (
+                              <span className="text-xs font-semibold text-green-600">
+                                €{wildcardHourlyRate}/hour
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Description - This is what gets truncated */}
+                          <div className="flex items-center gap-1 mt-1">
+                            <div className="line-clamp-2 text-xs">
+                              {wildcardDescription}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {wildcardDescription.length > 80 && (
+                    <div className="text-xs text-orange-600">
+                      ⚠️ {t("jobOfferings.textWillBeTruncated")}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={closeAddWildcardDialog}
+                className="flex-1"
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button 
+                onClick={handleAddWildcardOffering} 
+                disabled={saving} 
+                className="flex-1 bg-orange-600 hover:bg-orange-700"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t("jobOfferings.cardAdding")}
+                  </>
+                ) : (
+                  <>
+                    <Package className="mr-2 h-4 w-4" />
+                    {t("jobOfferings.cardAddWildcardOffering")}
                   </>
                 )}
               </Button>
