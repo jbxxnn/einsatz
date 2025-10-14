@@ -1249,7 +1249,8 @@
       "selectServicePackage": "Selecteer Servicepakket",
       "bookingCreatedProceedToPayment": "Boeking aangemaakt - Ga door naar betaling",
       "pleaseSelectPackage": "Selecteer een pakket",
-      "completeDBAOrSkip": "Voltooi DBA of sla over om door te gaan"
+      "completeDBAOrSkip": "Voltooi DBA of sla over om door te gaan",
+      "continueToBooking": "Doorgaan met boeken"
     },
     "api": {
       "failedToSubmitDBA": "Fout bij het indienen van DBA-beoordeling:",

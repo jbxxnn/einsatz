@@ -1249,7 +1249,8 @@
       "selectServicePackage": "Select Service Package",
       "bookingCreatedProceedToPayment": "Booking Created - Proceed to Payment",
       "pleaseSelectPackage": "Please Select a Package",
-      "completeDBAOrSkip": "Complete DBA or Skip to Proceed"
+      "completeDBAOrSkip": "Complete DBA or Skip to Proceed",
+      "continueToBooking": "Continue to Booking"
     },
     "api": {
       "failedToSubmitDBA": "Failed to submit DBA assessment:",

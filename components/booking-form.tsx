@@ -737,18 +737,20 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       return
     }
 
-    // Check DBA requirements based on freelancer's DBA status
-    if (freelancerDbaStatus?.is_completed) {
-      // Freelancer completed DBA - client can skip or complete DBA
-      if (!dbaCompleted && !dbaSkipped) {
-        toast.error(t("bookingform.validation.completeOrSkipDBA"))
-        return
-      }
-    } else {
-      // Freelancer didn't complete DBA - client can only skip DBA
-      if (!dbaSkipped) {
-        toast.error(t("bookingform.validation.freelancerDbaNotCompleted"))
-        return
+    // Check DBA requirements based on freelancer's DBA status (skip for wildcard offerings)
+    if (!currentOffering?.is_wildcard) {
+      if (freelancerDbaStatus?.is_completed) {
+        // Freelancer completed DBA - client can skip or complete DBA
+        if (!dbaCompleted && !dbaSkipped) {
+          toast.error(t("bookingform.validation.completeOrSkipDBA"))
+          return
+        }
+      } else {
+        // Freelancer didn't complete DBA - client can only skip DBA
+        if (!dbaSkipped) {
+          toast.error(t("bookingform.validation.freelancerDbaNotCompleted"))
+          return
+        }
       }
     }
 
@@ -1249,8 +1251,9 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       />
 
 
-      {/* DBA Check Section - Shows different options based on freelancer's DBA status */}
-      <div className="space-y-3 pt-4 border-t">
+      {/* DBA Check Section - Only show for non-wildcard offerings */}
+      {!currentOffering?.is_wildcard && (
+        <div className="space-y-3 pt-4 border-t">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CustomRescheduleIcon className="h-4 w-4 text-blue-600" />
@@ -1347,6 +1350,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
             </div>
           )}
         </div>
+      )}
 
         {dbaCompleted && dbaResult && (
           <div className="text-xs p-2 rounded-md border bg-gray-50">
@@ -1371,12 +1375,13 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       <Button
         type="submit"
         className="w-full"
-        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || (!dbaCompleted && !dbaSkipped) || !termsAccepted || !!bookingId || (currentOffering?.pricing_type === "packages" && !selectedPackageData)}
+        disabled={loading || fetchingAvailability || noAvailability || !selectedStartTime || !selectedEndTime || !location.trim() || !description.trim() || (!currentOffering?.is_wildcard && !dbaCompleted && !dbaSkipped) || !termsAccepted || !!bookingId || (currentOffering?.pricing_type === "packages" && !selectedPackageData)}
       >
         {loading ? t("bookingform.processing") : bookingId ? t("bookingform.buttons.bookingCreatedProceedToPayment") : 
+         currentOffering?.pricing_type === "packages" && !selectedPackageData ? t("bookingform.buttons.pleaseSelectPackage") :
+         currentOffering?.is_wildcard ? t("bookingform.buttons.continueToBooking") :
          dbaCompleted ? t("bookingform.buttons.bookingCreatedProceedToPayment") : 
          dbaSkipped ? t("bookingform.buttons.bookingCreatedProceedToPayment") : 
-         currentOffering?.pricing_type === "packages" && !selectedPackageData ? t("bookingform.buttons.pleaseSelectPackage") :
          t("bookingform.buttons.completeDBAOrSkip")}
       </Button>
 
