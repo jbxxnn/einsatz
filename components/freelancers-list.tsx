@@ -19,6 +19,7 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
     category_id?: string
     category_name: string
     subcategory_name?: string
+    is_wildcard?: boolean
     pricing_type: "hourly" | "packages"
     hourly_rate?: number
     experience_years?: number
@@ -468,12 +469,16 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                           <TooltipTrigger asChild>
                             <Link href={`/freelancers/${freelancer.id}${offering.category_id ? `?category=${offering.category_id}` : ''}`}>
                               <Badge 
-                                className={`text-xs cursor-pointer flex flex-col items-start justify-start rounded-md border transition-colors h-full hover:shadow-md hover:scale-105 ${getCategoryColor(offering.category_name)}`}
+                                className={`text-xs cursor-pointer flex flex-col items-start justify-start rounded-md border transition-colors h-full hover:shadow-md hover:scale-105 ${
+                                  offering.is_wildcard 
+                                    ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200'
+                                    : getCategoryColor(offering.category_name)
+                                }`}
                                 onClick={(e) => e.stopPropagation()}
                               >
                             <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full relative">
-                              {/* DBA Status - Positioned at top right */}
-                              {offering.dba_status?.is_completed && (
+                              {/* DBA Status - Positioned at top right (not shown for wildcard) */}
+                              {!offering.is_wildcard && offering.dba_status?.is_completed && (
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -488,9 +493,25 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                                 </TooltipProvider>
                               )}
                               
-                              <span className="font-bold">
-                                {offering.subcategory_name}
+                              {/* Title - show category_name for wildcard, subcategory_name for regular */}
+                              <span className="font-bold flex items-center gap-1">
+                                {offering.is_wildcard && <span className="text-orange-600">🎯</span>}
+                                {offering.is_wildcard ? offering.category_name : offering.subcategory_name}
                               </span>
+                              
+                              {/* Wildcard Work Types */}
+                              {offering.is_wildcard && offering.description && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {offering.description.split('\n\nWork Types: ')[1]?.split(', ').slice(0, 2).map((workType, index) => (
+                                    <span key={index} className="text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">
+                                      {workType}
+                                    </span>
+                                  ))}
+                                  {(offering.description.split('\n\nWork Types: ')[1]?.split(', ').length || 0) > 2 && (
+                                    <span className="text-xs text-orange-600">+{(offering.description.split('\n\nWork Types: ')[1]?.split(', ').length || 0) - 2}</span>
+                                  )}
+                                </div>
+                              )}
                               
                               {/* Pricing and Experience */}
                               <div className="flex gap-4 mt-1">
@@ -526,21 +547,31 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                                 )}
                               </div>
                               
-                              {/* Description */}
-                              <div className="flex items-center gap-1 mt-1 font-normal">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="line-clamp-2 text-xs cursor-help">
-                                        {offering.description}
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs">
-                                      <p className="text-sm whitespace-pre-wrap">{offering.description}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
+                              {/* Description (exclude work types for wildcard) */}
+                              {offering.description && (
+                                <div className="flex items-center gap-1 mt-1 font-normal">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="line-clamp-2 text-xs cursor-help">
+                                          {offering.is_wildcard 
+                                            ? offering.description.split('\n\nWork Types: ')[0]
+                                            : offering.description
+                                          }
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs">
+                                        <p className="text-sm whitespace-pre-wrap">
+                                          {offering.is_wildcard 
+                                            ? offering.description.split('\n\nWork Types: ')[0]
+                                            : offering.description
+                                          }
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                              )}
                               </div>
                             </Badge>
                             </Link>
