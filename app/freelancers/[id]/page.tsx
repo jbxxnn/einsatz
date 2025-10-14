@@ -738,8 +738,17 @@ export default function FreelancerProfile() {
                             <div className="space-y-3">
                               <div className="flex items-center gap-3 bg-gray-50 rounded-md p-3">
                                 <div>
-                                  <CardTitle className="text-lg">{getSelectedOffering()?.subcategory_name}</CardTitle>
-                                  <CardDescription className="text-sm text-muted-foreground">{getSelectedOffering()?.category_name}</CardDescription>
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    {getSelectedOffering()?.is_wildcard && <span className="text-orange-600">🎯</span>}
+                                    {getSelectedOffering()?.is_wildcard 
+                                      ? getSelectedOffering()?.category_name 
+                                      : getSelectedOffering()?.subcategory_name}
+                                  </CardTitle>
+                                  {!getSelectedOffering()?.is_wildcard && (
+                                    <CardDescription className="text-sm text-muted-foreground">
+                                      {getSelectedOffering()?.category_name}
+                                    </CardDescription>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -748,7 +757,11 @@ export default function FreelancerProfile() {
                              {getSelectedOffering()?.description && (
                               <div className="pt-4">
                                 <h4 className="text-sm font-medium mb-2">{t("freelancer.serviceDetails.serviceDescription")}</h4>
-                                <p className="text-sm text-muted-foreground">{getSelectedOffering()?.description}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {getSelectedOffering()?.is_wildcard 
+                                    ? getSelectedOffering()?.description?.split('\n\nWork Types: ')[0]
+                                    : getSelectedOffering()?.description}
+                                </p>
                     </div>
                   )}
                           </CardHeader>

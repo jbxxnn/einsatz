@@ -1276,7 +1276,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                 {description && (
                   <div className="space-y-2">
                     <Label className="text-xs text-gray-600">{t("jobOfferings.previewAsShownToClients")}</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-36">
                       <div className="flex flex-col gap-1">
                         <div className="text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200">
                           <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full">

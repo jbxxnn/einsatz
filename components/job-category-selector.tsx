@@ -75,25 +75,29 @@ export default function JobCategorySelector({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[400px] p-0">
-          <Command>
-            <CommandInput placeholder="Search categories..." />
-            <CommandList>
-              <CommandEmpty>No category found.</CommandEmpty>
-              <CommandGroup>
-                {categories?.map((category) => (
-                  <CommandItem key={category.id} value={category.name} onSelect={() => handleSelect(category.id)}>
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedCategories.includes(category.id) ? "opacity-100" : "opacity-0",
-                      )}
-                    />
-                    {category.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+          {!loading && categories && (
+            <Command>
+              <CommandInput placeholder="Search categories..." />
+              <CommandList>
+                <CommandEmpty>No category found.</CommandEmpty>
+                <CommandGroup>
+                  {categories
+                    .filter((category) => category.id !== '00000000-0000-0000-0000-000000000001') // Exclude wildcard category
+                    .map((category) => (
+                      <CommandItem key={category.id} value={category.name} onSelect={() => handleSelect(category.id)}>
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedCategories.includes(category.id) ? "opacity-100" : "opacity-0",
+                          )}
+                        />
+                        {category.name}
+                      </CommandItem>
+                    ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          )}
         </PopoverContent>
       </Popover>
     </div>
