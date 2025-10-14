@@ -626,7 +626,14 @@ export default function FreelancerProfile() {
                   {/* Show categories only when none is selected */}
                   {!selectedCategoryId && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                      {freelancer.job_offerings.map((offering) => (
+                      {freelancer.job_offerings
+                        .sort((a, b) => {
+                          // Sort wildcard offerings to the end
+                          if (a.is_wildcard && !b.is_wildcard) return 1
+                          if (!a.is_wildcard && b.is_wildcard) return -1
+                          return 0
+                        })
+                        .map((offering) => (
                         <div 
                           key={offering.category_id} 
                           className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-[#33CC99]"

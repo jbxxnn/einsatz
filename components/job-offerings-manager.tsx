@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/lib/toast"
-import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Loader, GripVertical, Shield, CheckCircle, Clock, Package, DollarSign, Calculator } from "lucide-react"
+import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Loader, GripVertical, Shield, CheckCircle, Clock, Package, DollarSign, Calculator, Edit } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -74,6 +74,7 @@ const WILDCARD_WORK_TYPES = [
 function SortableTableRow({ 
   offering, 
   onDelete,
+  onEdit,
   onDbaClick,
   onManagePackages,
   dbaStatus,
@@ -81,6 +82,7 @@ function SortableTableRow({
 }: { 
   offering: JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }
   onDelete: (id: string) => void
+  onEdit: (offering: JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }) => void
   onDbaClick: (categoryId: string, categoryName: string) => void
   onManagePackages: (offering: JobOffering & { category_name: string; subcategory_name?: string; display_order?: number }) => void
   dbaStatus?: any
@@ -187,6 +189,10 @@ function SortableTableRow({
             {dbaStatus?.completion?.is_completed ? t("jobOfferings.updateDba") : t("jobOfferings.startDba")}
           </Button>
 
+          <Button variant="ghost" size="icon" onClick={() => onEdit(offering)}>
+            <Edit className="h-4 w-4 text-blue-600" />
+          </Button>
+
           <Button variant="ghost" size="icon" onClick={() => onDelete(offering.id)}>
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
@@ -232,6 +238,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [addWildcardDialogOpen, setAddWildcardDialogOpen] = useState(false)
   const [wildcardEnabled, setWildcardEnabled] = useState(false)
   const [loadingWildcardStatus, setLoadingWildcardStatus] = useState(false)
+  const [editingOffering, setEditingOffering] = useState<(JobOffering & { category_name: string; subcategory_name?: string }) | null>(null)
+  const [editWildcardDialogOpen, setEditWildcardDialogOpen] = useState(false)
 
 
   // Drag and drop sensors
@@ -349,6 +357,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       wildcardHourlyRate,
       wildcardDescription,
       offeringsCount: offerings.length,
+      editingOffering: editingOffering?.id,
       freelancerId
     })
 
@@ -358,15 +367,14 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       return
     }
 
-    if (offerings.length >= maxOfferings) {
-      console.log("❌ Max offerings reached:", offerings.length, "Max allowed:", maxOfferings)
-      toast.error(t("jobOfferings.cardMaxOfferings"))
-      return
-    }
+    // If editing, skip the max offerings and duplicate checks
+    if (!editingOffering) {
+      if (offerings.length >= maxOfferings) {
+        console.log("❌ Max offerings reached:", offerings.length, "Max allowed:", maxOfferings)
+        toast.error(t("jobOfferings.cardMaxOfferings"))
+        return
+      }
 
-    setSaving(true)
-
-    try {
       // Check if wildcard offering already exists
       const existingWildcardOffering = offerings.find(
         (o) => o.is_wildcard === true
@@ -376,6 +384,53 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         console.log("❌ Wildcard offering already exists")
         toast.error(t("jobOfferings.wildcardAlreadyExists"))
         setSaving(false)
+        return
+      }
+    }
+
+    setSaving(true)
+
+    try {
+      // If editing, update the existing wildcard offering
+      if (editingOffering) {
+        const updateData = {
+          hourly_rate: Number.parseFloat(wildcardHourlyRate) || 45.00,
+          description: `${wildcardDescription}\n\nWork Types: ${wildcardWorkTypes.join(', ')}`,
+        }
+
+        console.log("📝 Wildcard update data:", updateData)
+
+        const { data, error } = await supabase
+          .from("freelancer_job_offerings")
+          .update(updateData)
+          .eq("id", editingOffering.id)
+          .select(`
+            *,
+            job_categories (
+              id, name
+            ),
+            job_subcategories (
+              id, name
+            )
+          `)
+          .single()
+
+        if (error) throw error
+
+        console.log("✅ Successfully updated wildcard offering:", data)
+
+        // Update local state
+        const updatedOffering = {
+          ...data,
+          category_name: data.job_categories?.name || "Wildcard Services",
+          subcategory_name: data.job_subcategories?.name,
+        }
+
+        setOfferings(offerings.map(o => o.id === editingOffering.id ? updatedOffering : o))
+
+        toast.success(t("jobOfferings.wildcardJobOfferingUpdated"))
+        setEditingOffering(null)
+        setEditWildcardDialogOpen(false)
         return
       }
 
@@ -495,6 +550,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       experienceYears,
       offeringsCount: offerings.length,
       regularOfferingsCount: regularOfferings.length,
+      editingOffering: editingOffering?.id,
       freelancerId
     })
 
@@ -504,17 +560,64 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       return
     }
 
-    // Regular offerings are limited to MAX_JOB_OFFERINGS (3), regardless of wildcard status
-    if (regularOfferings.length >= MAX_JOB_OFFERINGS) {
-      console.log("❌ Max regular offerings reached:", regularOfferings.length, "Max allowed:", MAX_JOB_OFFERINGS)
-      toast.error(t("jobOfferings.cardMaxOfferings"))
-      return
+    // If editing, skip the max offerings check
+    if (!editingOffering) {
+      // Regular offerings are limited to MAX_JOB_OFFERINGS (3), regardless of wildcard status
+      if (regularOfferings.length >= MAX_JOB_OFFERINGS) {
+        console.log("❌ Max regular offerings reached:", regularOfferings.length, "Max allowed:", MAX_JOB_OFFERINGS)
+        toast.error(t("jobOfferings.cardMaxOfferings"))
+        return
+      }
     }
 
     setSaving(true)
 
     try {
-      // Check if offering already exists for this category and subcategory
+      // If editing, update the existing offering
+      if (editingOffering) {
+        const updateData = {
+          description: description,
+          hourly_rate: pricingType === "hourly" ? Number.parseFloat(hourlyRate) || 45.00 : null,
+          experience_years: experienceYears ? Number.parseFloat(experienceYears) : null,
+        }
+
+        console.log("📝 Update data:", updateData)
+
+        const { data, error } = await supabase
+          .from("freelancer_job_offerings")
+          .update(updateData)
+          .eq("id", editingOffering.id)
+          .select(`
+            *,
+            job_categories (
+              id, name
+            ),
+            job_subcategories (
+              id, name
+            )
+          `)
+          .single()
+
+        if (error) throw error
+
+        console.log("✅ Successfully updated job offering:", data)
+
+        // Update local state
+        const updatedOffering = {
+          ...data,
+          category_name: data.job_categories.name,
+          subcategory_name: data.job_subcategories?.name,
+        }
+
+        setOfferings(offerings.map(o => o.id === editingOffering.id ? updatedOffering : o))
+
+        toast.success(t("jobOfferings.jobOfferingUpdated"))
+        setEditingOffering(null)
+        setAddOfferingDialogOpen(false)
+        return
+      }
+
+      // Check if offering already exists for this category and subcategory (only for new offerings)
       const existingOffering = offerings.find(
         (o) =>
           o.category_id === selectedCategoryId &&
@@ -789,6 +892,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
     setHourlyRate("")
     setDescription("")
     setExperienceYears("")
+    setEditingOffering(null)
   }
 
   const openAddWildcardDialog = () => {
@@ -891,6 +995,16 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                             key={offering.id}
                             offering={offering}
                             onDelete={handleDeleteOffering}
+                            onEdit={(offering) => {
+                              setEditingOffering(offering)
+                              setSelectedCategoryId(offering.category_id)
+                              setSelectedSubcategoryId(offering.subcategory_id)
+                              setPricingType(offering.pricing_type)
+                              setHourlyRate(offering.hourly_rate?.toString() || "")
+                              setDescription(offering.description || "")
+                              setExperienceYears(offering.experience_years?.toString() || "")
+                              setAddOfferingDialogOpen(true)
+                            }}
                             onDbaClick={(categoryId, categoryName) => {
                               setSelectedDbaCategoryId(categoryId)
                               setSelectedDbaCategoryName(categoryName)
@@ -972,6 +1086,23 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end items-center">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => {
+                            setEditingOffering(offering)
+                            // Parse work types from description
+                            const workTypesPart = offering.description?.split('\n\nWork Types: ')[1]
+                            const workTypes = workTypesPart ? workTypesPart.split(', ') : []
+                            setWildcardWorkTypes(workTypes)
+                            setWildcardHourlyRate(offering.hourly_rate?.toString() || "")
+                            setWildcardDescription(offering.description?.split('\n\nWork Types: ')[0] || "")
+                            setEditWildcardDialogOpen(true)
+                          }}
+                          className="text-blue-600 hover:bg-blue-50"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -1161,38 +1292,54 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         </DialogContent>
       </Dialog>
 
-      {/* Add Job Offering Dialog */}
+      {/* Add/Edit Job Offering Dialog */}
       <Dialog open={addOfferingDialogOpen} onOpenChange={closeAddOfferingDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              {t("jobOfferings.cardAddNewOffering")}
+              {editingOffering ? <Edit className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+              {editingOffering ? t("jobOfferings.editJobOffering") : t("jobOfferings.cardAddNewOffering")}
             </DialogTitle>
             <DialogDescription>
               {t("jobOfferings.addJobOfferingDescription")}
             </DialogDescription>
           </DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="category" className="text-xs text-black">{t("jobOfferings.cardCategory")}</Label>
-                <JobCategorySelector
-                  selectedCategories={selectedCategoryId ? [selectedCategoryId] : []}
-                  onChange={(categories) => setSelectedCategoryId(categories[0] || null)}
-                  multiple={false}
-                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-                />
-              </div>
+              {!editingOffering && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="category" className="text-xs text-black">{t("jobOfferings.cardCategory")}</Label>
+                    <JobCategorySelector
+                      selectedCategories={selectedCategoryId ? [selectedCategoryId] : []}
+                      onChange={(categories) => setSelectedCategoryId(categories[0] || null)}
+                      multiple={false}
+                      className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="subcategory" className="text-xs text-black">{t("jobOfferings.cardSubcategory")}</Label>
-                <JobSubcategorySelector
-                  categoryId={selectedCategoryId}
-                  selectedSubcategory={selectedSubcategoryId}
-                  onChange={setSelectedSubcategoryId}
-                  className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subcategory" className="text-xs text-black">{t("jobOfferings.cardSubcategory")}</Label>
+                    <JobSubcategorySelector
+                      categoryId={selectedCategoryId}
+                      selectedSubcategory={selectedSubcategoryId}
+                      onChange={setSelectedSubcategoryId}
+                      className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
+                    />
+                  </div>
+                </>
+              )}
+              
+              {editingOffering && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm font-medium text-blue-800">
+                    {t("jobOfferings.editingOffering")}: {editingOffering.category_name}
+                    {editingOffering.subcategory_name && ` - ${editingOffering.subcategory_name}`}
+                  </p>
+                  <p className="text-xs text-blue-700 mt-1">
+                    {t("jobOfferings.cannotChangeCategory")}
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-xs text-black">{t("jobOfferings.pricingType")}</Label>
@@ -1202,6 +1349,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                  // "hourly" | 
                   "packages") => setPricingType(value)}
                   className="flex gap-6"
+                  disabled={!!editingOffering}
                 >
                 {/* <div className="flex items-center space-x-2 opacity-50 cursor-not-allowed">
                   <RadioGroupItem value="hourly" id="hourly" disabled />
@@ -1338,12 +1486,12 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("jobOfferings.cardAdding")}
+                    {editingOffering ? t("jobOfferings.updating") : t("jobOfferings.cardAdding")}
                   </>
                 ) : (
                   <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t("jobOfferings.cardAddJobOffering")}
+                    {editingOffering ? <Edit className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
+                    {editingOffering ? t("jobOfferings.updateJobOffering") : t("jobOfferings.cardAddJobOffering")}
                   </>
                 )}
               </Button>
@@ -1352,13 +1500,19 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         </DialogContent>
       </Dialog>
 
-      {/* Add Wildcard Job Offering Dialog */}
-      <Dialog open={addWildcardDialogOpen} onOpenChange={closeAddWildcardDialog}>
+      {/* Add/Edit Wildcard Job Offering Dialog */}
+      <Dialog open={addWildcardDialogOpen || editWildcardDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          closeAddWildcardDialog()
+          setEditingOffering(null)
+          setEditWildcardDialogOpen(false)
+        }
+      }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-orange-600" />
-              {t("jobOfferings.cardAddWildcardOffering")}
+              {editingOffering ? <Edit className="h-5 w-5 text-orange-600" /> : <Package className="h-5 w-5 text-orange-600" />}
+              {editingOffering ? t("jobOfferings.editWildcardOffering") : t("jobOfferings.cardAddWildcardOffering")}
             </DialogTitle>
             <DialogDescription>
               {t("jobOfferings.addWildcardJobOfferingDescription")}
@@ -1427,7 +1581,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
               {wildcardDescription && (
                 <div className="space-y-2">
                   <Label className="text-xs text-gray-600">{t("jobOfferings.previewAsShownToClients")}</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-36">
                     <div className="flex flex-col gap-1">
                       <div className="text-xs cursor-help flex flex-col items-start justify-start rounded-md border transition-colors h-full bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200">
                         <div className="flex flex-col items-start justify-start gap-1 p-1 w-full h-full">
@@ -1497,12 +1651,12 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                 {saving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("jobOfferings.cardAdding")}
+                    {editingOffering ? t("jobOfferings.updating") : t("jobOfferings.cardAdding")}
                   </>
                 ) : (
                   <>
-                    <Package className="mr-2 h-4 w-4" />
-                    {t("jobOfferings.cardAddWildcardOffering")}
+                    {editingOffering ? <Edit className="mr-2 h-4 w-4" /> : <Package className="mr-2 h-4 w-4" />}
+                    {editingOffering ? t("jobOfferings.updateWildcardOffering") : t("jobOfferings.cardAddWildcardOffering")}
                   </>
                 )}
               </Button>

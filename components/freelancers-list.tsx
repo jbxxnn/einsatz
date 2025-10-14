@@ -451,7 +451,14 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                </div>
               {/* Job Offerings */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 auto-rows-fr">
-                  {freelancer.job_offerings?.map((offering) => (
+                  {freelancer.job_offerings
+                    ?.sort((a, b) => {
+                      // Sort wildcard offerings to the end
+                      if (a.is_wildcard && !b.is_wildcard) return 1
+                      if (!a.is_wildcard && b.is_wildcard) return -1
+                      return 0
+                    })
+                    ?.map((offering) => (
                     <div key={offering.id} className="flex flex-col gap-1">
                       <TooltipProvider>
                         <Tooltip>
