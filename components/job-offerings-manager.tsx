@@ -915,9 +915,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                   </Button>
                 </Link>
               </div> */}
-            </div>
+              </div>
           )}
-        </div>
+            </div>
       </div>
 
       {/* Wildcard Job Offerings Table */}
@@ -954,9 +954,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                           ))}
                           {(offering.description?.split('\n\nWork Types: ')[1]?.split(', ').length || 0) > 3 && (
                             <span className="text-xs text-orange-600">+{(offering.description?.split('\n\nWork Types: ')[1]?.split(', ').length || 0) - 3} more</span>
-                          )}
-                        </div>
-                      </div>
+          )}
+        </div>
+      </div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
@@ -1031,9 +1031,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         <div className="p-6">
           {hasReachedMaxOfferings ? (
             <div className="flex gap-2">
-              <AlertCircle className="h-4 w-4" />
-              <div>
-                <AlertTitle className="text-sm text-black">{t("jobOfferings.cardMaxOfferings")}</AlertTitle>
+            <AlertCircle className="h-4 w-4" />
+            <div>
+            <AlertTitle className="text-sm text-black">{t("jobOfferings.cardMaxOfferings")}</AlertTitle>
             <AlertDescription className="text-xs text-black">
                   {t("jobOfferings.cardMaxOfferingsDescription", { 
                     maxOfferings: maxOfferings,
@@ -1041,9 +1041,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                       (t("common.language") === "nl" ? " (inclusief wildcard)" : " (including wildcard)") : ""
                   })}
             </AlertDescription>
-              </div>
-            </div>
-          ) : (
+          </div>
+        </div>
+      ) : (
             <div className="space-y-3">
               {/* Regular Job Offering Button */}
               <Button 
@@ -1067,7 +1067,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                   {t("jobOfferings.cardAddWildcardOffering")}
                 </Button>
               )}
-            </div>
+          </div>
           )}
         </div>
       </div>

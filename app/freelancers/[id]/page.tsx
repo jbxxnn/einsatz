@@ -726,14 +726,14 @@ export default function FreelancerProfile() {
                         <Card className="h-fit">
                           <CardHeader>
                             <div className="flex justify-between items-center w-full mb-4">
-                      <Button
+                      {/* <Button
                         variant="outline"
                         size="sm"
                                 onClick={handleCategoryDeselect}
                                 className="text-xs w-full"
                       >
                                 {t("freelancer.id.changeFreelancerService")}
-                      </Button>
+                      </Button> */}
                             </div>
                             <div className="space-y-3">
                               <div className="flex items-center gap-3 bg-gray-50 rounded-md p-3">

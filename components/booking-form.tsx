@@ -21,6 +21,7 @@ import { useTranslation } from "@/lib/i18n"
 import { PreBookingDBAModal } from './pre-booking-dba-modal'
 import PackageSelectionStep from './package-selection-step'
 import TermsDisplay from './terms-display'
+import BookingTemplateManager from './booking-template-manager'
 
 
 
@@ -160,6 +161,17 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [termsAccepted, setTermsAccepted] = useState(false)
 
   const { t } = useTranslation()
+
+  // Fetch current client ID
+  useEffect(() => {
+    const fetchClientId = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setClientId(user.id)
+      }
+    }
+    fetchClientId()
+  }, [supabase])
 
   // Package selection is now handled in the parent component
   // This function is kept for compatibility but should not be used
@@ -710,6 +722,39 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
     setDbaResult(null)
   }
 
+  // Template handlers
+  const handleSaveTemplate = async () => {
+    // Validate that there's data to save
+    if (!location.trim() && !description.trim() && uploadedImages.length === 0) {
+      return null
+    }
+
+    return {
+      location,
+      description,
+      images: uploadedImages,
+      selectedStartTime: selectedStartTime || "",
+      selectedEndTime: selectedEndTime || "",
+      paymentMethod,
+    }
+  }
+
+  const handleLoadTemplate = (templateData: {
+    location: string
+    description: string
+    images: Array<{ url: string; path: string }>
+    selectedStartTime: string
+    selectedEndTime: string
+    paymentMethod: "online" | "offline"
+  }) => {
+    setLocation(templateData.location)
+    setDescription(templateData.description)
+    setUploadedImages(templateData.images)
+    setSelectedStartTime(templateData.selectedStartTime || null)
+    setSelectedEndTime(templateData.selectedEndTime || null)
+    setPaymentMethod(templateData.paymentMethod)
+  }
+
   const handleCreateBooking = async () => {
     if (!selectedDate) {
       toast.error(t("bookingform.pleaseSelectADate"))
@@ -924,6 +969,15 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
   const renderDetailsStep = () => (
     <form onSubmit={(e) => { e.preventDefault(); handleCreateBooking(); }} className="space-y-4">
+      {/* Template Loader - Top of form (wildcard only) */}
+      {clientId && currentOffering?.is_wildcard && (
+        <BookingTemplateManager
+          clientId={clientId}
+          onLoadTemplate={handleLoadTemplate}
+          mode="load"
+        />
+      )}
+
       {selectedPackageData && (
         <div className="mb-4 p-4 border rounded-lg bg-gray-50">
           <div className="flex items-center justify-between mb-2">
@@ -1371,6 +1425,14 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
           </div>
         )}
 
+      {/* Template Saver - Bottom of form (wildcard only) */}
+      {clientId && currentOffering?.is_wildcard && (
+        <BookingTemplateManager
+          clientId={clientId}
+          onSaveTemplate={handleSaveTemplate}
+          mode="save"
+        />
+      )}
 
       <Button
         type="submit"
