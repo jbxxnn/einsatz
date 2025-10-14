@@ -12,7 +12,6 @@ import { LocationInput } from "@/components/location-input"
 import { useCategories, useSubcategories, debounce } from "@/lib/data-fetching"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Database } from "@/lib/database.types"
-import WildcardFilter, { type WildcardCategory } from "@/components/wildcard-filter"
 import { Separator } from "@/components/ui/separator"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ChevronDown, ChevronUp, Search, MapPin, Euro, Clock, Tag } from "lucide-react"
@@ -21,6 +20,17 @@ import { useTranslation } from "@/lib/i18n"
 
 type Category = Database["public"]["Tables"]["job_categories"]["Row"]
 type Subcategory = Database["public"]["Tables"]["job_subcategories"]["Row"]
+
+// Wildcard work types that match what's in job-offerings-manager.tsx
+const WILDCARD_WORK_TYPES = [
+  { id: 'physical', label: 'Physical Work', labelKey: 'jobOfferings.workType.physical' },
+  { id: 'customer-facing', label: 'Customer-Facing Work', labelKey: 'jobOfferings.workType.customerFacing' },
+  { id: 'outdoor', label: 'Outdoor Work', labelKey: 'jobOfferings.workType.outdoor' },
+  { id: 'flexible-hours', label: 'Flexible Hours', labelKey: 'jobOfferings.workType.flexibleHours' },
+  { id: 'repetitive', label: 'Repetitive Tasks', labelKey: 'jobOfferings.workType.repetitive' },
+  { id: 'analytical', label: 'Analytical Work', labelKey: 'jobOfferings.workType.analytical' },
+  { id: 'creative', label: 'Creative Work', labelKey: 'jobOfferings.workType.creative' }
+]
 
 export default function FreelancerFilters() {
   const router = useRouter()
@@ -37,7 +47,8 @@ export default function FreelancerFilters() {
   const currentLatitude = searchParams.get("latitude") || ""
   const currentLongitude = searchParams.get("longitude") || ""
   const currentRadius = searchParams.get("radius") || "20"
-  const currentWildcards = (searchParams.get("wildcards")?.split(",").filter(Boolean) as WildcardCategory[]) || []
+  const currentWildcardWorkTypes = searchParams.get("wildcardWorkTypes")?.split(",").filter(Boolean) || []
+  const currentWildcardOnly = searchParams.get("wildcardOnly") === "true"
 
   // Local state for form values
   const [search, setSearch] = useState(currentSearch)
@@ -67,8 +78,8 @@ export default function FreelancerFilters() {
         },
   )
   const [radius, setRadius] = useState(Number.parseInt(currentRadius) || 20)
-  const [selectedWildcards, setSelectedWildcards] = useState<WildcardCategory[]>(currentWildcards)
-  const [showWildcardOnly, setShowWildcardOnly] = useState(false)
+  const [selectedWildcardWorkTypes, setSelectedWildcardWorkTypes] = useState<string[]>(currentWildcardWorkTypes)
+  const [wildcardOnly, setWildcardOnly] = useState(currentWildcardOnly)
 
   // Collapsible sections state
   const [openSections, setOpenSections] = useState({
@@ -136,15 +147,15 @@ export default function FreelancerFilters() {
       params.delete("radius")
     }
 
-    // Update wildcards
-    if (selectedWildcards.length > 0) {
-      params.set("wildcards", selectedWildcards.join(","))
+    // Update wildcard work types
+    if (selectedWildcardWorkTypes.length > 0) {
+      params.set("wildcardWorkTypes", selectedWildcardWorkTypes.join(","))
     } else {
-      params.delete("wildcards")
+      params.delete("wildcardWorkTypes")
     }
 
     // Update wildcard only filter
-    if (showWildcardOnly) {
+    if (wildcardOnly) {
       params.set("wildcardOnly", "true")
     } else {
       params.delete("wildcardOnly")
@@ -157,7 +168,7 @@ export default function FreelancerFilters() {
   // Update filters when form values change
   useEffect(() => {
     updateFilters()
-  }, [search, priceRange, selectedCategories, selectedSubcategories, availableNow, location, coordinates, radius, selectedWildcards, showWildcardOnly])
+  }, [search, priceRange, selectedCategories, selectedSubcategories, availableNow, location, coordinates, radius, selectedWildcardWorkTypes, wildcardOnly])
 
   // Handle category selection
   const toggleCategory = (categoryId: string) => {
@@ -205,9 +216,11 @@ export default function FreelancerFilters() {
     setRadius(value)
   }
 
-  // Handle wildcard change
-  const handleWildcardChange = (wildcards: WildcardCategory[]) => {
-    setSelectedWildcards(wildcards)
+  // Handle wildcard work type toggle
+  const toggleWildcardWorkType = (workTypeId: string) => {
+    setSelectedWildcardWorkTypes((prev) =>
+      prev.includes(workTypeId) ? prev.filter((id) => id !== workTypeId) : [...prev, workTypeId]
+    )
   }
 
   // Toggle collapsible section
@@ -228,8 +241,8 @@ export default function FreelancerFilters() {
     setLocation("")
     setCoordinates(null)
     setRadius(25)
-    setSelectedWildcards([])
-    setShowWildcardOnly(false)
+    setSelectedWildcardWorkTypes([])
+    setWildcardOnly(false)
   }
 
   return (
@@ -241,23 +254,50 @@ export default function FreelancerFilters() {
         {/* Wildcard Only Switch */}
         <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200">
           <div className="space-y-0.5">
-            <Label className="text-sm text-black font-bold">{t("freelancer.filters.wildcardSearch")}</Label>
-            <p className="text-xs text-black">
-            {t("freelancer.filters.wildcardSearchDescription")}
+            <div className="flex items-center gap-2">
+              <span className="text-orange-600 text-lg">🎯</span>
+              <Label className="text-sm text-black font-bold">{t("freelancer.filters.wildcardSearch")}</Label>
+            </div>
+            <p className="text-xs text-gray-600">
+              {t("freelancer.filters.wildcardSearchDescription")}
             </p>
           </div>
           <Switch
-            checked={showWildcardOnly}
-            onCheckedChange={setShowWildcardOnly}
+            checked={wildcardOnly}
+            onCheckedChange={setWildcardOnly}
           />
         </div>
 
-        {/* Wildcard Categories - Only shown when wildcard search is enabled */}
-        {showWildcardOnly && (
-          <div className="pl-4 bg-white rounded-lg p-4 border border-gray-200">
-            <div className="space-y-2">
-              <Label className="text-sm text-black font-bold">{t("freelancer.filters.selectWildcardCategories")}</Label>
-              <WildcardFilter selectedWildcards={selectedWildcards} onChange={handleWildcardChange} />
+        {/* Wildcard Work Types - Only shown when wildcard search is enabled */}
+        {wildcardOnly && (
+          <div className="bg-white rounded-lg p-4 border border-orange-200">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm text-black font-bold">{t("freelancer.filters.selectWorkTypes")}</Label>
+                {selectedWildcardWorkTypes.length > 0 && (
+                  <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                    {selectedWildcardWorkTypes.length} selected
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-600">{t("freelancer.filters.selectWorkTypesDescription")}</p>
+              <div className="space-y-2">
+                {WILDCARD_WORK_TYPES.map((workType) => (
+                  <div key={workType.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`wildcard-${workType.id}`}
+                      checked={selectedWildcardWorkTypes.includes(workType.id)}
+                      onCheckedChange={() => toggleWildcardWorkType(workType.id)}
+                    />
+                    <Label 
+                      htmlFor={`wildcard-${workType.id}`} 
+                      className="text-sm font-normal cursor-pointer flex-1"
+                    >
+                      {workType.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

@@ -21,11 +21,7 @@ export async function GET(request: Request) {
   const availableNow = url.searchParams.get("availableNow") === "true"
   const subcategoriesParam = url.searchParams.get("subcategories")
   const subcategories = subcategoriesParam ? subcategoriesParam.split(",").filter(Boolean) : []
-  const wildcards = url.searchParams.get("wildcards")?.split(",").filter(Boolean) || []
-  
-
-  
-
+  const wildcardWorkTypes = url.searchParams.get("wildcardWorkTypes")?.split(",").filter(Boolean) || []
   const wildcardOnly = url.searchParams.get("wildcardOnly") === "true"
 
   // Pagination parameters
@@ -215,23 +211,42 @@ export async function GET(request: Request) {
       processedFreelancers = processedFreelancers.filter((freelancer) => freelancer.is_available_now)
     }
 
-    // Filter by wildcards if any
-    if (wildcards.length > 0) {
+    // Filter by wildcard work types if any
+    if (wildcardWorkTypes.length > 0) {
       processedFreelancers = processedFreelancers.filter((freelancer) => {
-        // Skip if wildcard matching is not enabled or no wildcard categories are set
-        if (!freelancer.wildcard_enabled || !freelancer.wildcard_categories) return false
+        // Check if freelancer has any wildcard job offerings
+        const hasWildcardOfferings = freelancer.job_offerings?.some((offering: any) => offering.is_wildcard === true)
+        if (!hasWildcardOfferings) return false
 
-        // Check if the freelancer matches any of the selected wildcards
-        return wildcards.some((wildcard) => {
-          const wildcardValue = freelancer.wildcard_categories[wildcard]
-          return wildcardValue === true
+        // Get all work types from wildcard offerings
+        const freelancerWorkTypes = new Set<string>()
+        freelancer.job_offerings?.forEach((offering: any) => {
+          if (offering.is_wildcard && offering.description) {
+            // Extract work types from description (format: "Description\n\nWork Types: type1, type2, type3")
+            const workTypesPart = offering.description.split('\n\nWork Types: ')[1]
+            if (workTypesPart) {
+              const workTypes = workTypesPart.split(', ')
+              workTypes.forEach(wt => freelancerWorkTypes.add(wt.toLowerCase()))
+            }
+          }
+        })
+
+        // Check if freelancer has any of the selected work types
+        return wildcardWorkTypes.some((selectedType) => {
+          // Match against the work type labels (case-insensitive)
+          const selectedTypeLower = selectedType.toLowerCase()
+          return Array.from(freelancerWorkTypes).some(ft => 
+            ft.includes(selectedTypeLower) || selectedTypeLower.includes(ft)
+          )
         })
       })
     }
 
-    // Filter by wildcard only if enabled
+    // Filter by wildcard only if enabled (show only freelancers with wildcard offerings)
     if (wildcardOnly) {
-      processedFreelancers = processedFreelancers.filter((freelancer) => freelancer.wildcard_enabled === true)
+      processedFreelancers = processedFreelancers.filter((freelancer) => {
+        return freelancer.job_offerings?.some((offering: any) => offering.is_wildcard === true)
+      })
     }
 
     // Apply location filtering if coordinates are provided

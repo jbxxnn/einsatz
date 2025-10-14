@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { MapPin, Star, CheckCircle, AlertCircle, RefreshCw, BadgeCheck, ChevronLeft, ChevronRight, Zap, MessageCircle, Shield } from "lucide-react"
+import { MapPin, Star, CheckCircle, AlertCircle, RefreshCw, BadgeCheck, ChevronLeft, ChevronRight, MessageCircle, Shield } from "lucide-react"
 import Link from "next/link"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
@@ -43,16 +43,6 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
   is_available_now?: boolean
   is_verified?: boolean
   completed_bookings?: number
-  wildcard_categories?: {
-    physical_work: boolean
-    customer_facing: boolean
-    outdoor_work: boolean
-    odd_hours: boolean
-    repetitive_work: boolean
-    analytical_work: boolean
-    creative_work: boolean
-  } | null
-  wildcard_enabled?: boolean
 }
 
 export default function FreelancersList() {
@@ -77,7 +67,7 @@ export default function FreelancersList() {
     latitude: searchParams.get("latitude") || undefined,
     longitude: searchParams.get("longitude") || undefined,
     radius: searchParams.get("radius") || undefined,
-    wildcards: searchParams.get("wildcards")?.split(",").filter(Boolean) || undefined,
+    wildcardWorkTypes: searchParams.get("wildcardWorkTypes")?.split(",").filter(Boolean) || undefined,
     wildcardOnly: searchParams.get("wildcardOnly") === "true",
     page: currentPage,
     limit: limit,
@@ -262,8 +252,7 @@ export default function FreelancersList() {
       {freelancers.map((freelancer: Freelancer) => (
         <FreelancerCard 
           key={freelancer.id} 
-          freelancer={freelancer} 
-          showWildcards={filters.wildcardOnly}
+          freelancer={freelancer}
         />
       ))}
       </div>
@@ -329,7 +318,7 @@ export default function FreelancersList() {
   )
 }
 
-function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Freelancer, showWildcards?: boolean }) {
+function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
   const { t } = useTranslation()
   const initials = `${freelancer.first_name?.[0] || ""}${freelancer.last_name?.[0] || ""}`.toUpperCase()
 
@@ -460,7 +449,7 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                  )}
                </div>
                </div>
-              {/* Job Offerings - Hidden when wildcard filter is active */}
+              {/* Job Offerings */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 auto-rows-fr">
                   {freelancer.job_offerings?.map((offering) => (
                     <div key={offering.id} className="flex flex-col gap-1">
@@ -608,88 +597,6 @@ function FreelancerCard({ freelancer, showWildcards = false }: { freelancer: Fre
                     </div>
                   ))}
                 </div>
-              
-              {/* Wildcard Categories Display - Only show when wildcard filter is active */}
-              {showWildcards && freelancer.wildcard_enabled && freelancer.wildcard_categories && (
-                <div className="mt-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="h-4 w-4 text-purple-600" />
-                    <span className="text-sm font-medium text-gray-700">{t("freelancers.wildcard.additionalCapabilities")}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(freelancer.wildcard_categories).map(([key, value]) => {
-                      if (!value) return null
-                      
-                      const wildcardInfo = {
-                        physical_work: { 
-                          label: t("freelancers.wildcard.categories.physical_work.label"), 
-                          icon: "💪", 
-                          color: "bg-gray-100 text-gray-800 border-gray-200",
-                          description: t("freelancers.wildcard.categories.physical_work.description")
-                        },
-                        customer_facing: { 
-                          label: t("freelancers.wildcard.categories.customer_facing.label"), 
-                          icon: "👥", 
-                          color: "bg-gray-100 text-gray-800 border-gray-200",
-                          description: t("freelancers.wildcard.categories.customer_facing.description")
-                        },
-                        outdoor_work: { 
-                          label: t("freelancers.wildcard.categories.outdoor_work.label"), 
-                          icon: "🌞", 
-                          color: "bg-gray-100 text-gray-800 border-gray-200",
-                          description: t("freelancers.wildcard.categories.outdoor_work.description")
-                        },
-                        odd_hours: { 
-                          label: t("freelancers.wildcard.categories.odd_hours.label"), 
-                          icon: "🕐", 
-                          color: "bg-gray-100 text-gray-800 border-gray-200",
-                          description: t("freelancers.wildcard.categories.odd_hours.description")
-                        },
-                        repetitive_work: { 
-                          label: t("freelancers.wildcard.categories.repetitive_work.label"), 
-                          icon: "🔄", 
-                          color: "bg-gray-100 text-gray-800 border-gray-200",
-                          description: t("freelancers.wildcard.categories.repetitive_work.description")
-                        },
-                        analytical_work: { 
-                          label: t("freelancers.wildcard.categories.analytical_work.label"), 
-                          icon: "🧠", 
-                          color: "bg-gray-100 text-gray-800 border-gray-200",
-                          description: t("freelancers.wildcard.categories.analytical_work.description")
-                        },
-                        creative_work: { 
-                          label: t("freelancers.wildcard.categories.creative_work.label"), 
-                          icon: "🎨", 
-                          color: "bg-gray-100 text-gray-800 border-gray-200",
-                          description: t("freelancers.wildcard.categories.creative_work.description")
-                        }
-                      }
-                      
-                      const info = wildcardInfo[key as keyof typeof wildcardInfo]
-                      if (!info) return null
-                      
-                      return (
-                        <TooltipProvider key={key}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Badge 
-                                variant="outline" 
-                                className={`text-xs border ${info.color} hover:opacity-80 transition-opacity cursor-help`}
-                              >
-                                <span className="mr-1">{info.icon}</span>
-                                {info.label}
-                              </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-sm">{info.description}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
           

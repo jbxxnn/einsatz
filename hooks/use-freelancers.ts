@@ -55,7 +55,7 @@ interface UseFreelancersParams {
   skills?: string[]
   categories?: string[]
   availableNow?: boolean
-  wildcards?: string[]
+  wildcardWorkTypes?: string[]
   wildcardOnly?: boolean
   latitude?: string
   longitude?: string
