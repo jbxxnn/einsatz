@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { useOptimizedSupabase } from "./optimized-supabase-provider"
-import { User, Briefcase, Calendar, Clock, CreditCard, Settings, LogOut, Home, Loader, TrendingUp, Sidebar } from "lucide-react"
+import { User, Briefcase, Calendar, Clock, CreditCard, Settings, LogOut, Home, Loader, TrendingUp, Sidebar, FileText } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
@@ -271,19 +271,34 @@ export default function ModernSidebarNav({ profile }: ModernSidebarNavProps) {
               </SidebarMenuItem>
 
               {profile.user_type === "client" && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={isActive("/freelancers")} 
-                    tooltip={t("sidebar.findFreelancers")}
-                    className={isActive("/freelancers") ? "!bg-[#15dda9] !text-white hover:!bg-[#15dda9] hover:!text-black !rounded-lg" : "hover:!bg-[#d0f8ee] hover:!text-black hover:!rounded-lg"}
-                  >
-                    <Link href="/freelancers">
-                      <CustomFindFreelancersIcon className={`h-4 w-4 ${isActive("/freelancers") ? "text-black" : "text-[#15dda9]"}`} />
-                      <span className="text-xs font-light">{t("sidebar.findFreelancers")}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={isActive("/freelancers")} 
+                      tooltip={t("sidebar.findFreelancers")}
+                      className={isActive("/freelancers") ? "!bg-[#15dda9] !text-white hover:!bg-[#15dda9] hover:!text-black !rounded-lg" : "hover:!bg-[#d0f8ee] hover:!text-black hover:!rounded-lg"}
+                    >
+                      <Link href="/freelancers">
+                        <CustomFindFreelancersIcon className={`h-4 w-4 ${isActive("/freelancers") ? "text-black" : "text-[#15dda9]"}`} />
+                        <span className="text-xs font-light">{t("sidebar.findFreelancers")}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={isActive("/my-booking-requests")} 
+                      tooltip={t("sidebar.myBookingRequests")}
+                      className={isActive("/my-booking-requests") ? "!bg-[#15dda9] !text-white hover:!bg-[#15dda9] hover:!text-black !rounded-lg" : "hover:!bg-[#d0f8ee] hover:!text-black hover:!rounded-lg"}
+                    >
+                      <Link href="/my-booking-requests">
+                        <FileText className={`h-4 w-4 ${isActive("/my-booking-requests") ? "text-black" : "text-[#15dda9]"}`} />
+                        <span className="text-xs font-light">{t("sidebar.myBookingRequests")}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
               )}
 
               {profile.user_type === "freelancer" && (
@@ -313,6 +328,22 @@ export default function ModernSidebarNav({ profile }: ModernSidebarNavProps) {
                     <Link href="/profile/availability">
                       <CustomAvailabilityIcon className={`h-4 w-4 ${isActive("/profile/availability") ? "text-black" : "text-[#15dda9]"}`} />
                       <span className="text-xs font-light">{t("sidebar.availability")}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {profile.user_type === "freelancer" && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={isActive("/booking-requests")} 
+                    tooltip={t("sidebar.bookingRequests")}
+                    className={isActive("/booking-requests") ? "!bg-[#15dda9] !text-white hover:!bg-[#15dda9] hover:!text-black !rounded-lg" : "hover:!bg-[#d0f8ee] hover:!text-black hover:!rounded-lg"}
+                  >
+                    <Link href="/booking-requests">
+                      <FileText className={`h-4 w-4 ${isActive("/booking-requests") ? "text-black" : "text-[#15dda9]"}`} />
+                      <span className="text-xs font-light">{t("sidebar.bookingRequests")}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

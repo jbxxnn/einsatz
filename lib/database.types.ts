@@ -187,6 +187,98 @@ export interface Database {
           package_quantities?: Json | null
         }
       }
+      booking_requests: {
+        Row: {
+          id: string
+          client_id: string
+          freelancer_id: string
+          category_id: string
+          description: string
+          location: string
+          preferred_date: string | null
+          preferred_start_time: string | null
+          preferred_end_time: string | null
+          budget_amount: number | null
+          budget_is_flexible: boolean
+          images: Json
+          additional_notes: string | null
+          status: "pending" | "under_review" | "counter_offered" | "accepted" | "rejected" | "expired" | "converted_to_booking"
+          freelancer_response_description: string | null
+          freelancer_proposed_date: string | null
+          freelancer_proposed_start_time: string | null
+          freelancer_proposed_end_time: string | null
+          freelancer_proposed_rate: number | null
+          freelancer_proposed_total: number | null
+          freelancer_response_notes: string | null
+          viewed_by_freelancer: boolean
+          viewed_at: string | null
+          freelancer_responded_at: string | null
+          expires_at: string | null
+          converted_booking_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          freelancer_id: string
+          category_id: string
+          description: string
+          location: string
+          preferred_date?: string | null
+          preferred_start_time?: string | null
+          preferred_end_time?: string | null
+          budget_amount?: number | null
+          budget_is_flexible?: boolean
+          images?: Json
+          additional_notes?: string | null
+          status?: "pending" | "under_review" | "counter_offered" | "accepted" | "rejected" | "expired" | "converted_to_booking"
+          freelancer_response_description?: string | null
+          freelancer_proposed_date?: string | null
+          freelancer_proposed_start_time?: string | null
+          freelancer_proposed_end_time?: string | null
+          freelancer_proposed_rate?: number | null
+          freelancer_proposed_total?: number | null
+          freelancer_response_notes?: string | null
+          viewed_by_freelancer?: boolean
+          viewed_at?: string | null
+          freelancer_responded_at?: string | null
+          expires_at?: string | null
+          converted_booking_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          freelancer_id?: string
+          category_id?: string
+          description?: string
+          location?: string
+          preferred_date?: string | null
+          preferred_start_time?: string | null
+          preferred_end_time?: string | null
+          budget_amount?: number | null
+          budget_is_flexible?: boolean
+          images?: Json
+          additional_notes?: string | null
+          status?: "pending" | "under_review" | "counter_offered" | "accepted" | "rejected" | "expired" | "converted_to_booking"
+          freelancer_response_description?: string | null
+          freelancer_proposed_date?: string | null
+          freelancer_proposed_start_time?: string | null
+          freelancer_proposed_end_time?: string | null
+          freelancer_proposed_rate?: number | null
+          freelancer_proposed_total?: number | null
+          freelancer_response_notes?: string | null
+          viewed_by_freelancer?: boolean
+          viewed_at?: string | null
+          freelancer_responded_at?: string | null
+          expires_at?: string | null
+          converted_booking_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       reviews: {
         Row: {
           id: string

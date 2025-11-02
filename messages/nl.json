@@ -552,6 +552,8 @@
     "findFreelancers": "Zoek Freelancers",
     "jobOfferings": "Dienstenaanbod",
     "bookings": "Boekingen",
+    "bookingRequests": "Boeking Aanvragen",
+    "myBookingRequests": "Mijn Aanvragen",
     "payments": "Betalingen",
     "messages": "Berichten",
     "settings": "Instellingen",
@@ -1380,7 +1382,26 @@
     "yourTransactionHistoryWillAppearHereOnceYouHaveCompletedPayments": "Je transactiegeschiedenis verschijnt hier zodra je betalingen hebt voltooid.",
     "draft": "Concept",
     "sent": "Verzonden",
-    "cancelled": "Geannuleerd"
+    "cancelled": "Geannuleerd",
+    "wildcard": {
+      "selectBookingType": "Hoe wilt u doorgaan?",
+      "selectBookingTypeDescription": "Kies hoe u deze service wilt boeken",
+      "bookNow": "Nu boeken",
+      "bookNowDescription": "Selecteer een datum en tijd om direct te boeken",
+      "requestCustomOffer": "Aangepast aanbod aanvragen",
+      "requestCustomOfferDescription": "Stuur een aangepast verzoek voor de freelancer om te bekijken en te bespreken",
+      "preferredDate": "Voorkeursdatum",
+      "preferredStartTime": "Voorkeursstarttijd",
+      "preferredEndTime": "Voorkeurseindtijd",
+      "budget": "Budget",
+      "budgetIsFlexible": "Budget is flexibel",
+      "additionalNotes": "Aanvullende opmerkingen",
+      "additionalNotesPlaceholder": "Eventuele aanvullende informatie of speciale vereisten...",
+      "optional": "Optioneel",
+      "submitCustomOffer": "Aangepast aanbod indienen",
+      "customOfferSubmitted": "Aangepast aanbod succesvol ingediend",
+      "customOfferSubmittedSuccessfully": "Uw aangepaste aanbod is ingediend. De freelancer zal het bekijken en binnenkort reageren."
+    }
   },
   "booking": {
     "id": {
@@ -1770,5 +1791,122 @@
     "circular_economy_specialist": "Circulaire-economie-specialist",
     "environmental_consultant": "Milieukundig consultant",
     "sustainability_coach": "Duurzaamheidscoach"
+  },
+  "bookingRequests": {
+    "title": "Boeking Aanvragen",
+    "description": "Bekijk en reageer op aangepaste boeking aanvragen van klanten",
+    "all": "Alle",
+    "pending": "In behandeling",
+    "counterOffered": "Tegenvoorstel gedaan",
+    "accepted": "Geaccepteerd",
+    "rejected": "Afgewezen",
+    "noRequests": "Nog geen boeking aanvragen",
+    "noRequestsDescription": "Wanneer klanten aangepaste boeking aanvragen sturen voor uw wildcard diensten, verschijnen ze hier.",
+    "noPendingRequests": "Geen aanvragen in behandeling",
+    "noCounterOffered": "Geen tegenvoorstellen",
+    "noAcceptedRequests": "Geen geaccepteerde aanvragen",
+    "noRejectedRequests": "Geen afgewezen aanvragen",
+    "status": {
+      "pending": "In behandeling",
+      "counterOffered": "Tegenvoorstel gedaan",
+      "accepted": "Geaccepteerd",
+      "rejected": "Afgewezen",
+      "convertedToBooking": "Omgezet naar Boeking"
+    },
+    "from": "Van",
+    "to": "Naar",
+    "requestedOn": "Aangevraagd op",
+    "yourRequest": "Uw Aanvraag",
+    "unknownFreelancer": "Onbekende Freelancer",
+    "description": "Beschrijving",
+    "additionalNotes": "Aanvullende opmerkingen",
+    "images": "Afbeeldingen",
+    "budget": "Budget",
+    "flexible": "Flexibel",
+    "unknownClient": "Onbekende klant",
+    "yourCounterOffer": "Uw tegenvoorstel",
+    "rate": "Tarief",
+    "total": "Totaal",
+    "notes": "Opmerkingen",
+    "actions": {
+      "counterOffer": "Tegenvoorstel doen",
+      "accept": "Accepteren & Boeking Aanmaken",
+      "acceptAndConvert": "Accepteren & Boeking Aanmaken",
+      "reject": "Afwijzen",
+      "convertToBooking": "Omzetten naar Boeking"
+    },
+    "proposedDate": "Voorgestelde datum",
+    "proposedStartTime": "Voorgestelde starttijd",
+    "proposedEndTime": "Voorgestelde eindtijd",
+    "proposedRate": "Voorgesteld tarief",
+    "proposedTotal": "Voorgesteld totaal",
+    "responseDescription": "Reactie beschrijving",
+    "responseDescriptionPlaceholder": "Beschrijf uw tegenvoorstel...",
+    "responseNotes": "Reactie opmerkingen",
+    "responseNotesPlaceholder": "Aanvullende opmerkingen voor de klant...",
+    "counterOffer": {
+      "title": "Tegenvoorstel indienen",
+      "description": "Stel uw eigen datum, tijd en prijs voor voor dit verzoek"
+    },
+    "submitCounterOffer": "Tegenvoorstel indienen",
+    "cancel": "Annuleren",
+    "processing": "Bezig met verwerken...",
+    "viewBooking": "Bekijk Boeking",
+    "confirm": {
+      "accept": "Weet u zeker dat u deze boeking aanvraag wilt accepteren?",
+      "acceptAndConvert": "Weet u zeker dat u deze aanvraag wilt accepteren en een boeking wilt aanmaken? Dit zal direct de boeking aanmaken.",
+      "reject": "Weet u zeker dat u deze boeking aanvraag wilt afwijzen?",
+      "convertToBooking": "Weet u zeker dat u deze geaccepteerde aanvraag wilt omzetten naar een boeking?"
+    },
+    "success": {
+      "accepted": "Aanvraag succesvol geaccepteerd",
+      "rejected": "Aanvraag succesvol afgewezen",
+      "counterOfferSubmitted": "Tegenvoorstel succesvol ingediend",
+      "convertedToBooking": "Aanvraag succesvol omgezet naar boeking"
+    },
+    "error": {
+      "failedToLoad": "Kon boeking aanvragen niet laden",
+      "failedToAccept": "Kon aanvraag niet accepteren",
+      "failedToReject": "Kon aanvraag niet afwijzen",
+      "failedToSubmitCounterOffer": "Kon tegenvoorstel niet indienen",
+      "failedToConvert": "Kon niet omzetten naar boeking",
+      "invalidDate": "Ongeldige datum- of tijdwaarden. Controleer de tegenvoorstel details.",
+      "notFound": "Profiel niet gevonden",
+      "backToLogin": "Terug naar Inloggen"
+    },
+    "validation": {
+      "fillAllFields": "Vul alle verplichte velden in"
+    },
+    "myRequests": {
+      "title": "Mijn Boeking Aanvragen",
+      "description": "Bekijk en beheer uw aangepaste boeking aanvragen",
+      "noRequests": "Nog geen boeking aanvragen",
+      "noRequestsDescription": "Wanneer u aangepaste boeking aanvragen indient voor wildcard diensten, verschijnen ze hier."
+    },
+    "acceptedDetails": "Geaccepteerde Details",
+    "freelancer": {
+      "counterOfferAccepted": "Tegenvoorstel Geaccepteerd door Klant"
+    },
+    "client": {
+      "counterOfferReceived": "Tegenvoorstel Ontvangen",
+      "waitingForFreelancer": "Wachten op reactie van freelancer...",
+      "acceptedByFreelancer": "Aanvraag geaccepteerd door freelancer",
+      "rejectedByFreelancer": "Aanvraag afgewezen door freelancer",
+      "waitingForBooking": "Wachten tot freelancer omzet naar boeking",
+      "acceptCounter": "Tegenvoorstel Accepteren",
+      "rejectCounter": "Tegenvoorstel Afwijzen",
+      "confirm": {
+        "acceptCounter": "Weet u zeker dat u dit tegenvoorstel wilt accepteren?",
+        "rejectCounter": "Weet u zeker dat u dit tegenvoorstel wilt afwijzen? Het wordt teruggezet naar de status 'in behandeling'."
+      },
+      "success": {
+        "acceptedCounter": "Tegenvoorstel succesvol geaccepteerd",
+        "rejectedCounter": "Tegenvoorstel succesvol afgewezen"
+      },
+      "error": {
+        "failedToAcceptCounter": "Kon tegenvoorstel niet accepteren",
+        "failedToRejectCounter": "Kon tegenvoorstel niet afwijzen"
+      }
+    }
   }
 }

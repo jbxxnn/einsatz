@@ -29,6 +29,10 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  // Increase body size limit for API routes (image uploads)
+  serverActions: {
+    bodySizeLimit: '10mb',
+  },
 }
 
 mergeConfig(nextConfig, userConfig)

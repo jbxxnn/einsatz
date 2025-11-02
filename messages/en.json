@@ -552,6 +552,8 @@
     "findFreelancers": "Find Freelancers",
     "jobOfferings": "Job Offerings",
     "bookings": "Bookings",
+    "bookingRequests": "Booking Requests",
+    "myBookingRequests": "My Requests",
     "payments": "Payments",
     "messages": "Messages",
     "settings": "Settings",
@@ -1289,6 +1291,25 @@
       "failedToSubmitDBA": "Failed to submit DBA assessment:",
       "serverError": "Server error",
       "unknownError": "Unknown error"
+    },
+    "wildcard": {
+      "selectBookingType": "How would you like to proceed?",
+      "selectBookingTypeDescription": "Choose how you'd like to book this service",
+      "bookNow": "Book Now",
+      "bookNowDescription": "Select a date and time to book immediately",
+      "requestCustomOffer": "Request Custom Offer",
+      "requestCustomOfferDescription": "Send a custom request for the freelancer to review and negotiate",
+      "preferredDate": "Preferred Date",
+      "preferredStartTime": "Preferred Start Time",
+      "preferredEndTime": "Preferred End Time",
+      "budget": "Budget",
+      "budgetIsFlexible": "Budget is flexible",
+      "additionalNotes": "Additional Notes",
+      "additionalNotesPlaceholder": "Any additional information or special requirements...",
+      "optional": "Optional",
+      "submitCustomOffer": "Submit Custom Offer",
+      "customOfferSubmitted": "Custom offer submitted successfully",
+      "customOfferSubmittedSuccessfully": "Your custom offer has been submitted. The freelancer will review it and respond soon."
     }
   },
   "payments": {
@@ -1380,7 +1401,26 @@
     "yourTransactionHistoryWillAppearHereOnceYouHaveCompletedPayments": "Your transaction history will appear here once you have completed payments.",
     "draft": "Draft",
     "sent": "Sent",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "wildcard": {
+      "selectBookingType": "How would you like to proceed?",
+      "selectBookingTypeDescription": "Choose how you'd like to book this service",
+      "bookNow": "Book Now",
+      "bookNowDescription": "Select a date and time to book immediately",
+      "requestCustomOffer": "Request Custom Offer",
+      "requestCustomOfferDescription": "Send a custom request for the freelancer to review and negotiate",
+      "preferredDate": "Preferred Date",
+      "preferredStartTime": "Preferred Start Time",
+      "preferredEndTime": "Preferred End Time",
+      "budget": "Budget",
+      "budgetIsFlexible": "Budget is flexible",
+      "additionalNotes": "Additional Notes",
+      "additionalNotesPlaceholder": "Any additional information or special requirements...",
+      "optional": "Optional",
+      "submitCustomOffer": "Submit Custom Offer",
+      "customOfferSubmitted": "Custom offer submitted successfully",
+      "customOfferSubmittedSuccessfully": "Your custom offer has been submitted. The freelancer will review it and respond soon."
+    }
   },
   "booking": {
     "id": {
@@ -1771,5 +1811,122 @@
     "circular_economy_specialist": "Circular economy specialist",
     "environmental_consultant": "Environmental consultant",
     "sustainability_coach": "Sustainability coach"
+  },
+  "bookingRequests": {
+    "title": "Booking Requests",
+    "description": "Review and respond to custom booking requests from clients",
+    "all": "All",
+    "pending": "Pending",
+    "counterOffered": "Counter Offered",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "noRequests": "No booking requests yet",
+    "noRequestsDescription": "When clients send custom booking requests for your wildcard services, they will appear here.",
+    "noPendingRequests": "No pending requests",
+    "noCounterOffered": "No counter offers",
+    "noAcceptedRequests": "No accepted requests",
+    "noRejectedRequests": "No rejected requests",
+    "status": {
+      "pending": "Pending",
+      "counterOffered": "Counter Offered",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "convertedToBooking": "Converted to Booking"
+    },
+    "from": "From",
+    "to": "To",
+    "requestedOn": "Requested on",
+    "yourRequest": "Your Request",
+    "unknownFreelancer": "Unknown Freelancer",
+    "description": "Description",
+    "additionalNotes": "Additional Notes",
+    "images": "Images",
+    "budget": "Budget",
+    "flexible": "Flexible",
+    "unknownClient": "Unknown Client",
+    "yourCounterOffer": "Your Counter Offer",
+    "rate": "Rate",
+    "total": "Total",
+    "notes": "Notes",
+    "actions": {
+      "counterOffer": "Counter Offer",
+      "accept": "Accept & Create Booking",
+      "acceptAndConvert": "Accept & Create Booking",
+      "reject": "Reject",
+      "convertToBooking": "Convert to Booking"
+    },
+    "proposedDate": "Proposed Date",
+    "proposedStartTime": "Proposed Start Time",
+    "proposedEndTime": "Proposed End Time",
+    "proposedRate": "Proposed Rate",
+    "proposedTotal": "Proposed Total",
+    "responseDescription": "Response Description",
+    "responseDescriptionPlaceholder": "Describe your counter offer...",
+    "responseNotes": "Response Notes",
+    "responseNotesPlaceholder": "Additional notes for the client...",
+    "counterOffer": {
+      "title": "Submit Counter Offer",
+      "description": "Propose your own date, time, and pricing for this request"
+    },
+    "submitCounterOffer": "Submit Counter Offer",
+    "cancel": "Cancel",
+    "processing": "Processing...",
+    "viewBooking": "View Booking",
+    "confirm": {
+      "accept": "Are you sure you want to accept this booking request?",
+      "acceptAndConvert": "Are you sure you want to accept this request and create a booking? This will immediately create the booking.",
+      "reject": "Are you sure you want to reject this booking request?",
+      "convertToBooking": "Are you sure you want to convert this accepted request to a booking?"
+    },
+    "success": {
+      "accepted": "Request accepted successfully",
+      "rejected": "Request rejected successfully",
+      "counterOfferSubmitted": "Counter offer submitted successfully",
+      "convertedToBooking": "Request converted to booking successfully"
+    },
+    "error": {
+      "failedToLoad": "Failed to load booking requests",
+      "failedToAccept": "Failed to accept request",
+      "failedToReject": "Failed to reject request",
+      "failedToSubmitCounterOffer": "Failed to submit counter offer",
+      "failedToConvert": "Failed to convert to booking",
+      "invalidDate": "Invalid date or time values. Please check the counter offer details.",
+      "notFound": "Profile not found",
+      "backToLogin": "Back to Login"
+    },
+    "validation": {
+      "fillAllFields": "Please fill in all required fields"
+    },
+    "myRequests": {
+      "title": "My Booking Requests",
+      "description": "View and manage your custom booking requests",
+      "noRequests": "No booking requests yet",
+      "noRequestsDescription": "When you submit custom booking requests for wildcard services, they will appear here."
+    },
+    "acceptedDetails": "Accepted Details",
+    "freelancer": {
+      "counterOfferAccepted": "Counter Offer Accepted by Client"
+    },
+    "client": {
+      "counterOfferReceived": "Counter Offer Received",
+      "waitingForFreelancer": "Waiting for freelancer to respond...",
+      "acceptedByFreelancer": "Request accepted by freelancer",
+      "rejectedByFreelancer": "Request rejected by freelancer",
+      "waitingForBooking": "Waiting for freelancer to convert to booking",
+      "acceptCounter": "Accept Counter Offer",
+      "rejectCounter": "Reject Counter Offer",
+      "confirm": {
+        "acceptCounter": "Are you sure you want to accept this counter offer?",
+        "rejectCounter": "Are you sure you want to reject this counter offer? It will be returned to pending status."
+      },
+      "success": {
+        "acceptedCounter": "Counter offer accepted successfully",
+        "rejectedCounter": "Counter offer rejected successfully"
+      },
+      "error": {
+        "failedToAcceptCounter": "Failed to accept counter offer",
+        "failedToRejectCounter": "Failed to reject counter offer"
+      }
+    }
   }
 }

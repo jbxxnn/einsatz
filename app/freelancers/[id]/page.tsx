@@ -3,17 +3,19 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
+import { useOptimizedUser } from "@/components/optimized-user-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import FreelancerAvailabilityCalendar from "@/components/freelancer-availability-calendar"
 import { toast } from "@/lib/toast"
-import { MapPin, Star, Clock, CheckCircle, Info, MessageCircle, Shield, Award, Zap, Globe, User, Loader, ShieldCheck } from "lucide-react"
+import { MapPin, Star, Clock, CheckCircle, Info, MessageCircle, Shield, Award, Zap, Globe, User, Loader, ShieldCheck, Calendar, FileText } from "lucide-react"
 import Image from "next/image"
 import type { Database } from "@/lib/database.types"
 import BookingForm from "@/components/booking-form"
 import LeftPackageSelection from "@/components/left-package-selection"
+import CustomOfferRequestForm from "@/components/custom-offer-request-form"
 import { useTranslation } from "@/lib/i18n"
 import { getCoverTemplate } from "@/lib/cover-templates"
 import OptimizedHeader from "@/components/optimized-header"
@@ -199,10 +201,12 @@ export default function FreelancerProfile() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { supabase } = useOptimizedSupabase()
+  const { profile: currentUserProfile } = useOptimizedUser()
   const [freelancer, setFreelancer] = useState<FreelancerWithOfferings | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [showBookingForm, setShowBookingForm] = useState(false)
+  const [bookingType, setBookingType] = useState<'book_now' | 'custom_offer' | null>(null) // For wildcard services
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null)
   const [selectedPackageData, setSelectedPackageData] = useState<{
@@ -222,9 +226,11 @@ export default function FreelancerProfile() {
   const reviewsPerPage = 20
   const [conversationId, setConversationId] = useState<string | null>(null)
 
-  // Clear selected date when category changes
+  // Clear selected date and booking type when category changes
   useEffect(() => {
     setSelectedDate(undefined)
+    setBookingType(null)
+    setShowBookingForm(false)
   }, [selectedCategoryId, selectedSubcategoryId])
 
   useEffect(() => {
@@ -290,7 +296,8 @@ export default function FreelancerProfile() {
           icon: offering.job_categories?.icon || "🎯",
           subcategory_name: offering.job_subcategories?.name || null,
           dba_status: dbaMap.get(offering.category_id) || null,
-          job_offering_packages: offering.job_offering_packages?.filter((pkg: any) => pkg.is_active) || []
+          job_offering_packages: offering.job_offering_packages?.filter((pkg: any) => pkg.is_active) || [],
+          is_wildcard: offering.is_wildcard || false // Preserve is_wildcard property
         }))
 
         // Check real-time availability
@@ -875,11 +882,73 @@ export default function FreelancerProfile() {
                         </Card>
                       </div>
 
-                      {/* Right Side: Calendar and Booking Form */}
+                      {/* Right Side: Option Selection (Wildcard), Calendar and Booking Form */}
                       <div className="space-y-4">
                         <Card>
                           <CardContent className="p-6">
-                            {!showBookingForm ? (
+                            {/* Option Selection for Wildcard Services - Show BEFORE calendar */}
+                            {getSelectedOffering()?.is_wildcard && !bookingType && (
+                              <div className="space-y-4">
+                                <div className="text-center mb-4">
+                                  <h3 className="text-lg font-semibold text-black mb-2">{t("bookingform.wildcard.selectBookingType")}</h3>
+                                  <p className="text-sm text-muted-foreground">{t("bookingform.wildcard.selectBookingTypeDescription")}</p>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {/* Book Now Option */}
+                                  <div
+                                    onClick={() => setBookingType('book_now')}
+                                    className="border-2 rounded-lg p-6 cursor-pointer transition-all hover:border-primary hover:bg-primary/5"
+                                  >
+                                    <div className="flex items-center justify-between mb-3">
+                                      <h4 className="font-semibold text-black">{t("bookingform.wildcard.bookNow")}</h4>
+                                      <Calendar className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      {t("bookingform.wildcard.bookNowDescription")}
+                                    </p>
+                                  </div>
+
+                                  {/* Request Custom Offer Option */}
+                                  <div
+                                    onClick={() => setBookingType('custom_offer')}
+                                    className="border-2 rounded-lg p-6 cursor-pointer transition-all hover:border-primary hover:bg-primary/5"
+                                  >
+                                    <div className="flex items-center justify-between mb-3">
+                                      <h4 className="font-semibold text-black">{t("bookingform.wildcard.requestCustomOffer")}</h4>
+                                      <FileText className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      {t("bookingform.wildcard.requestCustomOfferDescription")}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Show Custom Offer Form if selected */}
+                            {getSelectedOffering()?.is_wildcard && bookingType === 'custom_offer' && (
+                              <CustomOfferRequestForm
+                                freelancer={freelancer}
+                                categoryId={selectedCategoryId!}
+                                categoryName={getSelectedOffering()?.category_name || ""}
+                                onBack={() => setBookingType(null)}
+                                onSuccess={() => {
+                                  // Redirect clients to their booking requests page
+                                  if (currentUserProfile?.user_type === 'client') {
+                                    router.push('/my-booking-requests')
+                                  } else {
+                                    // For non-clients, just reset the form
+                                    setBookingType(null)
+                                    setSelectedCategoryId(null)
+                                    setSelectedDate(undefined)
+                                  }
+                                }}
+                              />
+                            )}
+
+                            {/* Show Calendar and Booking Form if Book Now selected or non-wildcard */}
+                            {((getSelectedOffering()?.is_wildcard && bookingType === 'book_now') || !getSelectedOffering()?.is_wildcard) && !showBookingForm && (
                               <div className="space-y-4">
                                 <div>
                                   <FreelancerAvailabilityCalendar
@@ -903,7 +972,10 @@ export default function FreelancerProfile() {
                                   }
                                 </Button>
                               </div>
-                            ) : (
+                            )}
+
+                            {/* Show Booking Form after date selection */}
+                            {showBookingForm && ((getSelectedOffering()?.is_wildcard && bookingType === 'book_now') || !getSelectedOffering()?.is_wildcard) && (
                               <BookingForm
                                 freelancer={freelancer}
                                 selectedDate={selectedDate}

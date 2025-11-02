@@ -22,6 +22,7 @@ import { PreBookingDBAModal } from './pre-booking-dba-modal'
 import PackageSelectionStep from './package-selection-step'
 import TermsDisplay from './terms-display'
 import BookingTemplateManager from './booking-template-manager'
+import CustomOfferRequestForm from './custom-offer-request-form'
 
 
 
@@ -159,6 +160,7 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(selectedPackageData?.package.id || null)
   const [selectedPackage, setSelectedPackage] = useState<any>(selectedPackageData?.package || null)
   const [termsAccepted, setTermsAccepted] = useState(false)
+  const [bookingType, setBookingType] = useState<'book_now' | 'custom_offer' | null>(null) // For wildcard services
 
   const { t } = useTranslation()
 
@@ -198,8 +200,27 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
   // Get current job offering details
   const currentOffering = useMemo(() => {
     if (!selectedCategoryId || !freelancer.job_offerings) return null
-    return freelancer.job_offerings.find(offering => offering.category_id === selectedCategoryId)
+    const offering = freelancer.job_offerings.find(offering => offering.category_id === selectedCategoryId)
+    // Fallback: Check if it's the wildcard category ID even if is_wildcard flag is missing
+    if (offering && !offering.is_wildcard && selectedCategoryId === '00000000-0000-0000-0000-000000000001') {
+      return { ...offering, is_wildcard: true }
+    }
+    return offering
   }, [selectedCategoryId, freelancer.job_offerings])
+
+  // Set default booking type for non-wildcard services
+  // For wildcard services, if we reach BookingForm, it means they selected 'book_now' already
+  useEffect(() => {
+    if (currentOffering) {
+      if (!currentOffering.is_wildcard) {
+        setBookingType('book_now')
+      } else if (currentOffering.is_wildcard && !bookingType) {
+        // If wildcard and no bookingType set, default to 'book_now' 
+        // (user already selected it in parent component)
+        setBookingType('book_now')
+      }
+    }
+  }, [currentOffering, bookingType])
 
   // Calculate valid end times based on selected start time
   const validEndTimes = useMemo(() => {
@@ -969,14 +990,71 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
 
   const renderDetailsStep = () => (
     <form onSubmit={(e) => { e.preventDefault(); handleCreateBooking(); }} className="space-y-4">
-      {/* Template Loader - Top of form (wildcard only) */}
-      {clientId && currentOffering?.is_wildcard && (
-        <BookingTemplateManager
-          clientId={clientId}
-          onLoadTemplate={handleLoadTemplate}
-          mode="load"
+      {/* Option Selection for Wildcard Services */}
+      {currentOffering?.is_wildcard && !bookingType && (
+        <div className="mb-6 space-y-4">
+          <div className="text-center mb-4">
+            <h3 className="text-lg font-semibold text-black mb-2">{t("bookingform.wildcard.selectBookingType")}</h3>
+            <p className="text-sm text-muted-foreground">{t("bookingform.wildcard.selectBookingTypeDescription")}</p>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-4">
+            {/* Book Now Option */}
+            <div
+              onClick={() => setBookingType('book_now')}
+              className="border-2 rounded-lg p-6 cursor-pointer transition-all hover:border-primary hover:bg-primary/5"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-black">{t("bookingform.wildcard.bookNow")}</h4>
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {t("bookingform.wildcard.bookNowDescription")}
+              </p>
+            </div>
+
+            {/* Request Custom Offer Option */}
+            <div
+              onClick={() => setBookingType('custom_offer')}
+              className="border-2 rounded-lg p-6 cursor-pointer transition-all hover:border-primary hover:bg-primary/5"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-black">{t("bookingform.wildcard.requestCustomOffer")}</h4>
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {t("bookingform.wildcard.requestCustomOfferDescription")}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show Custom Offer Form if selected */}
+      {currentOffering?.is_wildcard && bookingType === 'custom_offer' && (
+        <CustomOfferRequestForm
+          freelancer={freelancer}
+          categoryId={selectedCategoryId!}
+          categoryName={categoryName}
+          onBack={() => setBookingType(null)}
+          onSuccess={() => {
+            toast.success(t("bookingform.wildcard.customOfferSubmitted"))
+            onBack() // Go back to previous step
+          }}
         />
       )}
+
+      {/* Show regular booking form if Book Now selected or non-wildcard */}
+      {((currentOffering?.is_wildcard && bookingType === 'book_now') || !currentOffering?.is_wildcard) && (
+        <>
+          {/* Template Loader - Top of form (wildcard only) */}
+          {clientId && currentOffering?.is_wildcard && (
+            <BookingTemplateManager
+              clientId={clientId}
+              onLoadTemplate={handleLoadTemplate}
+              mode="load"
+            />
+          )}
 
       {selectedPackageData && (
         <div className="mb-4 p-4 border rounded-lg bg-gray-50">
@@ -1450,6 +1528,8 @@ export default function BookingForm({ freelancer, selectedDate, selectedCategory
       <p className="text-xs text-center text-muted-foreground">
         {t("bookingform.byBooking")}
       </p>
+        </>
+      )}
     </form>
   )
 
