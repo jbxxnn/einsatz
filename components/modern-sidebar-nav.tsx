@@ -8,6 +8,8 @@ import Image from "next/image"
 import { useState } from "react"
 import type { Database } from "@/lib/database.types"
 import { useTranslation } from "@/lib/i18n"
+import BookingRequestsNotificationBadge from "./booking-requests-notification-badge"
+import MyBookingRequestsNotificationBadge from "./my-booking-requests-notification-badge"
 import {
   SidebarHeader,
   SidebarContent,
@@ -293,8 +295,12 @@ export default function ModernSidebarNav({ profile }: ModernSidebarNavProps) {
                       className={isActive("/my-booking-requests") ? "!bg-[#15dda9] !text-white hover:!bg-[#15dda9] hover:!text-black !rounded-lg" : "hover:!bg-[#d0f8ee] hover:!text-black hover:!rounded-lg"}
                     >
                       <Link href="/my-booking-requests">
-                        <FileText className={`h-4 w-4 ${isActive("/my-booking-requests") ? "text-black" : "text-[#15dda9]"}`} />
+                        <div className="relative">
+                          <FileText className={`h-4 w-4 ${isActive("/my-booking-requests") ? "text-black" : "text-[#15dda9]"}`} />
+                          
+                        </div>
                         <span className="text-xs font-light">{t("sidebar.myBookingRequests")}</span>
+                        <MyBookingRequestsNotificationBadge />
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -342,8 +348,12 @@ export default function ModernSidebarNav({ profile }: ModernSidebarNavProps) {
                     className={isActive("/booking-requests") ? "!bg-[#15dda9] !text-white hover:!bg-[#15dda9] hover:!text-black !rounded-lg" : "hover:!bg-[#d0f8ee] hover:!text-black hover:!rounded-lg"}
                   >
                     <Link href="/booking-requests">
-                      <FileText className={`h-4 w-4 ${isActive("/booking-requests") ? "text-black" : "text-[#15dda9]"}`} />
+                      <div className="relative">
+                        <FileText className={`h-4 w-4 ${isActive("/booking-requests") ? "text-black" : "text-[#15dda9]"}`} />
+                        
+                      </div>
                       <span className="text-xs font-light">{t("sidebar.bookingRequests")}</span>
+                      <BookingRequestsNotificationBadge />
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

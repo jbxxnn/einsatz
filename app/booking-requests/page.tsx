@@ -106,17 +106,39 @@ export default function BookingRequestsPage() {
         }
 
         const data = await response.json()
-        setRequests(data.requests || [])
+        const fetchedRequests = data.requests || []
+        setRequests(fetchedRequests)
+
+        // Mark pending requests as viewed when page loads
+        const unviewedPendingRequests = fetchedRequests.filter(
+          (req: BookingRequest) => req.status === 'pending' && !req.viewed_by_freelancer
+        )
+
+        if (unviewedPendingRequests.length > 0) {
+          // Mark all unviewed pending requests as viewed
+          const updatePromises = unviewedPendingRequests.map((req: BookingRequest) =>
+            supabase
+              .from('booking_requests')
+              .update({ 
+                viewed_by_freelancer: true, 
+                viewed_at: new Date().toISOString() 
+              })
+              .eq('id', req.id)
+          )
+
+          await Promise.all(updatePromises)
+        }
       } catch (error: any) {
         console.error("Error fetching booking requests:", error)
         toast.error(error.message || t("bookingRequests.error.failedToLoad"))
+        setRequests([]) // Clear requests on error
       } finally {
         setLoading(false)
       }
     }
 
     fetchRequests()
-  }, [profile, filter])
+  }, [profile, filter, supabase]) // Removed 't' from dependencies to prevent unnecessary re-renders
 
   if (isProfileLoading || loading) {
     return (
