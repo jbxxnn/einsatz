@@ -399,9 +399,9 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
     <Card className="transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:scale-[1.01] rounded-xl">
       <a href={`/freelancers/${freelancer.id}`}>
               <CardContent className="h-full flex flex-col justify-between pt-6 px-4">
-                    <div className="flex flex-col md:flex-row gap-6 justify-between items-start">
-            <div className="w-1/6">
-             <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col md:flex-row gap-6 justify-between items-start">
+          <div className="w-full md:w-1/6 flex md:block justify-center">
+           <div className="flex flex-col items-center gap-2">
                <Avatar className="h-32 w-32 rounded-md">
                 <AvatarImage 
                   src={freelancer.avatar_url || "/placeholder.svg"}
@@ -419,7 +419,7 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                )}
              </div>
             </div>
-              <div className="w-5/6">
+          <div className="w-full md:w-5/6">
               <div className="flex gap-2 mb-1 flex-col ">
                 <div className="flex items-center gap-1">
                   <div className="flex items-center gap-0.5">
@@ -451,7 +451,7 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                     <BadgeCheck className="h-3 w-3 mr-1 text-green-500" />
                   )} */}
               </div>
-                             <div className="flex items-center gap-2 mb-6">
+             <div className="flex items-center gap-2 mb-6">
                {/* <div className="text-xs">€{freelancer.hourly_rate}/hr</div> */}
               <MapPin className="h-3 w-3 text-black" />
                <div className="flex items-center gap-2">
@@ -477,7 +477,7 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                </div>
                </div>
               {/* Job Offerings */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 auto-rows-fr">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 auto-rows-fr">
                   {freelancer.job_offerings
                     ?.sort((a, b) => {
                       // Sort wildcard offerings to the end
