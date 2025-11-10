@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import { useOptimizedUser } from "@/components/optimized-user-provider"
@@ -32,6 +32,7 @@ import {
   AlertCircle,
   Loader2
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import Image from "next/image"
 import BookingRequestCard from "@/components/booking-request-card"
 
@@ -59,17 +60,39 @@ function BookingRequestsSkeleton() {
   return (
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
-        <Card key={i}>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-64" />
+        <Card key={i} className="rounded-2xl border border-slate-200/70 shadow-sm">
+          <CardContent className="p-6 space-y-5">
+            <Skeleton className="h-5 w-48" />
+            <div className="grid gap-3 md:grid-cols-2">
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-20 w-full" />
             </div>
+            <Skeleton className="h-24 w-full rounded-xl" />
           </CardContent>
         </Card>
       ))}
+    </div>
+  )
+}
+
+function EmptyState({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: LucideIcon
+  title: string
+  description?: string
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-slate-200 bg-white px-10 py-14 text-center shadow-sm">
+      <span className="rounded-full bg-slate-100 p-3 text-slate-500">
+        <Icon className="h-6 w-6" />
+      </span>
+      <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+      {description && (
+        <p className="text-sm text-slate-500 max-w-sm">{description}</p>
+      )}
     </div>
   )
 }
@@ -140,18 +163,39 @@ export default function BookingRequestsPage() {
     fetchRequests()
   }, [profile, filter, supabase]) // Removed 't' from dependencies to prevent unnecessary re-renders
 
+  const refreshRequests = useCallback(async (statusOverride: typeof filter | 'all') => {
+    if (!profile || profile.user_type !== "freelancer") return
+
+    try {
+      const effectiveStatus = statusOverride === 'all' ? null : statusOverride
+      const url = `/api/booking-requests?role=freelancer${effectiveStatus ? `&status=${effectiveStatus}` : ''}`
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh booking requests')
+      }
+
+      const data = await response.json()
+      setRequests(data.requests || [])
+    } catch (error) {
+      console.error("Error refreshing booking requests:", error)
+    }
+  }, [profile])
+
   if (isProfileLoading || loading) {
     return (
       <SidebarProvider className="w-full">
-        <div className="flex min-h-screen bg-muted/30 w-full">
+        <div className="flex min-h-screen bg-slate-50 w-full">
           <Sidebar>
             <ModernSidebarNav profile={null} />
           </Sidebar>
           
           <SidebarInset className="w-full">
             <MobileHeader />
-            <div className="p-6">
-              <BookingRequestsSkeleton />
+            <div className="w-full px-6 pb-20 pt-6 md:px-10">
+              <div className="mx-auto w-full max-w-5xl">
+                <BookingRequestsSkeleton />
+              </div>
             </div>
           </SidebarInset>
         </div>
@@ -177,9 +221,39 @@ export default function BookingRequestsPage() {
   const acceptedRequests = requests.filter(r => r.status === 'accepted')
   const rejectedRequests = requests.filter(r => r.status === 'rejected')
 
+  const renderTabPanel = (
+    list: BookingRequest[],
+    statusOverride: typeof filter | 'all',
+    icon: LucideIcon,
+    title: string,
+    description?: string
+  ) => {
+    if (list.length === 0) {
+      return (
+        <EmptyState
+          icon={icon}
+          title={title}
+          description={description}
+        />
+      )
+    }
+
+    return (
+      <div className="space-y-5">
+        {list.map((request) => (
+          <BookingRequestCard
+            key={request.id}
+            request={request}
+            onUpdate={() => refreshRequests(statusOverride)}
+          />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <SidebarProvider className="w-full">
-      <div className="flex min-h-screen bg-muted/30 w-full">
+      <div className="flex min-h-screen bg-slate-50 w-full">
         <Sidebar>
           {profile && <ModernSidebarNav profile={profile} />}
         </Sidebar>
@@ -187,172 +261,104 @@ export default function BookingRequestsPage() {
         <SidebarInset className="w-full">
           <MobileHeader />
           
-          <div className="p-6 pb-20 bg-[#f7f7f7]">
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">{t("bookingRequests.title")}</h1>
-                <p className="text-muted-foreground">{t("bookingRequests.description")}</p>
+          <div className="w-full px-6 pb-20 pt-6 md:px-10">
+            <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
+              <header className="space-y-3">
+                <Badge variant="secondary" className="rounded-full bg-slate-200/70 px-3 py-1 text-xs text-slate-700">
+                  {t("sidebar.bookingRequests")}
+                </Badge>
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-semibold tracking-tight text-slate-900">{t("bookingRequests.title")}</h1>
+                  <p className="text-sm text-slate-500 md:text-base">{t("bookingRequests.description")}</p>
+                </div>
+              </header>
+
+              <div className="rounded-3xl border border-slate-200/70 bg-white shadow-sm">
+                <div className="border-b border-slate-200/80 bg-slate-50/80 px-4 py-4 md:px-6">
+                  <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as any)}>
+                    <TabsList className="flex flex-wrap gap-2 bg-transparent p-0">
+                      <TabsTrigger 
+                        value="all" 
+                        className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                      >
+                        {t("bookingRequests.all")} ({requests.length})
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="pending" 
+                        className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                      >
+                        {t("bookingRequests.pending")} ({pendingRequests.length})
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="counter_offered" 
+                        className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                      >
+                        {t("bookingRequests.counterOffered")} ({counterOffered.length})
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="accepted" 
+                        className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                      >
+                        {t("bookingRequests.accepted")} ({acceptedRequests.length})
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="rejected" 
+                        className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                      >
+                        {t("bookingRequests.rejected")} ({rejectedRequests.length})
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <div className="border-t border-slate-200/80 bg-white px-4 py-6 md:px-6 md:py-8">
+                      <TabsContent value="all" className="mt-0 space-y-5">
+                        {renderTabPanel(
+                          requests,
+                          'all',
+                          FileText,
+                          t("bookingRequests.noRequests"),
+                          t("bookingRequests.noRequestsDescription")
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="pending" className="mt-0 space-y-5">
+                        {renderTabPanel(
+                          pendingRequests,
+                          'pending',
+                          Clock,
+                          t("bookingRequests.noPendingRequests")
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="counter_offered" className="mt-0 space-y-5">
+                        {renderTabPanel(
+                          counterOffered,
+                          'counter_offered',
+                          MessageSquare,
+                          t("bookingRequests.noCounterOffered")
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="accepted" className="mt-0 space-y-5">
+                        {renderTabPanel(
+                          acceptedRequests,
+                          'accepted',
+                          CheckCircle,
+                          t("bookingRequests.noAcceptedRequests")
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="rejected" className="mt-0 space-y-5">
+                        {renderTabPanel(
+                          rejectedRequests,
+                          'rejected',
+                          X,
+                          t("bookingRequests.noRejectedRequests")
+                        )}
+                      </TabsContent>
+                    </div>
+                  </Tabs>
+                </div>
               </div>
-
-              <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as any)}>
-                <TabsList>
-                  <TabsTrigger value="all">
-                    {t("bookingRequests.all")} ({requests.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="pending">
-                    {t("bookingRequests.pending")} ({pendingRequests.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="counter_offered">
-                    {t("bookingRequests.counterOffered")} ({counterOffered.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="accepted">
-                    {t("bookingRequests.accepted")} ({acceptedRequests.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="rejected">
-                    {t("bookingRequests.rejected")} ({rejectedRequests.length})
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="all" className="mt-6">
-                  {requests.length > 0 ? (
-                    <div className="space-y-4">
-                      {requests.map((request) => (
-                        <BookingRequestCard
-                          key={request.id}
-                          request={request}
-                          onUpdate={() => {
-                            // Refetch requests
-                            const fetchRequests = async () => {
-                              const statusParam = filter === 'all' ? null : filter
-                              const url = `/api/booking-requests?role=freelancer${statusParam ? `&status=${statusParam}` : ''}`
-                              const response = await fetch(url)
-                              const data = await response.json()
-                              setRequests(data.requests || [])
-                            }
-                            fetchRequests()
-                          }}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-12 text-center">
-                        <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-lg font-medium mb-2">{t("bookingRequests.noRequests")}</p>
-                        <p className="text-sm text-muted-foreground">{t("bookingRequests.noRequestsDescription")}</p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="pending" className="mt-6">
-                  {pendingRequests.length > 0 ? (
-                    <div className="space-y-4">
-                      {pendingRequests.map((request) => (
-                        <BookingRequestCard
-                          key={request.id}
-                          request={request}
-                          onUpdate={() => {
-                            const fetchRequests = async () => {
-                              const response = await fetch('/api/booking-requests?role=freelancer&status=pending')
-                              const data = await response.json()
-                              setRequests(data.requests || [])
-                            }
-                            fetchRequests()
-                          }}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-12 text-center">
-                        <p className="text-muted-foreground">{t("bookingRequests.noPendingRequests")}</p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="counter_offered" className="mt-6">
-                  {counterOffered.length > 0 ? (
-                    <div className="space-y-4">
-                      {counterOffered.map((request) => (
-                        <BookingRequestCard
-                          key={request.id}
-                          request={request}
-                          onUpdate={() => {
-                            const fetchRequests = async () => {
-                              const response = await fetch('/api/booking-requests?role=freelancer&status=counter_offered')
-                              const data = await response.json()
-                              setRequests(data.requests || [])
-                            }
-                            fetchRequests()
-                          }}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-12 text-center">
-                        <p className="text-muted-foreground">{t("bookingRequests.noCounterOffered")}</p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="accepted" className="mt-6">
-                  {acceptedRequests.length > 0 ? (
-                    <div className="space-y-4">
-                      {acceptedRequests.map((request) => (
-                        <BookingRequestCard
-                          key={request.id}
-                          request={request}
-                          onUpdate={() => {
-                            const fetchRequests = async () => {
-                              const response = await fetch('/api/booking-requests?role=freelancer&status=accepted')
-                              const data = await response.json()
-                              setRequests(data.requests || [])
-                            }
-                            fetchRequests()
-                          }}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-12 text-center">
-                        <p className="text-muted-foreground">{t("bookingRequests.noAcceptedRequests")}</p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="rejected" className="mt-6">
-                  {rejectedRequests.length > 0 ? (
-                    <div className="space-y-4">
-                      {rejectedRequests.map((request) => (
-                        <BookingRequestCard
-                          key={request.id}
-                          request={request}
-                          onUpdate={() => {
-                            const fetchRequests = async () => {
-                              const response = await fetch('/api/booking-requests?role=freelancer&status=rejected')
-                              const data = await response.json()
-                              setRequests(data.requests || [])
-                            }
-                            fetchRequests()
-                          }}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-12 text-center">
-                        <p className="text-muted-foreground">{t("bookingRequests.noRejectedRequests")}</p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </TabsContent>
-              </Tabs>
             </div>
           </div>
         </SidebarInset>
