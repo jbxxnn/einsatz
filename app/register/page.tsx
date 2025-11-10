@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/lib/toast"
+import { useTranslation } from "@/lib/i18n"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
 
@@ -19,6 +20,7 @@ export default function Register() {
   const searchParams = useSearchParams()
   const defaultType = searchParams.get("type") || "client"
   const { supabase } = useOptimizedSupabase()
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -71,8 +73,8 @@ export default function Register() {
 
         console.log('Profile status:', profile ? 'Found' : 'Not found')
 
-        toast.success("Account created successfully!")
-        toast.info("Please check your email to verify your account before logging in.")
+        toast.success(t("register.toastSuccess"))
+        toast.info(t("register.toastVerification"))
         
         // Clear the form
         setEmail("")
@@ -84,7 +86,7 @@ export default function Register() {
       }
     } catch (error: any) {
       console.error('Registration error:', error)
-      toast.error(error.message || "Something went wrong. Please try again.")
+      toast.error(error.message || t("register.errors.generic"))
     } finally {
       setLoading(false)
     }
@@ -106,7 +108,7 @@ export default function Register() {
         throw error
       }
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong. Please try again.")
+      toast.error(error.message || t("register.errors.generic"))
     }
   }
 
@@ -114,33 +116,33 @@ export default function Register() {
     <div className="container flex items-center justify-center py-10 md:py-20">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Sign up to get started with Einsatz</CardDescription>
+          <CardTitle className="text-2xl">{t("register.title")}</CardTitle>
+          <CardDescription>{t("register.description")}</CardDescription>
         </CardHeader>
         <Tabs defaultValue={userType} onValueChange={(value) => setUserType(value as "client" | "freelancer")}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="client">I need services</TabsTrigger>
-            <TabsTrigger value="freelancer">I offer services</TabsTrigger>
+            <TabsTrigger value="client">{t("register.tabClient")}</TabsTrigger>
+            <TabsTrigger value="freelancer">{t("register.tabFreelancer")}</TabsTrigger>
           </TabsList>
           <TabsContent value="client">
             <CardContent className="space-y-4 pt-4">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First name</Label>
+                    <Label htmlFor="firstName">{t("register.firstNameLabel")}</Label>
                     <Input
                       id="firstName"
-                      placeholder="John"
+                      placeholder={t("register.firstNamePlaceholder")}
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last name</Label>
+                    <Label htmlFor="lastName">{t("register.lastNameLabel")}</Label>
                     <Input
                       id="lastName"
-                      placeholder="Doe"
+                      placeholder={t("register.lastNamePlaceholder")}
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       required
@@ -148,21 +150,22 @@ export default function Register() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("register.emailLabel")}</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="john@example.com"
+                    placeholder={t("register.emailPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t("register.passwordLabel")}</Label>
                   <Input
                     id="password"
                     type="password"
+                    placeholder={t("register.passwordPlaceholder")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -172,10 +175,10 @@ export default function Register() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
+                      {t("register.creatingAccount")}
                     </>
                   ) : (
-                    "Sign Up"
+                    t("register.signUp")
                   )}
                 </Button>
               </form>
@@ -216,20 +219,20 @@ export default function Register() {
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First name</Label>
+                    <Label htmlFor="firstName">{t("register.firstNameLabel")}</Label>
                     <Input
                       id="firstName"
-                      placeholder="John"
+                      placeholder={t("register.firstNamePlaceholder")}
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last name</Label>
+                    <Label htmlFor="lastName">{t("register.lastNameLabel")}</Label>
                     <Input
                       id="lastName"
-                      placeholder="Doe"
+                      placeholder={t("register.lastNamePlaceholder")}
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       required
@@ -237,21 +240,22 @@ export default function Register() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("register.emailLabel")}</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="john@example.com"
+                    placeholder={t("register.emailPlaceholder")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{t("register.passwordLabel")}</Label>
                   <Input
                     id="password"
                     type="password"
+                    placeholder={t("register.passwordPlaceholder")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -261,10 +265,10 @@ export default function Register() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
+                      {t("register.creatingAccount")}
                     </>
                   ) : (
-                    "Sign Up"
+                    t("register.signUp")
                   )}
                 </Button>
               </form>
@@ -303,9 +307,9 @@ export default function Register() {
         </Tabs>
         <CardFooter className="flex flex-col items-center">
           <p className="mt-2 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
+            {t("register.alreadyHaveAccount")}{" "}
             <Link href="/login" className="text-primary underline underline-offset-4">
-              Log in
+              {t("register.loginLink")}
             </Link>
           </p>
         </CardFooter>

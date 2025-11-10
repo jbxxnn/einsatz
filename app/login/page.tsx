@@ -10,12 +10,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/lib/toast"
+import { useTranslation } from "@/lib/i18n"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
 
 export default function Login() {
   const router = useRouter()
   const { supabase } = useOptimizedSupabase()
+  const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -37,7 +39,7 @@ export default function Login() {
       router.push("/dashboard")
       router.refresh()
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong. Please try again.")
+      toast.error(error.message || t("login.errors.generic"))
     } finally {
       setIsLoading(false)
     }
@@ -56,7 +58,7 @@ export default function Login() {
         throw error
       }
     } catch (error: any) {
-      toast.error(error.message || "Something went wrong. Please try again.")
+      toast.error(error.message || t("login.errors.generic"))
     }
   }
 
@@ -64,17 +66,17 @@ export default function Login() {
     <div className="container flex items-center justify-center py-10 md:py-20">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Log in</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
+          <CardTitle className="text-2xl">{t("login.title")}</CardTitle>
+          <CardDescription>{t("login.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("login.emailLabel")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="john@example.com"
+                placeholder={t("login.emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -82,14 +84,15 @@ export default function Login() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("login.passwordLabel")}</Label>
                 <Link href="/reset-password" className="text-xs text-primary underline underline-offset-4">
-                  Forgot password?
+                  {t("login.forgotPasswordLink")}
                 </Link>
               </div>
               <Input
                 id="password"
                 type="password"
+                placeholder={t("login.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -99,10 +102,10 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging in...
+                  {t("login.loggingIn")}
                 </>
               ) : (
-                "Log in"
+                t("login.submit")
               )}
             </Button>
           </form>
@@ -139,9 +142,9 @@ export default function Login() {
         </CardContent>
         <CardFooter className="flex flex-col items-center">
           <p className="mt-2 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            {t("login.noAccount")}{" "}
             <Link href="/register" className="text-primary underline underline-offset-4">
-              Sign up
+              {t("login.registerLink")}
             </Link>
           </p>
         </CardFooter>

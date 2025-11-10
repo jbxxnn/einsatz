@@ -312,6 +312,45 @@
     "forgotPassword": "Wachtwoord vergeten?",
     "rememberMe": "Onthoud mij"
   },
+  "register": {
+    "title": "Maak een account aan",
+    "description": "Registreer om van start te gaan met Einsatz",
+    "tabClient": "Ik zoek diensten",
+    "tabFreelancer": "Ik bied diensten aan",
+    "firstNameLabel": "Voornaam",
+    "firstNamePlaceholder": "Jan",
+    "lastNameLabel": "Achternaam",
+    "lastNamePlaceholder": "Jansen",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "jan@example.com",
+    "passwordLabel": "Wachtwoord",
+    "passwordPlaceholder": "••••••••",
+    "creatingAccount": "Account wordt aangemaakt...",
+    "signUp": "Registreren",
+    "alreadyHaveAccount": "Heb je al een account?",
+    "loginLink": "Log in",
+    "toastSuccess": "Account succesvol aangemaakt!",
+    "toastVerification": "Controleer je e-mail om je account te verifiëren voordat je inlogt.",
+    "errors": {
+      "generic": "Er is iets misgegaan. Probeer het opnieuw."
+    }
+  },
+  "login": {
+    "title": "Inloggen",
+    "description": "Vul je gegevens in om toegang te krijgen tot je account",
+    "emailLabel": "E-mailadres",
+    "emailPlaceholder": "jan@example.com",
+    "passwordLabel": "Wachtwoord",
+    "passwordPlaceholder": "••••••••",
+    "forgotPasswordLink": "Wachtwoord vergeten?",
+    "loggingIn": "Bezig met inloggen...",
+    "submit": "Inloggen",
+    "noAccount": "Nog geen account?",
+    "registerLink": "Registreer",
+    "errors": {
+      "generic": "Er is iets misgegaan. Probeer het opnieuw."
+    }
+  },
   "freelancers": {
     "title": "Freelancers vinden",
     "search": {

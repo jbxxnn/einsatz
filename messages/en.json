@@ -312,6 +312,45 @@
     "forgotPassword": "Forgot Password?",
     "rememberMe": "Remember Me"
   },
+  "register": {
+    "title": "Create an account",
+    "description": "Sign up to get started with Einsatz",
+    "tabClient": "I need services",
+    "tabFreelancer": "I offer services",
+    "firstNameLabel": "First name",
+    "firstNamePlaceholder": "John",
+    "lastNameLabel": "Last name",
+    "lastNamePlaceholder": "Doe",
+    "emailLabel": "Email",
+    "emailPlaceholder": "john@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "creatingAccount": "Creating account...",
+    "signUp": "Sign Up",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginLink": "Log in",
+    "toastSuccess": "Account created successfully!",
+    "toastVerification": "Please check your email to verify your account before logging in.",
+    "errors": {
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "login": {
+    "title": "Log in",
+    "description": "Enter your credentials to access your account",
+    "emailLabel": "Email",
+    "emailPlaceholder": "john@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "forgotPasswordLink": "Forgot password?",
+    "loggingIn": "Logging in...",
+    "submit": "Log in",
+    "noAccount": "Don't have an account?",
+    "registerLink": "Sign up",
+    "errors": {
+      "generic": "Something went wrong. Please try again."
+    }
+  },
   "freelancers": {
     "title": "Find Freelancers",
     "search": {
