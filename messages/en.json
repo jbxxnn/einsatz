@@ -883,6 +883,38 @@
     "wildcardJobOfferingCreated": "Wildcard job offering created successfully with work types: {workTypes}",
     "workTypes": "Work Types",
     "workTypesCount": "Work Types Count",
+    "additionalCount": "+{count} more",
+    "workTypesCountLabel": "{count} work types",
+    "wildcardWorkTypesOptions": {
+      "physical": {
+        "label": "Physical Work",
+        "description": "I'm able-bodied and can perform physical tasks"
+      },
+      "customerFacing": {
+        "label": "Customer-Facing Work",
+        "description": "I have good representation and communication skills"
+      },
+      "outdoor": {
+        "label": "Outdoor Work",
+        "description": "I don't mind working in different weather conditions"
+      },
+      "flexibleHours": {
+        "label": "Flexible Hours",
+        "description": "I'm available to work early mornings, late nights, or weekends"
+      },
+      "repetitive": {
+        "label": "Repetitive Tasks",
+        "description": "I don't mind repetitive or routine work"
+      },
+      "analytical": {
+        "label": "Analytical Work",
+        "description": "I have problem-solving and analytical skills"
+      },
+      "creative": {
+        "label": "Creative Work",
+        "description": "I have creative skills and innovative thinking"
+      }
+    },
     "wildcardOfferings": "Wildcard Job Offerings",
     "wildcardOfferingsDescription": "Flexible services that can adapt to various client needs",
     "orderUpdated": "Job offerings order updated",

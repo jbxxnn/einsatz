@@ -43,6 +43,33 @@ type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row
   }>
 }
 
+type TranslateFn = ReturnType<typeof useTranslation>["t"]
+
+const WILDCARD_WORK_TYPES = [
+  { id: 'physical', labelKey: 'jobOfferings.wildcardWorkTypesOptions.physical.label' },
+  { id: 'customer-facing', labelKey: 'jobOfferings.wildcardWorkTypesOptions.customerFacing.label' },
+  { id: 'outdoor', labelKey: 'jobOfferings.wildcardWorkTypesOptions.outdoor.label' },
+  { id: 'flexible-hours', labelKey: 'jobOfferings.wildcardWorkTypesOptions.flexibleHours.label' },
+  { id: 'repetitive', labelKey: 'jobOfferings.wildcardWorkTypesOptions.repetitive.label' },
+  { id: 'analytical', labelKey: 'jobOfferings.wildcardWorkTypesOptions.analytical.label' },
+  { id: 'creative', labelKey: 'jobOfferings.wildcardWorkTypesOptions.creative.label' },
+]
+
+const extractWildcardWorkTypeIds = (description?: string | null) => {
+  if (!description) return []
+  const [, workTypesPart] = description.split('\n\nWork Types: ')
+  if (!workTypesPart) return []
+  return workTypesPart
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+}
+
+const getWildcardLabelById = (t: TranslateFn, id: string) => {
+  const config = WILDCARD_WORK_TYPES.find((workType) => workType.id === id)
+  return config ? t(config.labelKey) : id
+}
+
 
 const CustomProfileIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg 
@@ -640,7 +667,9 @@ export default function FreelancerProfile() {
                           if (!a.is_wildcard && b.is_wildcard) return -1
                           return 0
                         })
-                        .map((offering) => (
+                        .map((offering) => {
+                        const workTypeIds = extractWildcardWorkTypeIds(offering.description)
+                        return (
                         <div 
                           key={offering.category_id} 
                           className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-[#33CC99]"
@@ -654,10 +683,7 @@ export default function FreelancerProfile() {
                             {/* Category name */}
                             <div className="flex items-center space-x-2">
                               {offering.is_wildcard ? (
-                                <>
-                                  <span className="text-orange-600 text-lg">🎯</span>
-                                  <h4 className="font-bold text-black text-sm">{offering.category_name}</h4>
-                                </>
+                                <span className="text-orange-600 text-lg">🎯</span>
                               ) : (
                                 <>
                                   <CustomResponseIcon className="h-4 w-4 text-[#33CC99]" />
@@ -667,15 +693,17 @@ export default function FreelancerProfile() {
                             </div>
                             
                             {/* Wildcard Work Types */}
-                            {offering.is_wildcard && offering.description && (
+                            {offering.is_wildcard && workTypeIds.length > 0 && (
                               <div className="flex flex-wrap gap-1">
-                                {offering.description.split('\n\nWork Types: ')[1]?.split(', ').slice(0, 3).map((workType, index) => (
-                                  <span key={index} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                                    {workType}
+                                {workTypeIds.slice(0, 3).map((workTypeId) => (
+                                  <span key={workTypeId} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                                    {getWildcardLabelById(t, workTypeId)}
                                   </span>
                                 ))}
-                                {(offering.description.split('\n\nWork Types: ')[1]?.split(', ').length || 0) > 3 && (
-                                  <span className="text-xs text-orange-600">+{(offering.description.split('\n\nWork Types: ')[1]?.split(', ').length || 0) - 3} more</span>
+                                {workTypeIds.length > 3 && (
+                                  <span className="text-xs text-orange-600">
+                                    {t("jobOfferings.additionalCount", { count: workTypeIds.length - 3 })}
+                                  </span>
                                 )}
                               </div>
                             )}
@@ -728,7 +756,7 @@ export default function FreelancerProfile() {
                             )}
                           </div>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   )}
 
@@ -751,19 +779,25 @@ export default function FreelancerProfile() {
                             </div>
                             <div className="space-y-3">
                               <div className="flex items-center gap-3 bg-gray-50 rounded-md p-3">
-                                <div>
-                                  <CardTitle className="text-lg flex items-center gap-2">
-                                    {getSelectedOffering()?.is_wildcard && <span className="text-orange-600">🎯</span>}
-                                    {getSelectedOffering()?.is_wildcard 
-                                      ? getSelectedOffering()?.category_name 
-                                      : getSelectedOffering()?.subcategory_name}
-                                  </CardTitle>
-                                  {!getSelectedOffering()?.is_wildcard && (
+                                {getSelectedOffering()?.is_wildcard ? (
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-orange-600 text-lg"></span>
+                                    {extractWildcardWorkTypeIds(getSelectedOffering()?.description).map((workTypeId) => (
+                                      <span key={workTypeId} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                                        {getWildcardLabelById(t, workTypeId)}
+                                      </span>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <CardTitle className="text-lg flex items-center gap-2">
+                                      {getSelectedOffering()?.subcategory_name}
+                                    </CardTitle>
                                     <CardDescription className="text-sm text-muted-foreground">
                                       {getSelectedOffering()?.category_name}
                                     </CardDescription>
-                                  )}
-                                </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
 

@@ -48,8 +48,14 @@ import { CSS } from '@dnd-kit/utilities'
 type JobOffering = Database["public"]["Tables"]["freelancer_job_offerings"]["Row"] & {
   is_wildcard?: boolean
 }
-type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"]
-type JobSubcategory = Database["public"]["Tables"]["job_subcategories"]["Row"]
+type JobCategory = Database["public"]["Tables"]["job_categories"]["Row"] & {
+  name_en?: string | null
+  name_nl?: string | null
+}
+type JobSubcategory = Database["public"]["Tables"]["job_subcategories"]["Row"] & {
+  name_en?: string | null
+  name_nl?: string | null
+}
 
 interface JobOfferingsManagerProps {
   freelancerId: string
@@ -61,13 +67,41 @@ const MAX_WILDCARD_OFFERINGS = 4 // 3 normal + 1 wildcard
 
 // Wildcard work types
 const WILDCARD_WORK_TYPES = [
-  { id: 'physical', label: 'Physical Work', description: "I'm able-bodied and can perform physical tasks" },
-  { id: 'customer-facing', label: 'Customer-Facing Work', description: "I have good representation and communication skills" },
-  { id: 'outdoor', label: 'Outdoor Work', description: "I don't mind working in different weather conditions" },
-  { id: 'flexible-hours', label: 'Flexible Hours', description: "I'm available to work early mornings, late nights, or weekends" },
-  { id: 'repetitive', label: 'Repetitive Tasks', description: "I don't mind repetitive or routine work" },
-  { id: 'analytical', label: 'Analytical Work', description: "I have problem-solving and analytical skills" },
-  { id: 'creative', label: 'Creative Work', description: "I have creative skills and innovative thinking" }
+  { 
+    id: 'physical', 
+    labelKey: 'jobOfferings.wildcardWorkTypesOptions.physical.label', 
+    descriptionKey: 'jobOfferings.wildcardWorkTypesOptions.physical.description' 
+  },
+  { 
+    id: 'customer-facing', 
+    labelKey: 'jobOfferings.wildcardWorkTypesOptions.customerFacing.label', 
+    descriptionKey: 'jobOfferings.wildcardWorkTypesOptions.customerFacing.description' 
+  },
+  { 
+    id: 'outdoor', 
+    labelKey: 'jobOfferings.wildcardWorkTypesOptions.outdoor.label', 
+    descriptionKey: 'jobOfferings.wildcardWorkTypesOptions.outdoor.description' 
+  },
+  { 
+    id: 'flexible-hours', 
+    labelKey: 'jobOfferings.wildcardWorkTypesOptions.flexibleHours.label', 
+    descriptionKey: 'jobOfferings.wildcardWorkTypesOptions.flexibleHours.description' 
+  },
+  { 
+    id: 'repetitive', 
+    labelKey: 'jobOfferings.wildcardWorkTypesOptions.repetitive.label', 
+    descriptionKey: 'jobOfferings.wildcardWorkTypesOptions.repetitive.description' 
+  },
+  { 
+    id: 'analytical', 
+    labelKey: 'jobOfferings.wildcardWorkTypesOptions.analytical.label', 
+    descriptionKey: 'jobOfferings.wildcardWorkTypesOptions.analytical.description' 
+  },
+  { 
+    id: 'creative', 
+    labelKey: 'jobOfferings.wildcardWorkTypesOptions.creative.label', 
+    descriptionKey: 'jobOfferings.wildcardWorkTypesOptions.creative.description' 
+  }
 ]
 
 // Sortable table row component
@@ -205,7 +239,7 @@ function SortableTableRow({
 
 
 export default function JobOfferingsManager({ freelancerId }: JobOfferingsManagerProps) { 
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
   const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(true)
   const [offerings, setOfferings] = useState<(JobOffering & { category_name: string; subcategory_name?: string; display_order?: number })[]>([])
@@ -240,6 +274,39 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
   const [loadingWildcardStatus, setLoadingWildcardStatus] = useState(false)
   const [editingOffering, setEditingOffering] = useState<(JobOffering & { category_name: string; subcategory_name?: string }) | null>(null)
   const [editWildcardDialogOpen, setEditWildcardDialogOpen] = useState(false)
+
+  const getLocalizedCategoryName = (category?: JobCategory | null) => {
+    if (!category) return ""
+    const categoryFields = category as JobCategory & Record<string, string | null | undefined>
+    if (locale === "nl") {
+      return categoryFields.name_nl ?? categoryFields.name ?? categoryFields.name_en ?? ""
+    }
+    return categoryFields.name_en ?? categoryFields.name ?? categoryFields.name_nl ?? ""
+  }
+
+  const getLocalizedSubcategoryName = (subcategory?: JobSubcategory | null) => {
+    if (!subcategory) return ""
+    const subcategoryFields = subcategory as JobSubcategory & Record<string, string | null | undefined>
+    if (locale === "nl") {
+      return subcategoryFields.name_nl ?? subcategoryFields.name ?? subcategoryFields.name_en ?? ""
+    }
+    return subcategoryFields.name_en ?? subcategoryFields.name ?? subcategoryFields.name_nl ?? ""
+  }
+
+  const getWildcardLabelById = (id: string) => {
+    const config = WILDCARD_WORK_TYPES.find((workType) => workType.id === id)
+    return config ? t(config.labelKey) : id
+  }
+
+  const extractWildcardWorkTypeIds = (description?: string | null) => {
+    if (!description) return []
+    const [, workTypesPart] = description.split('\n\nWork Types: ')
+    if (!workTypesPart) return []
+    return workTypesPart
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
+  }
 
 
   // Drag and drop sensors
@@ -310,10 +377,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           .select(`
             *,
             job_categories (
-              id, name
+              id, name, name_en, name_nl
             ),
             job_subcategories (
-              id, name
+              id, name, name_en, name_nl
             )
           `)
           .eq("freelancer_id", freelancerId)
@@ -324,8 +391,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
 
         const formattedOfferings = data.map((offering) => ({
           ...offering,
-          category_name: offering.job_categories.name,
-          subcategory_name: offering.job_subcategories?.name,
+          category_name: getLocalizedCategoryName(offering.job_categories as JobCategory),
+          subcategory_name: getLocalizedSubcategoryName(offering.job_subcategories as JobSubcategory),
         }))
 
         setOfferings(formattedOfferings)
@@ -347,7 +414,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       fetchOfferings()
       fetchWildcardStatus()
     }
-  }, [supabase, freelancerId])
+  }, [supabase, freelancerId, locale])
 
   const handleAddWildcardOffering = async () => {
     console.log("🚀 Starting handleAddWildcardOffering...")
@@ -407,10 +474,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           .select(`
             *,
             job_categories (
-              id, name
+              id, name, name_en, name_nl
             ),
             job_subcategories (
-              id, name
+              id, name, name_en, name_nl
             )
           `)
           .single()
@@ -422,8 +489,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         // Update local state
         const updatedOffering = {
           ...data,
-          category_name: data.job_categories?.name || "Wildcard Services",
-          subcategory_name: data.job_subcategories?.name,
+          category_name: getLocalizedCategoryName(data.job_categories as JobCategory) || t("jobOfferings.wildcardOfferings"),
+          subcategory_name: getLocalizedSubcategoryName(data.job_subcategories as JobSubcategory),
         }
 
         setOfferings(offerings.map(o => o.id === editingOffering.id ? updatedOffering : o))
@@ -458,10 +525,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         .select(`
           *,
           job_categories (
-            id, name
+            id, name, name_en, name_nl
           ),
           job_subcategories (
-            id, name
+            id, name, name_en, name_nl
           )
         `)
         .single()
@@ -484,8 +551,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       // Add to local state
       const newWildcardOffering = {
         ...data,
-        category_name: data.job_categories?.name || "Wildcard Services",
-        subcategory_name: data.job_subcategories?.name,
+        category_name: getLocalizedCategoryName(data.job_categories as JobCategory) || t("jobOfferings.wildcardOfferings"),
+        subcategory_name: getLocalizedSubcategoryName(data.job_subcategories as JobSubcategory),
       }
       
       console.log("📝 Adding wildcard to local state:", newWildcardOffering)
@@ -505,7 +572,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       console.log("🎉 Wildcard job offering added successfully!")
 
       toast.success(t("jobOfferings.wildcardJobOfferingCreated", {
-        workTypes: wildcardWorkTypes.join(', ')
+        workTypes: wildcardWorkTypes.map((id) => getWildcardLabelById(id)).join(', ')
       }))
     } catch (error) {
       console.error("💥 Error adding wildcard job offering - Full error object:", error)
@@ -590,10 +657,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
           .select(`
             *,
             job_categories (
-              id, name
+              id, name, name_en, name_nl
             ),
             job_subcategories (
-              id, name
+              id, name, name_en, name_nl
             )
           `)
           .single()
@@ -605,8 +672,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         // Update local state
         const updatedOffering = {
           ...data,
-          category_name: data.job_categories.name,
-          subcategory_name: data.job_subcategories?.name,
+          category_name: getLocalizedCategoryName(data.job_categories as JobCategory),
+          subcategory_name: getLocalizedSubcategoryName(data.job_subcategories as JobSubcategory),
         }
 
         setOfferings(offerings.map(o => o.id === editingOffering.id ? updatedOffering : o))
@@ -663,10 +730,10 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
         .select(`
           *,
           job_categories (
-            id, name
+            id, name, name_en, name_nl
           ),
           job_subcategories (
-            id, name
+            id, name, name_en, name_nl
           )
         `)
         .single()
@@ -686,6 +753,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
 
       console.log("✅ Successfully inserted job offering:", data)
 
+      const localizedCategoryName = getLocalizedCategoryName(data.job_categories as JobCategory)
+      const localizedSubcategoryName = getLocalizedSubcategoryName(data.job_subcategories as JobSubcategory)
+
       // Get freelancer's hourly rate from profile
       console.log("💰 Fetching freelancer hourly rate...")
       const { data: profile, error: profileError } = await supabase
@@ -701,7 +771,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       console.log("📦 Creating default package...")
       const defaultPackageData = {
         job_offering_id: data.id,
-        package_name: t("jobOfferings.defaultPackageName", { categoryName: data.job_categories.name }),
+        package_name: t("jobOfferings.defaultPackageName", { categoryName: localizedCategoryName || data.job_categories.name }),
         short_description: t("jobOfferings.defaultPackageDescription"),
         price: 0, // Default to 0 - calculated from package items
         display_order: 1,
@@ -749,8 +819,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
       // Add to local state
       const newOffering = {
           ...data,
-          category_name: data.job_categories.name,
-          subcategory_name: data.job_subcategories?.name,
+          category_name: localizedCategoryName,
+          subcategory_name: localizedSubcategoryName,
       }
       
       console.log("📝 Adding to local state:", newOffering)
@@ -1055,20 +1125,19 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {wildcardOfferings.map((offering) => (
-                  <TableRow key={offering.id} className="text-xs text-black">
+                {wildcardOfferings.map((offering) => {
+                  const workTypeIds = extractWildcardWorkTypeIds(offering.description)
+                  return (
+                    <TableRow key={offering.id} className="text-xs text-black">
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <span className="text-orange-600">🎯</span>
                         <div className="flex flex-wrap gap-1">
-                          {offering.description?.split('\n\nWork Types: ')[1]?.split(', ').slice(0, 3).map((workType, index) => (
-                            <span key={index} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                              {workType}
+                          {workTypeIds.map((workTypeId) => (
+                            <span key={workTypeId} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                              {getWildcardLabelById(workTypeId)}
                             </span>
                           ))}
-                          {(offering.description?.split('\n\nWork Types: ')[1]?.split(', ').length || 0) > 3 && (
-                            <span className="text-xs text-orange-600">+{(offering.description?.split('\n\nWork Types: ')[1]?.split(', ').length || 0) - 3} more</span>
-          )}
         </div>
       </div>
                     </TableCell>
@@ -1081,7 +1150,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                     </TableCell>
                     <TableCell>
                       <div className="text-xs text-orange-600">
-                        {offering.description?.split('\n\nWork Types: ')[1]?.split(', ').length || 0} work types
+                        {t("jobOfferings.workTypesCountLabel", { count: workTypeIds.length })}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -1091,10 +1160,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                           size="icon" 
                           onClick={() => {
                             setEditingOffering(offering)
-                            // Parse work types from description
-                            const workTypesPart = offering.description?.split('\n\nWork Types: ')[1]
-                            const workTypes = workTypesPart ? workTypesPart.split(', ') : []
-                            setWildcardWorkTypes(workTypes)
+                            setWildcardWorkTypes(extractWildcardWorkTypeIds(offering.description))
                             setWildcardHourlyRate(offering.hourly_rate?.toString() || "")
                             setWildcardDescription(offering.description?.split('\n\nWork Types: ')[0] || "")
                             setEditWildcardDialogOpen(true)
@@ -1114,7 +1180,8 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  )
+                })}
               </TableBody>
             </Table>
           </div>
@@ -1540,9 +1607,9 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                     />
                     <div className="flex-1">
                       <label htmlFor={`wildcard-work-${workType.id}`} className="text-sm font-medium text-gray-900 cursor-pointer">
-                        {workType.label}
+                        {t(workType.labelKey)}
                       </label>
-                      <p className="text-xs text-gray-600 mt-1">{workType.description}</p>
+                      <p className="text-xs text-gray-600 mt-1">{t(workType.descriptionKey)}</p>
                     </div>
                   </div>
                 ))}
@@ -1593,17 +1660,13 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                           {/* Work Types */}
                           {wildcardWorkTypes.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {wildcardWorkTypes.slice(0, 2).map((workTypeId) => {
-                                const workType = WILDCARD_WORK_TYPES.find(wt => wt.id === workTypeId)
+                              {wildcardWorkTypes.map((workTypeId) => {
                                 return (
                                   <span key={workTypeId} className="text-xs bg-orange-200 text-orange-800 px-1 rounded">
-                                    {workType?.label}
+                                    {getWildcardLabelById(workTypeId)}
                                   </span>
                                 )
                               })}
-                              {wildcardWorkTypes.length > 2 && (
-                                <span className="text-xs text-orange-600">+{wildcardWorkTypes.length - 2} more</span>
-                              )}
                             </div>
                           )}
                           

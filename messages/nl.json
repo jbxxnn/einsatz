@@ -883,6 +883,38 @@
     "wildcardJobOfferingCreated": "Wildcard job aanbieding succesvol aangemaakt met werk types: {workTypes}",
     "workTypes": "Werk Types",
     "workTypesCount": "Werk Types Aantal",
+    "additionalCount": "+{count} meer",
+    "workTypesCountLabel": "{count} werktypes",
+    "wildcardWorkTypesOptions": {
+      "physical": {
+        "label": "Fysiek werk",
+        "description": "Ik ben fysiek in staat en kan fysieke taken uitvoeren"
+      },
+      "customerFacing": {
+        "label": "Klantgericht werk",
+        "description": "Ik heb goede representatie- en communicatieve vaardigheden"
+      },
+      "outdoor": {
+        "label": "Buitenwerk",
+        "description": "Ik werk graag in verschillende weersomstandigheden"
+      },
+      "flexibleHours": {
+        "label": "Flexibele uren",
+        "description": "Ik ben beschikbaar voor vroege ochtenden, late avonden of weekenden"
+      },
+      "repetitive": {
+        "label": "Repetitieve taken",
+        "description": "Ik heb geen moeite met repetitief of routinematig werk"
+      },
+      "analytical": {
+        "label": "Analytisch werk",
+        "description": "Ik beschik over probleemoplossend en analytisch vermogen"
+      },
+      "creative": {
+        "label": "Creatief werk",
+        "description": "Ik heb creatieve vaardigheden en innovatief denken"
+      }
+    },
     "wildcardOfferings": "Wildcard Job Aanbiedingen",
     "wildcardOfferingsDescription": "Flexibele diensten die zich kunnen aanpassen aan verschillende klantbehoeften",
     "orderUpdated": "Diensten volgorde bijgewerkt",

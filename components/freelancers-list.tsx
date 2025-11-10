@@ -45,6 +45,33 @@ type Freelancer = Database["public"]["Tables"]["profiles"]["Row"] & {
   completed_bookings?: number
 }
 
+type TranslateFn = ReturnType<typeof useTranslation>["t"]
+
+const WILDCARD_WORK_TYPES = [
+  { id: 'physical', labelKey: 'jobOfferings.wildcardWorkTypesOptions.physical.label' },
+  { id: 'customer-facing', labelKey: 'jobOfferings.wildcardWorkTypesOptions.customerFacing.label' },
+  { id: 'outdoor', labelKey: 'jobOfferings.wildcardWorkTypesOptions.outdoor.label' },
+  { id: 'flexible-hours', labelKey: 'jobOfferings.wildcardWorkTypesOptions.flexibleHours.label' },
+  { id: 'repetitive', labelKey: 'jobOfferings.wildcardWorkTypesOptions.repetitive.label' },
+  { id: 'analytical', labelKey: 'jobOfferings.wildcardWorkTypesOptions.analytical.label' },
+  { id: 'creative', labelKey: 'jobOfferings.wildcardWorkTypesOptions.creative.label' },
+]
+
+const extractWildcardWorkTypeIds = (description?: string | null) => {
+  if (!description) return []
+  const [, workTypesPart] = description.split('\n\nWork Types: ')
+  if (!workTypesPart) return []
+  return workTypesPart
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+}
+
+const getWildcardLabelById = (t: TranslateFn, id: string) => {
+  const config = WILDCARD_WORK_TYPES.find((workType) => workType.id === id)
+  return config ? t(config.labelKey) : id
+}
+
 export default function FreelancersList() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -465,7 +492,7 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                           <TooltipTrigger asChild>
                             <Link href={`/freelancers/${freelancer.id}${offering.category_id ? `?category=${offering.category_id}` : ''}`}>
                               <Badge 
-                                className={`text-xs cursor-pointer flex flex-col items-start justify-start rounded-md border transition-colors h-full hover:shadow-md hover:scale-105 ${
+                                className={`text-xs cursor-pointer flex flex-col items-start justify-start rounded-md border transition-colors h-full hover:shadow-md hover:scale-105 min-h-[130px] max-h-[170px] overflow-y-auto ${
                                   offering.is_wildcard 
                                     ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200'
                                     : getCategoryColor(offering.category_name)
@@ -498,14 +525,11 @@ function FreelancerCard({ freelancer }: { freelancer: Freelancer }) {
                               {/* Wildcard Work Types */}
                               {offering.is_wildcard && offering.description && (
                                 <div className="flex flex-wrap gap-1 mt-1">
-                                  {offering.description.split('\n\nWork Types: ')[1]?.split(', ').slice(0, 2).map((workType, index) => (
-                                    <span key={index} className="text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">
-                                      {workType}
+                                  {extractWildcardWorkTypeIds(offering.description).map((workTypeId) => (
+                                    <span key={workTypeId} className="text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded">
+                                      {getWildcardLabelById(t, workTypeId)}
                                     </span>
                                   ))}
-                                  {(offering.description.split('\n\nWork Types: ')[1]?.split(', ').length || 0) > 2 && (
-                                    <span className="text-xs text-orange-600">+{(offering.description.split('\n\nWork Types: ')[1]?.split(', ').length || 0) - 2}</span>
-                                  )}
                                 </div>
                               )}
                               
