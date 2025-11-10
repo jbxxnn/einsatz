@@ -62,6 +62,9 @@ export default function Home() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
+              <a href="/dashboard"><span className="text-xs">{t("home.navigation.dashboard")}</span></a>
+            </div>
             <div className="flex items-center gap-2 bg-[#3e4f4566] px-6 py-3 rounded-lg">
               <a href="/freelancers"><span className="text-xs">{t("home.navigation.findFreelancers")}</span></a>
             </div>
@@ -121,6 +124,13 @@ export default function Home() {
           <div className="flex flex-col h-full p-6">
             {/* Navigation Links */}
             <nav className="flex flex-col gap-4 mb-6">
+            <a 
+                href="/dashboard" 
+                className="flex items-center gap-3 p-4 rounded-lg bg-[#3e4f4566] hover:bg-[#3e4f4588] transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="text-white font-medium">{t("home.navigation.dashboard")}</span>
+              </a>
               <a 
                 href="/freelancers" 
                 className="flex items-center gap-3 p-4 rounded-lg bg-[#3e4f4566] hover:bg-[#3e4f4588] transition-colors"
