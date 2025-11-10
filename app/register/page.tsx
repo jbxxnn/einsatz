@@ -179,7 +179,7 @@ export default function Register() {
                   )}
                 </Button>
               </form>
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
                 </div>
@@ -297,7 +297,7 @@ export default function Register() {
                   <path d="M1 1h22v22H1z" fill="none" />
                 </svg>
                 Google
-              </Button>
+              </Button> */}
             </CardContent>
           </TabsContent>
         </Tabs>
