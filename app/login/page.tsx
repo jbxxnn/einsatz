@@ -106,7 +106,7 @@ export default function Login() {
               )}
             </Button>
           </form>
-          <div className="relative">
+          {/* <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -135,7 +135,7 @@ export default function Login() {
               <path d="M1 1h22v22H1z" fill="none" />
             </svg>
             Google
-          </Button>
+          </Button> */}
         </CardContent>
         <CardFooter className="flex flex-col items-center">
           <p className="mt-2 text-center text-sm text-muted-foreground">
