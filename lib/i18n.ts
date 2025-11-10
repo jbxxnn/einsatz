@@ -16,7 +16,7 @@ const LANGUAGE_CHANGE_EVENT = 'languageChange'
 
 export function useTranslation() {
   const [mounted, setMounted] = useState(false)
-  const [locale, setLocale] = useState<Locale>('en')
+  const [locale, setLocale] = useState<Locale>('nl')
 
   useEffect(() => {
     // Get the stored locale from localStorage or default to 'en'
@@ -25,7 +25,7 @@ export function useTranslation() {
       setLocale(storedLocale)
     } else {
       // If no stored locale, set to 'en' and store it
-      localStorage.setItem('locale', 'en')
+      localStorage.setItem('locale', 'nl')
     }
     setMounted(true)
 

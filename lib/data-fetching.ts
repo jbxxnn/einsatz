@@ -89,7 +89,7 @@ export function useFreelancers(filters: {
 // Hook for fetching categories
 export function useCategories() {
   // Get locale from localStorage or default to 'en'
-  const [locale, setLocale] = useState<string>('en')
+  const [locale, setLocale] = useState<string>('nl')
   
   useEffect(() => {
     const storedLocale = localStorage.getItem('locale')
@@ -99,7 +99,7 @@ export function useCategories() {
     
     // Listen for language changes
     const handleLanguageChange = () => {
-      const newLocale = localStorage.getItem('locale') || 'en'
+      const newLocale = localStorage.getItem('locale') || 'nl'
       setLocale(newLocale)
     }
     
@@ -116,7 +116,7 @@ export function useCategories() {
 // Hook for fetching subcategories by category ID
 export function useSubcategories(categoryId: string | null) {
   // Get locale from localStorage or default to 'en'
-  const [locale, setLocale] = useState<string>('en')
+  const [locale, setLocale] = useState<string>('nl')
   
   useEffect(() => {
     const storedLocale = localStorage.getItem('locale')
@@ -126,7 +126,7 @@ export function useSubcategories(categoryId: string | null) {
     
     // Listen for language changes
     const handleLanguageChange = () => {
-      const newLocale = localStorage.getItem('locale') || 'en'
+      const newLocale = localStorage.getItem('locale') || 'nl'
       setLocale(newLocale)
     }
     
