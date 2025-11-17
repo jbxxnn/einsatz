@@ -103,6 +103,7 @@ export default function BookingRequestsPage() {
   const { supabase } = useOptimizedSupabase()
   const { profile, isLoading: isProfileLoading } = useOptimizedUser()
   const [loading, setLoading] = useState(true)
+  const [tabLoading, setTabLoading] = useState(false)
   const [requests, setRequests] = useState<BookingRequest[]>([])
   const [filter, setFilter] = useState<'all' | 'pending' | 'counter_offered' | 'accepted' | 'rejected'>('all')
 
@@ -115,10 +116,19 @@ export default function BookingRequestsPage() {
   }, [profile, isProfileLoading, router])
 
   useEffect(() => {
-    if (!profile || profile.user_type !== "freelancer") return
+    if (!profile || profile.user_type !== "freelancer") {
+      setLoading(false)
+      return
+    }
+
+    const isInitialLoad = loading
 
     const fetchRequests = async () => {
-      setLoading(true)
+      if (isInitialLoad) {
+        setLoading(true)
+      } else {
+        setTabLoading(true)
+      }
       try {
         const statusParam = filter === 'all' ? null : filter
         const url = `/api/booking-requests?role=freelancer${statusParam ? `&status=${statusParam}` : ''}`
@@ -132,31 +142,36 @@ export default function BookingRequestsPage() {
         const fetchedRequests = data.requests || []
         setRequests(fetchedRequests)
 
-        // Mark pending requests as viewed when page loads
-        const unviewedPendingRequests = fetchedRequests.filter(
-          (req: BookingRequest) => req.status === 'pending' && !req.viewed_by_freelancer
-        )
-
-        if (unviewedPendingRequests.length > 0) {
-          // Mark all unviewed pending requests as viewed
-          const updatePromises = unviewedPendingRequests.map((req: BookingRequest) =>
-            supabase
-              .from('booking_requests')
-              .update({ 
-                viewed_by_freelancer: true, 
-                viewed_at: new Date().toISOString() 
-              })
-              .eq('id', req.id)
+        // Mark pending requests as viewed when page loads (only on initial load)
+        if (isInitialLoad) {
+          const unviewedPendingRequests = fetchedRequests.filter(
+            (req: BookingRequest) => req.status === 'pending' && !req.viewed_by_freelancer
           )
 
-          await Promise.all(updatePromises)
+          if (unviewedPendingRequests.length > 0) {
+            // Mark all unviewed pending requests as viewed
+            const updatePromises = unviewedPendingRequests.map((req: BookingRequest) =>
+              supabase
+                .from('booking_requests')
+                .update({ 
+                  viewed_by_freelancer: true, 
+                  viewed_at: new Date().toISOString() 
+                })
+                .eq('id', req.id)
+            )
+
+            await Promise.all(updatePromises)
+          }
         }
       } catch (error: any) {
         console.error("Error fetching booking requests:", error)
         toast.error(error.message || t("bookingRequests.error.failedToLoad"))
         setRequests([]) // Clear requests on error
       } finally {
-        setLoading(false)
+        if (isInitialLoad) {
+          setLoading(false)
+        }
+        setTabLoading(false)
       }
     }
 
@@ -167,6 +182,7 @@ export default function BookingRequestsPage() {
     if (!profile || profile.user_type !== "freelancer") return
 
     try {
+      setTabLoading(true)
       const effectiveStatus = statusOverride === 'all' ? null : statusOverride
       const url = `/api/booking-requests?role=freelancer${effectiveStatus ? `&status=${effectiveStatus}` : ''}`
       const response = await fetch(url)
@@ -179,6 +195,8 @@ export default function BookingRequestsPage() {
       setRequests(data.requests || [])
     } catch (error) {
       console.error("Error refreshing booking requests:", error)
+    } finally {
+      setTabLoading(false)
     }
   }, [profile])
 
@@ -273,92 +291,107 @@ export default function BookingRequestsPage() {
                 </div>
               </header>
 
-              <div className="rounded-3xl border border-slate-200/70 bg-white shadow-sm">
-                <div className="border-b border-slate-200/80 bg-slate-50/80 px-4 py-4 md:px-6">
-                  <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as any)}>
-                    <TabsList className="flex flex-wrap gap-2 bg-transparent p-0">
-                      <TabsTrigger 
-                        value="all" 
-                        className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
-                      >
-                        {t("bookingRequests.all")} ({requests.length})
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="pending" 
-                        className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
-                      >
-                        {t("bookingRequests.pending")} ({pendingRequests.length})
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="counter_offered" 
-                        className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
-                      >
-                        {t("bookingRequests.counterOffered")} ({counterOffered.length})
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="accepted" 
-                        className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
-                      >
-                        {t("bookingRequests.accepted")} ({acceptedRequests.length})
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="rejected" 
-                        className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
-                      >
-                        {t("bookingRequests.rejected")} ({rejectedRequests.length})
-                      </TabsTrigger>
-                    </TabsList>
+              <Card className="rounded-3xl border border-slate-200/70 bg-white shadow-sm" key={filter}>
+                <CardContent className="p-0">
+                  <Tabs
+                    value={filter}
+                    onValueChange={(value) => {
+                      setFilter(value as any)
+                      setTabLoading(true)
+                    }}
+                    className="w-full"
+                  >
+                    <div className="border-b border-slate-200/80 bg-slate-50/80 px-4 py-4 md:px-6">
+                      <TabsList className="flex flex-wrap gap-2 bg-transparent p-0">
+                        <TabsTrigger 
+                          value="all" 
+                          className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                        >
+                          {t("bookingRequests.all")} ({requests.length})
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="pending" 
+                          className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                        >
+                          {t("bookingRequests.pending")} ({pendingRequests.length})
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="counter_offered" 
+                          className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                        >
+                          {t("bookingRequests.counterOffered")} ({counterOffered.length})
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="accepted" 
+                          className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                        >
+                          {t("bookingRequests.accepted")} ({acceptedRequests.length})
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="rejected" 
+                          className="rounded-full border border-transparent bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:text-slate-900 data-[state=active]:border-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white"
+                        >
+                          {t("bookingRequests.rejected")} ({rejectedRequests.length})
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
 
                     <div className="border-t border-slate-200/80 bg-white px-4 py-6 md:px-6 md:py-8">
-                      <TabsContent value="all" className="mt-0 space-y-5">
-                        {renderTabPanel(
-                          requests,
-                          'all',
-                          FileText,
-                          t("bookingRequests.noRequests"),
-                          t("bookingRequests.noRequestsDescription")
-                        )}
-                      </TabsContent>
+                      {tabLoading ? (
+                        <BookingRequestsSkeleton />
+                      ) : (
+                        <>
+                          <TabsContent value="all" className="mt-0 space-y-5">
+                            {renderTabPanel(
+                              requests,
+                              'all',
+                              FileText,
+                              t("bookingRequests.noRequests"),
+                              t("bookingRequests.noRequestsDescription")
+                            )}
+                          </TabsContent>
 
-                      <TabsContent value="pending" className="mt-0 space-y-5">
-                        {renderTabPanel(
-                          pendingRequests,
-                          'pending',
-                          Clock,
-                          t("bookingRequests.noPendingRequests")
-                        )}
-                      </TabsContent>
+                          <TabsContent value="pending" className="mt-0 space-y-5">
+                            {renderTabPanel(
+                              pendingRequests,
+                              'pending',
+                              Clock,
+                              t("bookingRequests.noPendingRequests")
+                            )}
+                          </TabsContent>
 
-                      <TabsContent value="counter_offered" className="mt-0 space-y-5">
-                        {renderTabPanel(
-                          counterOffered,
-                          'counter_offered',
-                          MessageSquare,
-                          t("bookingRequests.noCounterOffered")
-                        )}
-                      </TabsContent>
+                          <TabsContent value="counter_offered" className="mt-0 space-y-5">
+                            {renderTabPanel(
+                              counterOffered,
+                              'counter_offered',
+                              MessageSquare,
+                              t("bookingRequests.noCounterOffered")
+                            )}
+                          </TabsContent>
 
-                      <TabsContent value="accepted" className="mt-0 space-y-5">
-                        {renderTabPanel(
-                          acceptedRequests,
-                          'accepted',
-                          CheckCircle,
-                          t("bookingRequests.noAcceptedRequests")
-                        )}
-                      </TabsContent>
+                          <TabsContent value="accepted" className="mt-0 space-y-5">
+                            {renderTabPanel(
+                              acceptedRequests,
+                              'accepted',
+                              CheckCircle,
+                              t("bookingRequests.noAcceptedRequests")
+                            )}
+                          </TabsContent>
 
-                      <TabsContent value="rejected" className="mt-0 space-y-5">
-                        {renderTabPanel(
-                          rejectedRequests,
-                          'rejected',
-                          X,
-                          t("bookingRequests.noRejectedRequests")
-                        )}
-                      </TabsContent>
+                          <TabsContent value="rejected" className="mt-0 space-y-5">
+                            {renderTabPanel(
+                              rejectedRequests,
+                              'rejected',
+                              X,
+                              t("bookingRequests.noRejectedRequests")
+                            )}
+                          </TabsContent>
+                        </>
+                      )}
                     </div>
                   </Tabs>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </SidebarInset>

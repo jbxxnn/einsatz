@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/lib/toast"
 import { useTranslation } from "@/lib/i18n"
-import { useOptimizedSupabase } from "@/components/optimized-supabase-provider"
 import type { Database } from "@/lib/database.types"
 import {
   Calendar,
@@ -27,10 +26,10 @@ import {
   FileText,
   CheckCircle,
   X,
-  MessageSquare,
   AlertCircle,
   Loader2,
-  User
+  User,
+  ChevronDown
 } from "lucide-react"
 import Image from "next/image"
 import { format } from "date-fns"
@@ -58,26 +57,10 @@ interface ClientBookingRequestCardProps {
 
 export default function ClientBookingRequestCard({ request, onUpdate }: ClientBookingRequestCardProps) {
   const { t } = useTranslation()
-  const { supabase } = useOptimizedSupabase()
   const [loading, setLoading] = useState(false)
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false)
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
-
-  // Fetch freelancer info if not provided
-  const fetchFreelancerInfo = async () => {
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, first_name, last_name, avatar_url")
-        .eq("id", request.freelancer_id)
-        .single()
-      
-      return data
-    } catch (error) {
-      console.error("Error fetching freelancer info:", error)
-      return null
-    }
-  }
+  const [expanded, setExpanded] = useState(false)
 
   const handleAcceptCounterOffer = async () => {
     setAcceptDialogOpen(false)
@@ -154,7 +137,9 @@ export default function ClientBookingRequestCard({ request, onUpdate }: ClientBo
     }
   }
 
-  const images = Array.isArray(request.images) ? request.images : []
+  const images = Array.isArray(request.images) 
+    ? request.images.filter((img): img is string => typeof img === 'string')
+    : []
   
   // Get freelancer name from API response
   const freelancerName = request.freelancer 
@@ -162,255 +147,371 @@ export default function ClientBookingRequestCard({ request, onUpdate }: ClientBo
       ? `${request.freelancer.first_name} ${request.freelancer.last_name}`
       : request.freelancer.first_name || t("bookingRequests.unknownFreelancer"))
     : t("bookingRequests.unknownFreelancer")
+  const freelancerAvatar =
+    request.freelancer && "avatar_url" in request.freelancer ? request.freelancer.avatar_url : null
+  const hasCounterOffer =
+    !!request.freelancer_proposed_date ||
+    !!request.freelancer_proposed_start_time ||
+    !!request.freelancer_proposed_end_time ||
+    !!request.freelancer_proposed_rate ||
+    !!request.freelancer_proposed_total ||
+    request.status === "counter_offered"
+  const descriptionPreview =
+    request.description && request.description.length > 180
+      ? `${request.description.slice(0, 180)}…`
+      : request.description
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
+    <Card className="group overflow-hidden rounded-2xl border border-slate-200/70 bg-white/90 shadow-sm backdrop-blur transition hover:shadow-md">
+      <CardHeader className="border-b border-slate-200/70 bg-slate-50/80 pb-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-1 flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-3">
               {request.job_categories?.icon && (
-                <span className="text-2xl">{request.job_categories.icon}</span>
+                <span className="text-2xl leading-none">{request.job_categories.icon}</span>
               )}
-              <CardTitle className="text-lg">{request.job_categories?.name || "Custom Service"}</CardTitle>
+              <CardTitle className="text-lg font-semibold text-slate-900 md:text-xl">
+                {request.job_categories?.name || "Custom Service"}
+              </CardTitle>
               {getStatusBadge()}
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-slate-500">
               <User className="h-4 w-4" />
-              <span>{t("bookingRequests.to")} {freelancerName}</span>
+              <span>
+                {t("bookingRequests.to")} {freelancerName}
+              </span>
             </div>
+          </div>
+          <div className="hidden md:block text-xs text-slate-500">
+            {t("bookingRequests.requestedOn")} {format(new Date(request.created_at), "PPP")}
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Your Request Details */}
-        <div className="space-y-2">
-          <div className="flex items-start gap-2">
-            <FileText className="h-4 w-4 mt-0.5 text-muted-foreground" />
+      <CardContent className="space-y-5 p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex items-center gap-3">
+            {freelancerAvatar ? (
+              <div className="relative h-12 w-12 overflow-hidden rounded-full border border-slate-200 shadow-sm">
+                <Image
+                  src={freelancerAvatar}
+                  alt={freelancerName}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-sm font-medium text-slate-500">
+                {freelancerName
+                  .split(" ")
+                  .map((name: string[]) => name[0])
+                  .join("")
+                  .slice(0, 2)}
+              </div>
+            )}
             <div>
-              <Label className="text-xs text-muted-foreground">{t("bookingRequests.yourRequest")}</Label>
-              <p className="text-sm">{request.description}</p>
+              <p className="text-sm font-semibold text-slate-900 md:text-base">{freelancerName}</p>
+              <p className="text-xs text-slate-500 md:hidden">
+                {t("bookingRequests.requestedOn")} {format(new Date(request.created_at), "PPP")}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">{request.location}</span>
-          </div>
-
-          {request.preferred_date && (
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">
-                {format(new Date(request.preferred_date), "PPP")}
-                {request.preferred_start_time && request.preferred_end_time && (
-                  <> • {request.preferred_start_time} - {request.preferred_end_time}</>
-                )}
+          <div className="flex flex-col items-start gap-2 md:items-end">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 md:text-sm">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
+                {t("bookingRequests.idLabel")}: {request.id.slice(0, 6)}…
+              </span>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm">
+                {format(new Date(request.created_at), "PPP p")}
               </span>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setExpanded((prev) => !prev)}
+              className="flex items-center gap-2 text-slate-600 hover:text-slate-900"
+            >
+              {expanded ? t("bookingRequests.hideDetails") : t("bookingRequests.viewDetails")}
+              <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {request.location && (
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 md:text-sm">
+              <MapPin className="h-4 w-4 text-slate-500" />
+              {request.location}
+            </span>
+          )}
+
+          {request.preferred_date && (
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 md:text-sm">
+              <Calendar className="h-4 w-4 text-slate-500" />
+              <span>
+                {format(new Date(request.preferred_date), "PPP")}
+                {request.preferred_start_time && request.preferred_end_time && (
+                  <span className="hidden md:inline">
+                    {" "}
+                    · {request.preferred_start_time} – {request.preferred_end_time}
+                  </span>
+                )}
+              </span>
+            </span>
+          )}
+
+          {request.preferred_start_time && request.preferred_end_time && (
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 md:hidden">
+              <Clock className="h-4 w-4 text-slate-500" />
+              {request.preferred_start_time} – {request.preferred_end_time}
+            </span>
           )}
 
           {request.budget_amount && (
-            <div className="flex items-center gap-2">
-              <Euro className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">
-                {t("bookingRequests.budget")}: €{request.budget_amount.toFixed(2)}
-                {request.budget_is_flexible && (
-                  <Badge variant="outline" className="ml-2 text-xs">{t("bookingRequests.flexible")}</Badge>
-                )}
-              </span>
-            </div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 md:text-sm">
+              <Euro className="h-4 w-4 text-slate-500" />
+              €{request.budget_amount.toFixed(2)}
+              {request.budget_is_flexible && (
+                <Badge
+                  variant="outline"
+                  className="ml-1 border-emerald-200 bg-emerald-50 text-[10px] uppercase tracking-wide text-emerald-700"
+                >
+                  {t("bookingRequests.flexible")}
+                </Badge>
+              )}
+            </span>
           )}
 
-          {request.additional_notes && (
-            <div className="mt-2 p-3 bg-muted rounded-md">
-              <Label className="text-xs text-muted-foreground">{t("bookingRequests.additionalNotes")}</Label>
-              <p className="text-sm mt-1">{request.additional_notes}</p>
-            </div>
-          )}
-
-          {images.length > 0 && (
-            <div className="mt-2">
-              <Label className="text-xs text-muted-foreground mb-2 block">{t("bookingRequests.images")} ({images.length})</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {images.slice(0, 6).map((imageUrl: string, index: number) => (
-                  <div key={index} className="relative w-full h-24 rounded-md overflow-hidden border">
-                    <Image
-                      src={imageUrl}
-                      alt={`Request image ${index + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+          {hasCounterOffer && request.freelancer_proposed_total && (
+            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 md:text-sm">
+              <Euro className="h-4 w-4 text-blue-500" />
+              {t("bookingRequests.total")}: €{request.freelancer_proposed_total.toFixed(2)}
+            </span>
           )}
         </div>
 
-        {/* Freelancer's Counter Offer (if exists) */}
-        {request.status === 'counter_offered' && request.freelancer_proposed_date && (
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <Label className="text-sm font-medium text-blue-800 mb-2 block">
-              <AlertCircle className="h-4 w-4 inline mr-2" />
-              {t("bookingRequests.client.counterOfferReceived")}
-            </Label>
-            <div className="space-y-2 text-sm">
-              {request.freelancer_proposed_date && (
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-blue-600" />
-                  <span>{format(new Date(request.freelancer_proposed_date), "PPP")}</span>
-                  {request.freelancer_proposed_start_time && request.freelancer_proposed_end_time && (
-                    <span> • {request.freelancer_proposed_start_time} - {request.freelancer_proposed_end_time}</span>
-                  )}
-                </div>
-              )}
-              {request.freelancer_proposed_rate && (
-                <div className="flex items-center gap-2">
-                  <Euro className="h-4 w-4 text-blue-600" />
-                  <span>{t("bookingRequests.rate")}: €{request.freelancer_proposed_rate.toFixed(2)}/hr</span>
-                </div>
-              )}
+        {!expanded && descriptionPreview && (
+          <p className="text-sm leading-relaxed text-slate-600">{descriptionPreview}</p>
+        )}
+
+        {!expanded && hasCounterOffer && (
+          <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 text-sm text-blue-900">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-semibold">{t("bookingRequests.counterOfferSnapshot")}</span>
               {request.freelancer_proposed_total && (
-                <div className="flex items-center gap-2">
-                  <Euro className="h-4 w-4 text-blue-600" />
-                  <span>{t("bookingRequests.total")}: €{request.freelancer_proposed_total.toFixed(2)}</span>
-                </div>
-              )}
-              {request.freelancer_response_notes && (
-                <div className="mt-2">
-                  <Label className="text-xs text-muted-foreground">{t("bookingRequests.notes")}:</Label>
-                  <p className="text-sm">{request.freelancer_response_notes}</p>
-                </div>
+                <span>€{request.freelancer_proposed_total.toFixed(2)}</span>
               )}
             </div>
-
-            {/* Action buttons for counter offer */}
-            <div className="flex gap-2 mt-4">
-              <Button
-                variant="outline"
-                className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-                onClick={() => setRejectDialogOpen(true)}
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <X className="h-4 w-4 mr-2" />
+            {request.freelancer_proposed_date && (
+              <p className="mt-1 text-xs text-blue-700">
+                {format(new Date(request.freelancer_proposed_date), "PPP")}
+                {request.freelancer_proposed_start_time && request.freelancer_proposed_end_time && (
+                  <>
+                    {" "}
+                    · {request.freelancer_proposed_start_time} – {request.freelancer_proposed_end_time}
+                  </>
                 )}
-                {t("bookingRequests.client.rejectCounter")}
-              </Button>
-              <Button
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => setAcceptDialogOpen(true)}
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                )}
-                {t("bookingRequests.client.acceptCounter")}
-              </Button>
-            </div>
+              </p>
+            )}
           </div>
         )}
 
-        {/* Status messages */}
-        {request.status === 'pending' && (
-          <div className="pt-4 border-t">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>{t("bookingRequests.client.waitingForFreelancer")}</span>
-            </div>
-          </div>
-        )}
-
-        {request.status === 'accepted' && (
-          <div className="pt-4 border-t space-y-4">
-            {/* Timeline Header */}
-            <div className="flex items-center gap-2 text-sm text-green-600 mb-3">
-              <CheckCircle className="h-4 w-4" />
-              <span className="font-medium">{t("bookingRequests.client.acceptedByFreelancer")}</span>
-            </div>
-            
-            {/* Accepted Details Timeline */}
-            <div className="bg-green-50 border border-green-200 rounded-md p-4 space-y-3">
-              <div className="flex items-start gap-2">
-                <div className="mt-0.5">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                </div>
-                <div className="flex-1">
-                  <Label className="text-xs font-medium text-green-800 mb-2 block">
-                    {t("bookingRequests.acceptedDetails")}
+        {expanded && (
+          <div className="space-y-5">
+            <section className="space-y-4 rounded-2xl border border-slate-200/70 bg-slate-50/50 p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm">
+                  <FileText className="h-5 w-5 text-slate-500" />
+                </span>
+                <div className="flex-1 space-y-2">
+                  <Label className="text-xs uppercase tracking-wide text-slate-500">
+                    {t("bookingRequests.yourRequest")}
                   </Label>
-                  
-                  {request.freelancer_proposed_date && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="h-4 w-4 text-green-700" />
-                      <span className="text-sm text-green-900">
-                        {format(new Date(request.freelancer_proposed_date), "EEEE, MMMM d, yyyy")}
-                        {request.freelancer_proposed_start_time && request.freelancer_proposed_end_time && (
-                          <> • {request.freelancer_proposed_start_time} - {request.freelancer_proposed_end_time}</>
+                  <p className="text-sm leading-relaxed text-slate-700">{request.description}</p>
+                </div>
+              </div>
+
+              {request.additional_notes && (
+                <div className="rounded-xl border border-slate-200 bg-white/70 p-4">
+                  <Label className="text-xs uppercase tracking-wide text-slate-500">
+                    {t("bookingRequests.additionalNotes")}
+                  </Label>
+                  <p className="mt-2 text-sm text-slate-700">{request.additional_notes}</p>
+                </div>
+              )}
+
+              {images.length > 0 && (
+                <div className="space-y-3">
+                  <Label className="text-xs uppercase tracking-wide text-slate-500">
+                    {t("bookingRequests.images")} ({images.length})
+                  </Label>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {images.slice(0, 6).map((imageUrl, index) => (
+                      <div
+                        key={index}
+                        className="relative h-24 w-full overflow-hidden rounded-xl border border-slate-200 shadow-sm"
+                      >
+                        <Image
+                          src={imageUrl}
+                          alt={`Request image ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {(request.location || request.preferred_date || request.budget_amount) && (
+              <section className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/70 p-5">
+                {request.location && (
+                  <div className="flex items-start gap-3 rounded-xl bg-slate-50/70 p-3">
+                    <MapPin className="mt-1 h-5 w-5 text-slate-500" />
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-slate-500">
+                        {t("bookingRequests.location")}
+                      </Label>
+                      <p className="mt-1 text-sm text-slate-700">{request.location}</p>
+                    </div>
+                  </div>
+                )}
+
+                {(request.preferred_date || request.preferred_start_time) && (
+                  <div className="flex items-start gap-3 rounded-xl bg-slate-50/70 p-3">
+                    <Calendar className="mt-1 h-5 w-5 text-slate-500" />
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-slate-500">
+                        {t("bookingRequests.preferredDate")}
+                      </Label>
+                      <p className="mt-1 text-sm text-slate-700">
+                        {request.preferred_date
+                          ? format(new Date(request.preferred_date), "PPP")
+                          : t("bookingRequests.notProvided")}
+                        {request.preferred_start_time && request.preferred_end_time && (
+                          <span className="block text-xs text-slate-500 md:text-sm">
+                            {request.preferred_start_time} – {request.preferred_end_time}
+                          </span>
                         )}
-                      </span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {request.budget_amount && (
+                  <div className="flex items-start gap-3 rounded-xl bg-slate-50/70 p-3">
+                    <Euro className="mt-1 h-5 w-5 text-slate-500" />
+                    <div>
+                      <Label className="text-xs uppercase tracking-wide text-slate-500">
+                        {t("bookingRequests.budget")}
+                      </Label>
+                      <p className="mt-1 text-sm text-slate-700">
+                        €{request.budget_amount.toFixed(2)}
+                        {request.budget_is_flexible && (
+                          <Badge
+                            variant="outline"
+                            className="ml-2 border-emerald-200 bg-emerald-50 text-xs text-emerald-700"
+                          >
+                            {t("bookingRequests.flexible")}
+                          </Badge>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {request.status === "counter_offered" && request.freelancer_proposed_date && (
+              <section className="rounded-2xl border border-blue-200/70 bg-blue-50/60 p-5 shadow-sm">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                  {t("bookingRequests.client.counterOfferReceived")}
+                </Label>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {request.freelancer_proposed_date && (
+                    <div className="flex items-center gap-3 rounded-xl bg-white/70 p-3">
+                      <Calendar className="h-5 w-5 text-blue-600" />
+                      <div className="text-sm text-blue-900">
+                        {format(new Date(request.freelancer_proposed_date), "PPP")}
+                        {request.freelancer_proposed_start_time && request.freelancer_proposed_end_time && (
+                          <span className="block text-xs text-blue-700">
+                            {request.freelancer_proposed_start_time} – {request.freelancer_proposed_end_time}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   )}
-                  
                   {request.freelancer_proposed_rate && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <Euro className="h-4 w-4 text-green-700" />
-                      <span className="text-sm text-green-900">
+                    <div className="flex items-center gap-3 rounded-xl bg-white/70 p-3">
+                      <Euro className="h-5 w-5 text-blue-600" />
+                      <span className="text-sm text-blue-900">
                         {t("bookingRequests.rate")}: €{request.freelancer_proposed_rate.toFixed(2)}/hr
                       </span>
                     </div>
                   )}
-                  
                   {request.freelancer_proposed_total && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <Euro className="h-4 w-4 text-green-700" />
-                      <span className="text-sm font-medium text-green-900">
+                    <div className="flex items-center gap-3 rounded-xl bg-white/70 p-3">
+                      <Euro className="h-5 w-5 text-blue-600" />
+                      <span className="text-sm font-semibold text-blue-900">
                         {t("bookingRequests.total")}: €{request.freelancer_proposed_total.toFixed(2)}
                       </span>
                     </div>
                   )}
-                  
                   {request.freelancer_response_notes && (
-                    <div className="mt-2 pt-2 border-t border-green-200">
-                      <Label className="text-xs text-green-700 mb-1 block">{t("bookingRequests.notes")}:</Label>
-                      <p className="text-sm text-green-900">{request.freelancer_response_notes}</p>
+                    <div className="rounded-xl bg-white/70 p-3 text-sm text-blue-900 md:col-span-2">
+                      <p className="text-xs font-medium uppercase tracking-wide text-blue-600">
+                        {t("bookingRequests.notes")}
+                      </p>
+                      <p className="mt-2">{request.freelancer_response_notes}</p>
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
-            
-            <p className="text-xs text-muted-foreground">{t("bookingRequests.client.waitingForBooking")}</p>
+              </section>
+            )}
+
+            {request.status === "accepted" && (
+              <section className="space-y-4 rounded-2xl border border-emerald-200/70 bg-emerald-50/60 p-5 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
+                  <CheckCircle className="h-4 w-4" />
+                  {t("bookingRequests.client.acceptedByFreelancer")}
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {request.freelancer_proposed_date && (
+                    <div className="flex items-center gap-3 rounded-xl bg-white/80 p-3 text-sm text-emerald-900">
+                      <Calendar className="h-5 w-5 text-emerald-600" />
+                      <div>
+                        {format(new Date(request.freelancer_proposed_date), "PPP")}
+                        {request.freelancer_proposed_start_time && request.freelancer_proposed_end_time && (
+                          <span className="block text-xs text-emerald-700">
+                            {request.freelancer_proposed_start_time} – {request.freelancer_proposed_end_time}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {request.freelancer_proposed_rate && (
+                    <div className="flex items-center gap-3 rounded-xl bg-white/80 p-3 text-sm text-emerald-900">
+                      <Euro className="h-5 w-5 text-emerald-600" />
+                      <span>
+                        {t("bookingRequests.rate")}: €{request.freelancer_proposed_rate.toFixed(2)}/hr
+                      </span>
+                    </div>
+                  )}
+                  {request.freelancer_proposed_total && (
+                    <div className="flex items-center gap-3 rounded-xl bg-white/80 p-3 text-sm font-semibold text-emerald-900">
+                      <Euro className="h-5 w-5 text-emerald-600" />
+                      <span>
+                        {t("bookingRequests.total")}: €{request.freelancer_proposed_total.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
           </div>
         )}
 
-        {request.status === 'rejected' && (
-          <div className="pt-4 border-t">
-            <div className="flex items-center gap-2 text-sm text-red-600">
-              <X className="h-4 w-4" />
-              <span>{t("bookingRequests.client.rejectedByFreelancer")}</span>
-            </div>
-          </div>
-        )}
-
-        {request.status === 'converted_to_booking' && request.converted_booking_id && (
-          <div className="pt-4 border-t">
-            <Button
-              variant="outline"
-              className="w-full"
-              asChild
-            >
-              <Link href={`/bookings/${request.converted_booking_id}`}>
-                {t("bookingRequests.viewBooking")}
-              </Link>
-            </Button>
-          </div>
-        )}
       </CardContent>
 
       {/* Accept Counter Offer Dialog */}
