@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { useOptimizedSupabase } from "./optimized-supabase-provider"
-import { User, Briefcase, Calendar, Clock, CreditCard, Settings, LogOut, Home, Loader, TrendingUp, Sidebar, FileText } from "lucide-react"
+import { User, Briefcase, Calendar, Clock, CreditCard, Settings, LogOut, Home, Loader, TrendingUp, Sidebar, FileText, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
@@ -171,6 +171,23 @@ const CustomJobOfferingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
     opacity=".4">
       </path>
       <path fill="currentColor" d="M12.53 3.46l2.85 2.84c.29.29.29.77 0 1.06-.29.29-.77.29-1.06 0L12.75 5.8v9.57c0 .41-.34.75-.75.75s-.75-.34-.75-.75V5.8L9.69 7.37c-.29.29-.77.29-1.06 0a.753.753 0 01-.23-.53c0-.19.07-.38.22-.53l2.85-2.84c.29-.3.77-.3 1.06-.01z">
+        </path>
+        </svg>
+)
+
+const CustomFeedbackIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+  className={props.className}
+  xmlns="http://www.w3.org/2000/svg" 
+  width="18" 
+  height="18" 
+  viewBox="0 0 24 24" 
+  fill="none">
+    <path opacity=".4" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" 
+    fill="currentColor">
+      </path>
+      <path d="M7 9h10v2H7V9zm0 4h7v2H7v-2z" 
+      fill="currentColor">
         </path>
         </svg>
 )
@@ -397,6 +414,20 @@ export default function ModernSidebarNav({ profile }: ModernSidebarNavProps) {
                   <Link href="/messages">
                     <CustomMessagesIcon className={`h-4 w-4 ${isActive("/messages") ? "text-black" : "text-[#15dda9]"}`} />
                     <span className="text-xs font-light">{t("sidebar.messages")}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  asChild 
+                  isActive={isActive("/feedback")} 
+                  tooltip={t("sidebar.feedback")}
+                  className={isActive("/feedback") ? "!bg-[#15dda9] !text-white hover:!bg-[#15dda9] hover:!text-black !rounded-lg" : "hover:!bg-[#d0f8ee] hover:!text-black hover:!rounded-lg"}
+                >
+                  <Link href="/feedback">
+                    <CustomFeedbackIcon className={`h-4 w-4 ${isActive("/feedback") ? "text-black" : "text-[#15dda9]"}`} />
+                    <span className="text-xs font-light">{t("sidebar.feedback")}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -603,7 +603,8 @@
     "account": "Account",
     "navigation": "Navigation",
     "freelancer": "Freelancer",
-    "client": "Client"
+    "client": "Client",
+    "feedback": "Feedback"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2008,6 +2009,49 @@
         "failedToAcceptCounter": "Failed to accept counter offer",
         "failedToRejectCounter": "Failed to reject counter offer"
       }
+    }
+  },
+  "feedback": {
+    "badge": "Feedback",
+    "title": "Share Your Feedback",
+    "description": "Help us improve by sharing your thoughts, reporting bugs, or suggesting new features.",
+    "form": {
+      "title": "Tell us what's on your mind",
+      "description": "Select a category and provide details about your feedback",
+      "typeLabel": "What type of feedback is this?",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Brief summary of your feedback",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Provide detailed information about your feedback...",
+      "priorityLabel": "Priority",
+      "characters": "characters",
+      "submit": "Submit Feedback",
+      "submitting": "Submitting..."
+    },
+    "types": {
+      "bug": "Bug Report",
+      "feature": "Feature Request",
+      "improvement": "Improvement",
+      "general": "General Feedback",
+      "other": "Other"
+    },
+    "priority": {
+      "low": "Low",
+      "lowDescription": "Nice to have",
+      "medium": "Medium",
+      "mediumDescription": "Would be helpful",
+      "high": "High",
+      "highDescription": "Important"
+    },
+    "success": {
+      "title": "Thank You!",
+      "message": "Your feedback has been submitted successfully. We appreciate your input!",
+      "submitted": "Thank you for your feedback!"
+    },
+    "error": {
+      "notLoggedIn": "Please log in to submit feedback",
+      "missingFields": "Please fill in all required fields",
+      "submitFailed": "Failed to submit feedback. Please try again."
     }
   }
 }

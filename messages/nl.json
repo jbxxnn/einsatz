@@ -603,7 +603,8 @@
     "account": "Account",
     "navigation": "Navigatie",
     "freelancer": "Freelancer",
-    "client": "Klant"
+    "client": "Klant",
+    "feedback": "Feedback"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1988,6 +1989,49 @@
         "failedToAcceptCounter": "Kon tegenvoorstel niet accepteren",
         "failedToRejectCounter": "Kon tegenvoorstel niet afwijzen"
       }
+    }
+  },
+  "feedback": {
+    "badge": "Feedback",
+    "title": "Deel Uw Feedback",
+    "description": "Help ons verbeteren door uw gedachten te delen, bugs te melden of nieuwe functies voor te stellen.",
+    "form": {
+      "title": "Vertel ons wat u denkt",
+      "description": "Selecteer een categorie en geef details over uw feedback",
+      "typeLabel": "Wat voor soort feedback is dit?",
+      "titleLabel": "Titel",
+      "titlePlaceholder": "Korte samenvatting van uw feedback",
+      "descriptionLabel": "Beschrijving",
+      "descriptionPlaceholder": "Geef gedetailleerde informatie over uw feedback...",
+      "priorityLabel": "Prioriteit",
+      "characters": "tekens",
+      "submit": "Feedback Verzenden",
+      "submitting": "Verzenden..."
+    },
+    "types": {
+      "bug": "Bug Melding",
+      "feature": "Functieverzoek",
+      "improvement": "Verbetering",
+      "general": "Algemene Feedback",
+      "other": "Anders"
+    },
+    "priority": {
+      "low": "Laag",
+      "lowDescription": "Leuk om te hebben",
+      "medium": "Gemiddeld",
+      "mediumDescription": "Zou nuttig zijn",
+      "high": "Hoog",
+      "highDescription": "Belangrijk"
+    },
+    "success": {
+      "title": "Bedankt!",
+      "message": "Uw feedback is succesvol verzonden. We waarderen uw input!",
+      "submitted": "Bedankt voor uw feedback!"
+    },
+    "error": {
+      "notLoggedIn": "Log in om feedback te verzenden",
+      "missingFields": "Vul alle verplichte velden in",
+      "submitFailed": "Kon feedback niet verzenden. Probeer het opnieuw."
     }
   }
 }
