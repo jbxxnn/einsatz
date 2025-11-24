@@ -274,11 +274,11 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                     </div>
                   <span className="text-xs">{t("availability.status.guaranteed")}</span>
                 </div>
-                  <div className="flex items-center gap-3">
+                  {/* <div className="flex items-center gap-3">
                     <div className="h-3 w-3 rounded-full bg-amber-500 flex items-center justify-center">
                     </div>
                   <span className="text-xs">{t("availability.status.tentative")}</span>
-                </div>
+                </div> */}
                   <div className="flex items-center gap-3">
                     <div className="h-3 w-3 rounded-full bg-gray-400 flex items-center justify-center">
                     </div>
@@ -478,12 +478,12 @@ export default function AvailabilityCalendar({ freelancerId }: AvailabilityCalen
                         {t("availability.status.guaranteed")}
                       </div>
                     </SelectItem>
-                    <SelectItem value="tentative">
+                    {/* <SelectItem value="tentative">
                       <div className="flex items-center">
                         <div className="mr-2 h-2 w-2 rounded-full bg-amber-500" />
                         {t("availability.status.tentative")}
                       </div>
-                    </SelectItem>
+                    </SelectItem> */}
                     <SelectItem value="unavailable">
                       <div className="flex items-center">
                         <div className="mr-2 h-2 w-2 rounded-full bg-gray-300" />
