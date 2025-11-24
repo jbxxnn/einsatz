@@ -43,7 +43,7 @@ export default function RootLayout({
         <OptimizedSupabaseProvider>
           <OptimizedUserProvider>
             <QueryProvider>
-              <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+              <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" disableTransitionOnChange>
                 {/* <OptimizedHeader /> */}
                 <main className="flex-1">
                   <Suspense fallback={<LoadingSkeleton />}>{children}</Suspense>
