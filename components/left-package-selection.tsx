@@ -36,7 +36,7 @@ interface LeftPackageSelectionProps {
       total: number
     }>
     totalPrice: number
-  }) => void
+  } | null) => void
   selectedPackageData?: {
     package: JobOfferingPackage
     items: Array<{
@@ -155,6 +155,12 @@ export default function LeftPackageSelection({
   }
 
   const handlePackageSelect = (pkg: JobOfferingPackage & { items: JobOfferingPackageItem[] }) => {
+    // If already selected, deselect it
+    if (selectedPackageData?.package.id === pkg.id) {
+      onPackageSelect(null)
+      return
+    }
+
     const quantities = packageQuantities[pkg.id] || {}
     const itemsWithQuantities = pkg.items.map(item => ({
       item,

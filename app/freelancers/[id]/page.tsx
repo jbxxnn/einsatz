@@ -459,7 +459,7 @@ export default function FreelancerProfile() {
       total: number
     }>
     totalPrice: number
-  }) => {
+  } | null) => {
     setSelectedPackageData(packageData)
   }
   
