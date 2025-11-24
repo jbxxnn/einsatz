@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useOptimizedUser } from "@/components/optimized-user-provider"
 import { useDashboardStats } from "@/hooks/use-dashboard-stats"
-import { Calendar, Clock, DollarSign } from "lucide-react"
+import { Calendar, Clock, ReceiptEuro } from "lucide-react"
 import { useTranslation } from "@/lib/i18n"
 
 export default function DashboardStats() {
@@ -60,7 +60,7 @@ export default function DashboardStats() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-            <DollarSign className="h-4 w-4 mr-2" />
+            <ReceiptEuro className="h-4 w-4 mr-2" />
             {t("dashboard.stats.completed")}
           </CardTitle>
         </CardHeader>

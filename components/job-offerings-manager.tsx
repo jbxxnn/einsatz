@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/lib/toast"
-import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Loader, GripVertical, Shield, CheckCircle, Clock, Package, DollarSign, Calculator, Edit } from "lucide-react"
+import { Loader2, Plus, Trash2, AlertCircle, Calendar, Briefcase, Loader, GripVertical, Shield, CheckCircle, Clock, Package, ReceiptEuro, Calculator, Edit } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -1422,7 +1422,7 @@ export default function JobOfferingsManager({ freelancerId }: JobOfferingsManage
                   <RadioGroupItem value="hourly" id="hourly" disabled />
                   <Label htmlFor="hourly" className="text-xs text-gray-400 cursor-not-allowed">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
+                        <ReceiptEuro className="h-4 w-4" />
                       {t("jobOfferings.fixedHourlyRate")} ({t("jobOfferings.comingSoon")})
                       </div>
                     </Label>
