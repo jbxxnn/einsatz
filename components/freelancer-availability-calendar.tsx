@@ -12,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useTranslation } from "@/lib/i18n"
 
 interface FreelancerAvailabilityCalendarProps {
   freelancerId: string
@@ -32,6 +33,7 @@ export default function FreelancerAvailabilityCalendar({
   categoryId,
   onSelectDate,
 }: FreelancerAvailabilityCalendarProps) {
+  const { t } = useTranslation()
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [availability, setAvailability] = useState<DateAvailability[]>([])
   const [loading, setLoading] = useState(false)
@@ -207,10 +209,13 @@ export default function FreelancerAvailabilityCalendar({
             <div className="text-sm">
               <p className="font-medium">{format(date, "EEEE, MMMM d, yyyy")}</p>
               <p className="text-muted-foreground">
-                {details ? `${details.slots} time slot${details.slots !== 1 ? 's' : ''} available` : 'Available'}
+                {details 
+                  ? `${details.slots} ${details.slots === 1 ? t("availability.status.timeSlotAvailable") : t("availability.status.timeSlotsAvailable")}`
+                  : t("availability.status.available")
+                }
               </p>
               <p className="text-xs text-muted-foreground">
-                Status: {dateInfo.status}
+                {t("availability.status.label")} {t(`availability.status.${dateInfo.status}`)}
               </p>
             </div>
           </TooltipContent>
@@ -271,7 +276,7 @@ export default function FreelancerAvailabilityCalendar({
             <div className="mt-4 flex items-center text-xs justify-center gap-4">
               <div className="flex items-center gap-1">
                 <div className="h-2 w-2 rounded-full bg-green-500" />
-                <span>Guaranteed</span>
+                <span>{t("availability.status.guaranteed")}</span>
               </div>
               {/* <div className="flex items-center gap-1">
                 <div className="h-2 w-2 rounded-full bg-amber-500" />
@@ -279,13 +284,13 @@ export default function FreelancerAvailabilityCalendar({
               </div> */}
               <div className="flex items-center gap-1">
                 <div className="h-2 w-2 rounded-full bg-gray-300" />
-                <span>Unavailable</span>
+                <span>{t("availability.status.unavailable")}</span>
               </div>
             </div>
           </>
         )}
         {!loading && availability.length === 0 && (
-          <div className="text-center mt-2 text-xs text-black">No available dates in this month</div>
+          <div className="text-center mt-2 text-xs text-black">{t("availability.calendar.noAvailableDatesInMonth")}</div>
         )}
       </CardContent>
     </Card>

@@ -1623,12 +1623,17 @@
     "manageAvailabilityDescription": "Stel je werkuren en schema in",
     "calendar": {
       "title": "Beschikbaarheid Kalender",
-      "description": "Selecteer datums om je beschikbaarheid te bekijken en beheren"
+      "description": "Selecteer datums om je beschikbaarheid te bekijken en beheren",
+      "noAvailableDatesInMonth": "Geen beschikbare datums deze maand"
     },
     "status": {
       "guaranteed": "Gegarandeerd",
       "tentative": "Tentatief",
-      "unavailable": "Niet beschikbaar"
+      "unavailable": "Niet beschikbaar",
+      "label": "Status:",
+      "available": "Beschikbaar",
+      "timeSlotAvailable": "tijdslot beschikbaar",
+      "timeSlotsAvailable": "tijdslots beschikbaar"
     },
     "actions": {
       "add": "Toevoegen",

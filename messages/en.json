@@ -1642,12 +1642,17 @@
     "manageAvailabilityDescription": "Set your working hours and schedule",
     "calendar": {
       "title": "Availability Calendar",
-      "description": "Select dates to view and manage your availability"
+      "description": "Select dates to view and manage your availability",
+      "noAvailableDatesInMonth": "No available dates in this month"
     },
     "status": {
       "guaranteed": "Guaranteed",
       "tentative": "Tentative",
-      "unavailable": "Unavailable"
+      "unavailable": "Unavailable",
+      "label": "Status:",
+      "available": "Available",
+      "timeSlotAvailable": "time slot available",
+      "timeSlotsAvailable": "time slots available"
     },
     "actions": {
       "add": "Add",
