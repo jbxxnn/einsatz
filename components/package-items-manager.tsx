@@ -109,7 +109,7 @@ function SortableItemRow({
           <div>
             <div className="font-medium">{item.offering}</div>
             <Badge className={`text-xs ${getTypeColor(item.type)}`}>
-              {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+              {t(`packageItems.${item.type}`)}
             </Badge>
           </div>
         </div>

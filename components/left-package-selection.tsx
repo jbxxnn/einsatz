@@ -264,7 +264,7 @@ export default function LeftPackageSelection({
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <Badge className={`text-xs ${getTypeColor(item.type)}`}>
-                                  {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                                  {t(`packageItems.${item.type}`)}
                                 </Badge>
                                 <span className="font-medium text-xs">{item.offering}</span>
                               </div>
