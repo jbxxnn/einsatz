@@ -273,10 +273,10 @@ export default function FreelancerAvailabilityCalendar({
                 <div className="h-2 w-2 rounded-full bg-green-500" />
                 <span>Guaranteed</span>
               </div>
-              <div className="flex items-center gap-1">
+              {/* <div className="flex items-center gap-1">
                 <div className="h-2 w-2 rounded-full bg-amber-500" />
                 <span>Tentative</span>
-              </div>
+              </div> */}
               <div className="flex items-center gap-1">
                 <div className="h-2 w-2 rounded-full bg-gray-300" />
                 <span>Unavailable</span>
