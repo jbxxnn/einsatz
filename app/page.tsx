@@ -125,7 +125,7 @@ export default function Home() {
             {/* Navigation Links */}
             <nav className="flex flex-col gap-4 mb-6">
             <a 
-                href="/dashboard" 
+                href="/dashboard/" 
                 className="flex items-center gap-3 p-4 rounded-lg bg-[#3e4f4566] hover:bg-[#3e4f4588] transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -154,11 +154,11 @@ export default function Home() {
                   {t("home.navigation.login")}
                 </Button>
               </Link>
-              <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
+              {/* <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button className="w-full bg-[#33CC99] text-[#1A302B] hover:bg-[#ecf7e9] py-3 rounded-lg font-medium">
                   {t("home.navigation.openAccount")}
                 </Button>
-              </Link>
+              </Link> */}
             </div>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="w-full flex items-center justify-center min-h-[80vh] px-8">
+      <section className="w-full flex items-center justify-center min-h-[60vh] md:min-h-[80vh] px-8">
         <div className="text-center space-y-8 max-w-4xl">
           {/* Company Label */}
           {/* <div className="text-sm uppercase tracking-wider text-gray-300 font-medium">
@@ -195,7 +195,7 @@ export default function Home() {
           
           {/* CTA Button */}
           <div className="pt-4">
-            <Link href="/register">
+            <Link href="/freelancers">
               <Button size="lg" className="bg-[#33CC99] text-[#1A302B] hover:bg-[#2BB88A] px-8 py-4 text-lg font-semibold rounded-lg">
 {t("home.mainHero.getStarted")}
               </Button>

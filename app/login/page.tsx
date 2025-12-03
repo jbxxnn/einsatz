@@ -39,7 +39,34 @@ export default function Login() {
       router.push("/dashboard")
       router.refresh()
     } catch (error: any) {
-      toast.error(error.message || t("login.errors.generic"))
+      console.error('Login error:', error)
+      
+      // Map Supabase errors to translated messages
+      let errorMessage = t("login.errors.generic")
+      
+      if (error?.message) {
+        const errorMsg = error.message.toLowerCase()
+        
+        // Check for specific error patterns
+        if (errorMsg.includes('invalid login') || errorMsg.includes('invalid credentials') || errorMsg.includes('invalid email or password')) {
+          errorMessage = t("login.errors.invalidCredentials")
+        } else if (errorMsg.includes('email not confirmed') || errorMsg.includes('email not verified') || errorMsg.includes('email_not_confirmed')) {
+          errorMessage = t("login.errors.emailNotVerified")
+        } else if (errorMsg.includes('too many requests') || errorMsg.includes('rate limit')) {
+          errorMessage = t("login.errors.tooManyRequests")
+        } else if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('connection')) {
+          errorMessage = t("login.errors.networkError")
+        } else if (errorMsg.includes('invalid email') || errorMsg.includes('email format')) {
+          errorMessage = t("login.errors.invalidEmail")
+        } else if (errorMsg.includes('user not found') || errorMsg.includes('no user found')) {
+          errorMessage = t("login.errors.userNotFound")
+        } else {
+          // For other errors, try to use a more user-friendly message
+          errorMessage = error.message
+        }
+      }
+      
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -58,7 +85,25 @@ export default function Login() {
         throw error
       }
     } catch (error: any) {
-      toast.error(error.message || t("login.errors.generic"))
+      console.error('Google sign in error:', error)
+      
+      // Map Supabase errors to translated messages
+      let errorMessage = t("login.errors.generic")
+      
+      if (error?.message) {
+        const errorMsg = error.message.toLowerCase()
+        
+        // Check for specific error patterns
+        if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('connection')) {
+          errorMessage = t("login.errors.networkError")
+        } else if (errorMsg.includes('popup') || errorMsg.includes('blocked')) {
+          errorMessage = t("login.errors.generic")
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
+      toast.error(errorMessage)
     }
   }
 

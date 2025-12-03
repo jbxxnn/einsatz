@@ -78,20 +78,20 @@
       "learnMore": "Meer informatie",
       "login": "Inloggen",
       "openAccount": "Account aanmaken",
-      "dashboard": "Dashboard"
+      "dashboard": "Word freelancer"
     },
     "mainHero": {
-      "title": "Laten we",
-      "titlePart2": "veranderen voor",
-      "freelancing": "freelancing",
-      "better": "beter",
-      "description": "Leg contact met bekwame professionals en bouw geweldige projecten samen. We maken freelance werk toegankelijk voor iedereen.",
-      "getStarted": "Aan de Slag"
+      "title": "Snel de juiste",
+      "titlePart2": "freelancer",
+      "freelancing": "voor jouw",
+      "better": "klus",
+      "description": "Bekijk welke freelancers geschikt én beschikbaar zijn, en regel het direct.",
+      "getStarted": "Vind je freelancer"
     },
     "freelancers": {
       "title": "Onze Freelancers",
-      "subtitle": "Geweldige mensen achter",
-      "description": "Onze getalenteerde freelancers hebben jaren gecombineerde ervaring in verschillende branches en vaardigheden.",
+        "subtitle": "Mensen met inzet",
+        "description": "Zij maken hun opdrachtgevers blij en houden hun reputatie hoog.",
       "unableToLoad": "Kan freelancers niet laden",
       "noneAvailable": "Geen freelancers beschikbaar",
       "freelancer": "Freelancer"
@@ -333,7 +333,13 @@
     "toastSuccess": "Account succesvol aangemaakt!",
     "toastVerification": "Controleer je e-mail om je account te verifiëren voordat je inlogt.",
     "errors": {
-      "generic": "Er is iets misgegaan. Probeer het opnieuw."
+      "generic": "Er is iets misgegaan. Probeer het opnieuw.",
+      "emailAlreadyRegistered": "Dit e-mailadres is al geregistreerd. Log in of gebruik een ander e-mailadres.",
+      "invalidEmail": "Voer een geldig e-mailadres in.",
+      "weakPassword": "Wachtwoord is te zwak. Gebruik minimaal 6 tekens.",
+      "networkError": "Netwerkfout. Controleer je verbinding en probeer het opnieuw.",
+      "userAlreadyRegistered": "Een gebruiker met dit e-mailadres bestaat al.",
+      "signupDisabled": "Registratie is momenteel uitgeschakeld. Neem contact op met ondersteuning."
     }
   },
   "login": {
@@ -349,7 +355,14 @@
     "noAccount": "Nog geen account?",
     "registerLink": "Registreer",
     "errors": {
-      "generic": "Er is iets misgegaan. Probeer het opnieuw."
+      "generic": "Er is iets misgegaan. Probeer het opnieuw.",
+      "invalidCredentials": "Ongeldig e-mailadres of wachtwoord. Probeer het opnieuw.",
+      "emailNotConfirmed": "Verifieer je e-mailadres voordat je inlogt.",
+      "tooManyRequests": "Te veel inlogpogingen. Probeer het later opnieuw.",
+      "networkError": "Netwerkfout. Controleer je verbinding en probeer het opnieuw.",
+      "invalidEmail": "Voer een geldig e-mailadres in.",
+      "userNotFound": "Geen account gevonden met dit e-mailadres.",
+      "emailNotVerified": "Verifieer je e-mailadres voordat je inlogt."
     }
   },
   "freelancers": {
@@ -754,7 +767,7 @@
     "defaultHourlyRateDescription": "Dit is je standaardtarief. Je kunt specifieke tarieven instellen voor elke dienstcategorie.",
     "jobOfferings": "Dienstenaanbod",
     "jobOfferingsDescription": "Beheer je diensten en expertise op de pagina voor dienstenaanbod.",
-    "manageJobOfferings": "Beheer dienstenaanbod",
+    "manageJobOfferings": "Maak je eerste dienst aan",
     "editAvatar": "Avatar Bewerken",
     "coverDesign": "Cover Ontwerp",
     "coverDesignDescription": "Kies een professioneel cover ontwerp voor je profiel",
@@ -775,13 +788,14 @@
     "hints": {
       "firstName": "Je voornaam zoals deze op officiële documenten staat",
       "lastName": "Je achternaam zoals deze op officiële documenten staat",
-      "email": "Een geldig e-mailadres waar klanten je kunnen bereiken",
-      "phone": "Je contactnummer inclusief landcode (bijv. +31)",
+      "email": "Een geldig e-mailadres waar klanten je kunnen bereiken. (Wordt niet getoond in je profiel)",
+      "phone": "Je contactnummer inclusief landcode, bijv. +31. (Wordt niet getoond in je profiel)",
       "bio": "Je bio is je kans om een goede eerste indruk te maken. Vertel potentiële klanten over je ervaring, vaardigheden en wat je uniek maakt.",
       "bioTips": "Tips voor het schrijven van een goede bio:",
       "bioTip1": "Begin met een korte introductie van wie je bent",
       "bioTip2": "Benadruk je belangrijkste vaardigheden en ervaring",
-      "bioTip3": "Vermeld eventuele certificeringen of speciale kwalificaties"
+      "bioTip3": "Vermeld eventuele certificeringen of speciale kwalificaties",
+      "location": "Je startlocatie. Het servicegebied bepaalt hoe ver je reist voor werk."
     },
     "wildcardCategories": {
       "title": "Wildcard Categorieën",
@@ -830,7 +844,7 @@
   "jobOfferings": {
     "title": "Dienstenaanbod",
     "description": "Beheer je diensten en expertise op de pagina voor dienstenaanbod.",
-    "manageJobOfferings": "Beheer dienstenaanbod",
+    "manageJobOfferings": "Maak je eerste dienst aan",
     "cardTitle": "Jouw dienstenaanbod",
     "cardDescription": "Voeg diensten toe en beheer de services die je aan klanten aanbiedt",
     "descriptionPlaceholder": "Beschrijf je ervaring en diensten voor deze jobcategorie",

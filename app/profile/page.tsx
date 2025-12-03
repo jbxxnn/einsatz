@@ -135,6 +135,7 @@ export default function ProfilePage() {
     twitter: "",
     instagram: "",
   })
+  const [role, setRole] = useState("")
   const [selectedCoverTemplate, setSelectedCoverTemplate] = useState<string | null>(null)
   const [showCoverSelector, setShowCoverSelector] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -183,7 +184,7 @@ export default function ProfilePage() {
           formattedAddress: profile.formatted_address || "",
         })
 
-      // Extract social links and cover template from metadata if available
+      // Extract social links, role, and cover template from metadata if available
       if (profile.metadata && typeof profile.metadata === "object") {
         const metadata = profile.metadata as any
         setSocialLinks({
@@ -192,6 +193,7 @@ export default function ProfilePage() {
           twitter: metadata.twitter || "",
           instagram: metadata.instagram || "",
         })
+        setRole(metadata.role || "")
         setSelectedCoverTemplate(metadata.coverTemplate || null)
       }
     }
@@ -317,6 +319,7 @@ export default function ProfilePage() {
         metadata: {
           ...(typeof profile?.metadata === 'object' && profile.metadata !== null ? profile.metadata : {}),
           ...socialLinks,
+          role: role,
           coverTemplate: selectedCoverTemplate,
         },
         // Add location data
@@ -635,11 +638,8 @@ export default function ProfilePage() {
                         <Input
                           id="role"
                           placeholder={t("profile.professionalTitlePlaceholder")}
-                          value={(profile.metadata as { role?: string })?.role || ""}
-                          onChange={(e) => {
-                            const updatedMetadata = { ...(profile.metadata as object), role: e.target.value }
-                            // Note: Profile will be updated when form is submitted
-                          }}
+                          value={role}
+                          onChange={(e) => setRole(e.target.value)}
                           className="rounded-lg text-xs border-brand-green focus-visible:border-none focus-visible:ring-0 focus-visible:ring-brand-green focus-visible:outline-none"
                         />
                       </div>

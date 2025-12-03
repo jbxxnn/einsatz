@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { MapPin, Loader2 } from "lucide-react"
+import { MapPin, Loader2, HelpCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { searchLocations, geocodeAddress } from "@/lib/geocoding"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation } from "@/lib/i18n"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip"
 
 interface LocationInputProps {
   value: string
@@ -30,7 +31,7 @@ export function LocationInput({
   radiusValue = 10,
   onRadiusChange,
   className,
-  placeholder = "Enter a location",
+  placeholder = "Voorlopig alleen binnen 10km van Kampen. (betaversie)",
   label,
   required = false,
 }: LocationInputProps) {
@@ -102,7 +103,17 @@ export function LocationInput({
     <div className={cn("space-y-2", className)}>
       {label && (
         <Label htmlFor="location">
-          {label} {required && <span className="text-red-500">*</span>}
+          {label} {required && <span className="text-red-500">*</span>} 
+          <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{t("profile.hints.location")}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
         </Label>
       )}
 
